@@ -1,14 +1,14 @@
 [project]
-name = "mcp-code-checker"
+name = "mcp-config"
 version = "0.1.0"
 authors = [
     {name = "Marcus Jellinghaus"},
 ]
-description = "An MCP server for running python code checks (pylint, pytest and mypy)"
+description = "A CLI tool to configure MCP servers for various clients like Claude Desktop and VSCode"
 readme = "README.md"
 requires-python = ">=3.11"
 license = {text = "MIT"}
-keywords = ["mcp", "code-checker", "pylint", "pytest", "mypy", "claude", "ai"]
+keywords = ["mcp", "configuration", "claude", "vscode", "ai", "cli"]
 classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
@@ -16,6 +16,8 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Installation/Setup",
+    "Topic :: Utilities",
 ]
 dependencies = [
     "pathspec>=0.12.1",
@@ -38,13 +40,12 @@ dev = [
     ]
 
 [project.scripts]
-mcp-code-checker = "src.main:main"
-mcp-config = "src.config.main:main"
+mcp-config = "src.main:main"
 
 [project.urls]
-"Homepage" = "https://github.com/yourusername/mcp-code-checker"
-"Bug Tracker" = "https://github.com/yourusername/mcp-code-checker/issues"
-"Documentation" = "https://github.com/yourusername/mcp-code-checker#readme"
+"Homepage" = "https://github.com/MarcusJellinghaus/mcp-config"
+"Bug Tracker" = "https://github.com/MarcusJellinghaus/mcp-config/issues"
+"Documentation" = "https://github.com/MarcusJellinghaus/mcp-config#readme"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
