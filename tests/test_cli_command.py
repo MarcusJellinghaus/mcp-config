@@ -95,4 +95,4 @@ class TestCLICommand:
         # Check that CLI entry point exists
         scripts = data.get("project", {}).get("scripts", {})
         assert "mcp-config" in scripts
-        assert scripts["mcp-config"] == "src.mcp_config.main:main"
+        assert scripts["mcp-config"] == "mcp_config.main:main"
