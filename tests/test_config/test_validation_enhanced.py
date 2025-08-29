@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from src.config.validation import (
+from src.mcp_config.validation import (
     validate_path,
     validate_python_executable,
     validate_server_configuration,

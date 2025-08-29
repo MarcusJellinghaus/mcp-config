@@ -8,13 +8,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config.clients import ClaudeDesktopHandler
-from src.config.integration import (
+from src.mcp_config.clients import ClaudeDesktopHandler
+from src.mcp_config.integration import (
     generate_client_config,
     remove_mcp_server,
     setup_mcp_server,
 )
-from src.config.servers import MCP_CODE_CHECKER, ParameterDef, ServerConfig
+from src.mcp_config.servers import MCP_CODE_CHECKER, ParameterDef, ServerConfig
 
 
 class TestGenerateClientConfig:
@@ -162,7 +162,7 @@ class TestGenerateClientConfig:
             "project_dir": ".",  # Relative path
         }
 
-        with patch("src.config.integration.Path.cwd", return_value=tmp_path):
+        with patch("src.mcp_config.integration.Path.cwd", return_value=tmp_path):
             config = generate_client_config(server_config, "test", user_params)
 
         # Should be normalized to absolute

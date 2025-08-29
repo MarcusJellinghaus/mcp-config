@@ -7,13 +7,13 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config.clients import ClaudeDesktopHandler
-from src.config.integration import (
+from src.mcp_config.clients import ClaudeDesktopHandler
+from src.mcp_config.integration import (
     generate_client_config,
     remove_mcp_server,
     setup_mcp_server,
 )
-from src.config.servers import ParameterDef, ServerConfig
+from src.mcp_config.servers import ParameterDef, ServerConfig
 
 
 class TestDryRunFunctionality:
@@ -162,13 +162,13 @@ class TestDryRunFunctionality:
 class TestDryRunOutput:
     """Test dry-run output formatting."""
 
-    @patch("src.config.output.OutputFormatter.print_dry_run_header")
-    @patch("src.config.output.OutputFormatter.print_dry_run_config_preview")
+    @patch("src.mcp_config.output.OutputFormatter.print_dry_run_header")
+    @patch("src.mcp_config.output.OutputFormatter.print_dry_run_config_preview")
     def test_setup_dry_run_output(
         self, mock_preview: MagicMock, mock_header: MagicMock
     ) -> None:
         """Test that dry-run setup produces correct output."""
-        from src.config.main import handle_setup_command
+        from src.mcp_config.main import handle_setup_command
 
         # Create mock args
         mock_args = MagicMock()
@@ -181,28 +181,28 @@ class TestDryRunOutput:
         mock_args.project_dir = "."
 
         # Mock registry
-        with patch("src.config.main.registry") as mock_registry:
+        with patch("src.mcp_config.main.registry") as mock_registry:
             mock_server_config = MagicMock()
             mock_server_config.name = "mcp-code-checker"
             mock_server_config.parameters = []
             mock_registry.get.return_value = mock_server_config
 
             # Mock other dependencies
-            with patch("src.config.main.get_client_handler") as mock_get_client:
+            with patch("src.mcp_config.main.get_client_handler") as mock_get_client:
                 mock_client = MagicMock()
                 mock_client.get_config_path.return_value = Path("/tmp/config.json")
                 mock_get_client.return_value = mock_client
 
-                with patch("src.config.main.extract_user_parameters") as mock_extract:
+                with patch("src.mcp_config.main.extract_user_parameters") as mock_extract:
                     mock_extract.return_value = {"project_dir": "."}
 
                     with patch(
-                        "src.config.main.detect_python_environment"
+                        "src.mcp_config.main.detect_python_environment"
                     ) as mock_detect:
                         mock_detect.return_value = ("/usr/bin/python", None)
 
                         with patch(
-                            "src.config.main.validate_required_parameters"
+                            "src.mcp_config.main.validate_required_parameters"
                         ) as mock_validate:
                             mock_validate.return_value = []
 
@@ -216,13 +216,13 @@ class TestDryRunOutput:
                             # Should return success
                             assert result == 0
 
-    @patch("src.config.output.OutputFormatter.print_dry_run_header")
-    @patch("src.config.output.OutputFormatter.print_dry_run_remove_preview")
+    @patch("src.mcp_config.output.OutputFormatter.print_dry_run_header")
+    @patch("src.mcp_config.output.OutputFormatter.print_dry_run_remove_preview")
     def test_remove_dry_run_output(
         self, mock_preview: MagicMock, mock_header: MagicMock
     ) -> None:
         """Test that dry-run remove produces correct output."""
-        from src.config.main import handle_remove_command
+        from src.mcp_config.main import handle_remove_command
 
         # Create mock args
         mock_args = MagicMock()
@@ -233,7 +233,7 @@ class TestDryRunOutput:
         mock_args.backup = True
 
         # Mock client handler
-        with patch("src.config.main.get_client_handler") as mock_get_client:
+        with patch("src.mcp_config.main.get_client_handler") as mock_get_client:
             mock_client = MagicMock()
             mock_client.get_config_path.return_value = Path("/tmp/config.json")
             mock_client.list_managed_servers.return_value = [

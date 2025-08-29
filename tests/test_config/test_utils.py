@@ -5,8 +5,8 @@ from tempfile import TemporaryDirectory
 
 import pytest
 
-from src.config.servers import ParameterDef, ServerConfig
-from src.config.utils import (
+from src.mcp_config.servers import ParameterDef, ServerConfig
+from src.mcp_config.utils import (
     normalize_path_parameter,
     validate_parameter_value,
     validate_required_parameters,

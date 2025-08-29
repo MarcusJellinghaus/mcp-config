@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.config.clients import VSCodeHandler
+from src.mcp_config.clients import VSCodeHandler
 
 
 class TestVSCodeHandler:
@@ -18,7 +18,7 @@ class TestVSCodeHandler:
         """Test workspace configuration path."""
         handler = VSCodeHandler(workspace=True)
 
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = Path("/home/user/project")
             config_path = handler.get_config_path()
 
@@ -80,7 +80,7 @@ class TestVSCodeHandler:
     def test_setup_server(self, tmp_path: Path) -> None:
         """Test setting up a server configuration."""
         # Create handler with temp workspace
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -119,7 +119,7 @@ class TestVSCodeHandler:
 
     def test_remove_managed_server(self, tmp_path: Path) -> None:
         """Test removing a managed server."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -169,7 +169,7 @@ class TestVSCodeHandler:
 
     def test_list_servers(self, tmp_path: Path) -> None:
         """Test listing all servers."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -216,7 +216,7 @@ class TestVSCodeHandler:
 
     def test_validate_config(self, tmp_path: Path) -> None:
         """Test configuration validation."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -246,7 +246,7 @@ class TestVSCodeHandler:
 
     def test_backup_config(self, tmp_path: Path) -> None:
         """Test configuration backup."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -273,7 +273,7 @@ class TestVSCodeHandler:
 
     def test_empty_config_handling(self, tmp_path: Path) -> None:
         """Test handling of empty configuration."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -287,7 +287,7 @@ class TestVSCodeHandler:
 
     def test_malformed_json_handling(self, tmp_path: Path) -> None:
         """Test handling of malformed JSON configuration."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -315,7 +315,7 @@ class TestVSCodeHandler:
         assert user_handler.workspace is False
 
         # Config paths should be different
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = Path("/home/user/project")
             with patch("pathlib.Path.home") as mock_home:
                 mock_home.return_value = Path("/home/user")

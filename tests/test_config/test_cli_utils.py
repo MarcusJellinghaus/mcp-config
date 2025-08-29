@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config.cli_utils import (
+from src.mcp_config.cli_utils import (
     add_parameter_to_parser,
     build_setup_parser,
     create_full_parser,
@@ -19,7 +19,7 @@ from src.config.cli_utils import (
     validate_remove_args,
     validate_setup_args,
 )
-from src.config.servers import ParameterDef, ServerConfig, registry
+from src.mcp_config.servers import ParameterDef, ServerConfig, registry
 
 
 class TestParserBuilding:
