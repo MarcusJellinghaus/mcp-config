@@ -322,8 +322,8 @@ def validate_server_configuration(
             except ImportError:
                 # Development mode - check for source files
                 current_dir = Path.cwd()
-                main_path = current_dir / "src" / "main.py"
-                if main_path.exists():
+                package_path = current_dir / "src" / "mcp_config" / "main.py"
+                if package_path.exists():
                     checks.append({
                         "status": "info",
                         "message": "Running in development mode (source files)",
