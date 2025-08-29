@@ -8,24 +8,23 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config.cli_utils import (
+from src.mcp_config.cli_utils import (
     add_list_subcommand,
     add_parameter_to_parser,
     add_remove_subcommand,
     add_server_parameters,
     add_setup_subcommand,
 )
-from src.config.main import (
+from src.mcp_config.main import (
     create_main_parser,
     extract_user_parameters,
     handle_list_command,
     handle_remove_command,
     handle_setup_command,
     main,
-    print_server_info,
-    print_setup_summary,
 )
-from src.config.servers import ParameterDef, ServerConfig
+from src.mcp_config.output import OutputFormatter
+from src.mcp_config.servers import ParameterDef, ServerConfig
 
 
 class TestMainParserCreation:
@@ -129,7 +128,7 @@ class TestServerSpecificOptions:
         )
 
         # Mock registry
-        with patch("src.config.cli_utils.registry") as mock_registry:
+        with patch("src.mcp_config.cli_utils.registry") as mock_registry:
             mock_registry.get.return_value = mock_config
 
             import argparse
@@ -147,7 +146,7 @@ class TestServerSpecificOptions:
 
     def test_add_server_parameters_no_config(self) -> None:
         """Test handling when server config doesn't exist."""
-        with patch("src.config.cli_utils.registry") as mock_registry:
+        with patch("src.mcp_config.cli_utils.registry") as mock_registry:
             mock_registry.get.return_value = None
 
             import argparse
@@ -226,13 +225,13 @@ class TestExtractUserParameters:
 class TestCommandHandlers:
     """Test command handler functions."""
 
-    @patch("src.config.main.setup_mcp_server")  # type: ignore[misc]
-    @patch("src.config.main.validate_required_parameters")  # type: ignore[misc]
-    @patch("src.config.main.validate_parameter_combination")  # type: ignore[misc]
-    @patch("src.config.main.validate_setup_args")  # type: ignore[misc]
-    @patch("src.config.main.detect_python_environment")  # type: ignore[misc]
-    @patch("src.config.main.get_client_handler")  # type: ignore[misc]
-    @patch("src.config.main.registry")  # type: ignore[misc]
+    @patch("src.mcp_config.main.setup_mcp_server")  # type: ignore[misc]
+    @patch("src.mcp_config.main.validate_required_parameters")  # type: ignore[misc]
+    @patch("src.mcp_config.main.validate_parameter_combination")  # type: ignore[misc]
+    @patch("src.mcp_config.main.validate_setup_args")  # type: ignore[misc]
+    @patch("src.mcp_config.main.detect_python_environment")  # type: ignore[misc]
+    @patch("src.mcp_config.main.get_client_handler")  # type: ignore[misc]
+    @patch("src.mcp_config.main.registry")  # type: ignore[misc]
     def test_handle_setup_command_success(
         self,
         mock_registry: Any,
@@ -272,7 +271,7 @@ class TestCommandHandlers:
         assert result == 0
         mock_setup.assert_called_once()
 
-    @patch("src.config.main.registry")  # type: ignore[misc]
+    @patch("src.mcp_config.main.registry")  # type: ignore[misc]
     def test_handle_setup_command_unknown_server(self, mock_registry: Any) -> None:
         """Test setup command with unknown server type."""
         mock_registry.get.return_value = None
@@ -289,14 +288,14 @@ class TestCommandHandlers:
         result = handle_setup_command(args)
         assert result == 1
 
-    @patch("src.config.main.build_server_config")  # type: ignore[misc]
-    @patch("src.config.main.setup_mcp_server")  # type: ignore[misc]
-    @patch("src.config.main.validate_required_parameters")  # type: ignore[misc]
-    @patch("src.config.main.validate_parameter_combination")  # type: ignore[misc]
-    @patch("src.config.main.validate_setup_args")  # type: ignore[misc]
-    @patch("src.config.main.detect_python_environment")  # type: ignore[misc]
-    @patch("src.config.main.get_client_handler")  # type: ignore[misc]
-    @patch("src.config.main.registry")  # type: ignore[misc]
+    @patch("src.mcp_config.main.build_server_config")  # type: ignore[misc]
+    @patch("src.mcp_config.main.setup_mcp_server")  # type: ignore[misc]
+    @patch("src.mcp_config.main.validate_required_parameters")  # type: ignore[misc]
+    @patch("src.mcp_config.main.validate_parameter_combination")  # type: ignore[misc]
+    @patch("src.mcp_config.main.validate_setup_args")  # type: ignore[misc]
+    @patch("src.mcp_config.main.detect_python_environment")  # type: ignore[misc]
+    @patch("src.mcp_config.main.get_client_handler")  # type: ignore[misc]
+    @patch("src.mcp_config.main.registry")  # type: ignore[misc]
     def test_handle_setup_command_dry_run(
         self,
         mock_registry: Any,
@@ -345,8 +344,8 @@ class TestCommandHandlers:
         mock_setup.assert_not_called()  # Should not call setup in dry-run
         mock_build_config.assert_called_once()  # Should call build_server_config
 
-    @patch("src.config.main.remove_mcp_server")  # type: ignore[misc]
-    @patch("src.config.main.get_client_handler")  # type: ignore[misc]
+    @patch("src.mcp_config.main.remove_mcp_server")  # type: ignore[misc]
+    @patch("src.mcp_config.main.get_client_handler")  # type: ignore[misc]
     def test_handle_remove_command_success(
         self, mock_get_client: Any, mock_remove: Any
     ) -> None:
@@ -371,7 +370,7 @@ class TestCommandHandlers:
         assert result == 0
         mock_remove.assert_called_once()
 
-    @patch("src.config.main.get_client_handler")  # type: ignore[misc]
+    @patch("src.mcp_config.main.get_client_handler")  # type: ignore[misc]
     def test_handle_remove_command_not_managed(self, mock_get_client: Any) -> None:
         """Test remove command for non-managed server."""
         mock_client = MagicMock()
@@ -396,7 +395,7 @@ class TestCommandHandlers:
         result = handle_remove_command(args)
         assert result == 1
 
-    @patch("src.config.main.get_client_handler")  # type: ignore[misc]
+    @patch("src.mcp_config.main.get_client_handler")  # type: ignore[misc]
     def test_handle_list_command_success(self, mock_get_client: Any) -> None:
         """Test successful list command handling."""
         mock_client = MagicMock()
@@ -412,7 +411,7 @@ class TestCommandHandlers:
         result = handle_list_command(args)
         assert result == 0
 
-    @patch("src.config.main.get_client_handler")  # type: ignore[misc]
+    @patch("src.mcp_config.main.get_client_handler")  # type: ignore[misc]
     def test_handle_list_command_managed_only(self, mock_get_client: Any) -> None:
         """Test list command with managed-only filter."""
         mock_client = MagicMock()
@@ -507,7 +506,7 @@ class TestOutputFunctions:
 class TestMainFunction:
     """Test the main entry point."""
 
-    @patch("src.config.main.handle_setup_command")  # type: ignore[misc]
+    @patch("src.mcp_config.main.handle_setup_command")  # type: ignore[misc]
     def test_main_setup_command(self, mock_handle: Any, monkeypatch: Any) -> None:
         """Test main function with setup command."""
         mock_handle.return_value = 0
@@ -521,7 +520,7 @@ class TestMainFunction:
         assert result == 0
         mock_handle.assert_called_once()
 
-    @patch("src.config.main.handle_remove_command")  # type: ignore[misc]
+    @patch("src.mcp_config.main.handle_remove_command")  # type: ignore[misc]
     def test_main_remove_command(self, mock_handle: Any, monkeypatch: Any) -> None:
         """Test main function with remove command."""
         mock_handle.return_value = 0
@@ -531,7 +530,7 @@ class TestMainFunction:
         assert result == 0
         mock_handle.assert_called_once()
 
-    @patch("src.config.main.handle_list_command")  # type: ignore[misc]
+    @patch("src.mcp_config.main.handle_list_command")  # type: ignore[misc]
     def test_main_list_command(self, mock_handle: Any, monkeypatch: Any) -> None:
         """Test main function with list command."""
         mock_handle.return_value = 0
@@ -545,7 +544,7 @@ class TestMainFunction:
         """Test handling of keyboard interrupt."""
         monkeypatch.setattr(sys, "argv", ["mcp-config", "list"])
 
-        with patch("src.config.main.create_main_parser") as mock_parser:
+        with patch("src.mcp_config.main.create_main_parser") as mock_parser:
             mock_parser.side_effect = KeyboardInterrupt
 
             result = main()
@@ -555,7 +554,7 @@ class TestMainFunction:
         """Test handling of general exceptions."""
         monkeypatch.setattr(sys, "argv", ["mcp-config", "list"])
 
-        with patch("src.config.main.create_main_parser") as mock_parser:
+        with patch("src.mcp_config.main.create_main_parser") as mock_parser:
             mock_parser.side_effect = Exception("Test error")
 
             result = main()

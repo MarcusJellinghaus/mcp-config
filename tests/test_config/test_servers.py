@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config.servers import (
+from src.mcp_config.servers import (
     MCP_CODE_CHECKER,
     ParameterDef,
     ServerConfig,
@@ -170,8 +170,8 @@ class TestServerConfig:
         args = config.generate_args({"input": "test.txt", "output": "out.txt"})
         assert args == ["main.py", "--input", "test.txt", "--output", "out.txt"]
 
-    @patch("src.config.validation.auto_detect_python_executable")
-    @patch("src.config.validation.auto_detect_venv_path")
+    @patch("src.mcp_config.validation.auto_detect_python_executable")
+    @patch("src.mcp_config.validation.auto_detect_venv_path")
     def test_generate_args_with_auto_detection(
         self, mock_venv: MagicMock, mock_python: MagicMock
     ) -> None:

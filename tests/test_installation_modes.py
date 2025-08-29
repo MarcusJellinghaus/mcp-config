@@ -17,7 +17,7 @@ class TestInstallationModes:
         with patch("shutil.which") as mock_which:
             mock_which.return_value = "/usr/bin/mcp-code-checker"
             
-            from src.config.servers import registry
+            from src.mcp_config.servers import registry
             config = registry.get("mcp-code-checker")
             assert config is not None
             
@@ -31,7 +31,7 @@ class TestInstallationModes:
             with patch("importlib.util.find_spec") as mock_spec:
                 mock_spec.return_value = Mock()  # Simulate package installed
                 
-                from src.config.servers import registry
+                from src.mcp_config.servers import registry
                 config = registry.get("mcp-code-checker")
                 assert config is not None
                 
@@ -41,7 +41,7 @@ class TestInstallationModes:
     def test_get_installation_mode_development(self) -> None:
         """Test development mode detection."""
         # This should pass when running from source
-        from src.config.servers import registry
+        from src.mcp_config.servers import registry
         config = registry.get("mcp-code-checker")
         assert config is not None
         
@@ -54,7 +54,7 @@ class TestInstallationModes:
 
     def test_generate_args_cli_mode(self) -> None:
         """Test argument generation for CLI command mode."""
-        from src.config.servers import registry
+        from src.mcp_config.servers import registry
         
         config = registry.get("mcp-code-checker")
         assert config is not None
@@ -78,7 +78,7 @@ class TestInstallationModes:
 
     def test_generate_args_module_mode(self) -> None:
         """Test argument generation for module mode."""
-        from src.config.servers import registry
+        from src.mcp_config.servers import registry
         
         config = registry.get("mcp-code-checker")
         assert config is not None
@@ -147,7 +147,7 @@ class TestInstallationModes:
             mode = mode_info[0]
             expected_status = mode_info[1] 
             expected_message = mode_info[2]
-            with patch("src.config.servers.ServerConfig.get_installation_mode") as mock_mode:
+            with patch("src.mcp_config.servers.ServerConfig.get_installation_mode") as mock_mode:
                 mock_mode.return_value = mode
                 
                 with patch("shutil.which") as mock_which:

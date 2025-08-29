@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.log_utils import log_function_call, setup_logging
+from src.mcp_config.log_utils import log_function_call, setup_logging
 
 
 class TestSetupLogging:

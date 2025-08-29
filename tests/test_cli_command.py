@@ -62,7 +62,7 @@ class TestCLICommand:
     @patch("shutil.which")
     def test_command_detection(self, mock_which: Mock) -> None:
         """Test command detection logic."""
-        from src.config.integration import is_command_available
+        from src.mcp_config.integration import is_command_available
         
         # Test when command exists
         mock_which.return_value = "/usr/bin/mcp-code-checker"
@@ -96,4 +96,4 @@ class TestCLICommand:
         
         # Also check mcp-config exists
         assert "mcp-config" in scripts
-        assert scripts["mcp-config"] == "src.config.main:main"
+        assert scripts["mcp-config"] == "src.mcp_config.main:main"
