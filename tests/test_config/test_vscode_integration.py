@@ -7,14 +7,14 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from src.config.clients import VSCodeHandler
-from src.config.integration import (
+from src.mcp_config.clients import VSCodeHandler
+from src.mcp_config.integration import (
     generate_vscode_command,
     is_package_installed,
     make_paths_absolute,
     make_paths_relative,
 )
-from src.config.utils import detect_mcp_installation, recommend_command_format
+from src.mcp_config.utils import detect_mcp_installation, recommend_command_format
 
 
 class TestPackageDetection:
@@ -49,7 +49,7 @@ class TestVSCodeCommandGeneration:
 
     def test_generate_vscode_command_with_package(self) -> None:
         """Test command generation when package is installed."""
-        with patch("src.config.integration.is_package_installed", return_value=True):
+        with patch("src.mcp_config.integration.is_package_installed", return_value=True):
             config = {
                 "command": sys.executable,
                 "args": ["src/main.py", "--project-dir", "/path/to/project"],
@@ -67,7 +67,7 @@ class TestVSCodeCommandGeneration:
 
     def test_generate_vscode_command_without_package(self) -> None:
         """Test command generation when package is not installed."""
-        with patch("src.config.integration.is_package_installed", return_value=False):
+        with patch("src.mcp_config.integration.is_package_installed", return_value=False):
             config = {
                 "command": sys.executable,
                 "args": ["src/main.py", "--project-dir", "/path/to/project"],
@@ -297,8 +297,8 @@ class TestIntegrationWithVSCodeHandler:
 
     def test_generate_client_config_for_vscode(self, tmp_path: Path) -> None:
         """Test generating config specifically for VSCode."""
-        from src.config.integration import generate_client_config
-        from src.config.servers import ParameterDef, ServerConfig
+        from src.mcp_config.integration import generate_client_config
+        from src.mcp_config.servers import ParameterDef, ServerConfig
 
         # Create a mock server config
         server_config = ServerConfig(
@@ -320,7 +320,7 @@ class TestIntegrationWithVSCodeHandler:
         handler = VSCodeHandler(workspace=True)
 
         # Mock package installation check
-        with patch("src.config.integration.is_package_installed", return_value=True):
+        with patch("src.mcp_config.integration.is_package_installed", return_value=True):
             config = generate_client_config(
                 server_config,
                 "test-server",
@@ -334,8 +334,8 @@ class TestIntegrationWithVSCodeHandler:
 
     def test_setup_mcp_server_with_vscode(self, tmp_path: Path) -> None:
         """Test full setup flow with VSCode handler."""
-        from src.config.integration import setup_mcp_server
-        from src.config.servers import ParameterDef, ServerConfig
+        from src.mcp_config.integration import setup_mcp_server
+        from src.mcp_config.servers import ParameterDef, ServerConfig
 
         # Create a mock server config
         server_config = ServerConfig(
@@ -360,7 +360,7 @@ class TestIntegrationWithVSCodeHandler:
         handler.setup_server.return_value = True
 
         # Mock package detection
-        with patch("src.config.integration.is_package_installed", return_value=True):
+        with patch("src.mcp_config.integration.is_package_installed", return_value=True):
             result = setup_mcp_server(
                 handler,
                 server_config,

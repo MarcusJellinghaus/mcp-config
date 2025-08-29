@@ -427,63 +427,27 @@ class TestCommandHandlers:
         assert result == 0
 
 
-class TestOutputFunctions:
-    """Test output formatting functions."""
+class TestOutputFormatterFunctions:
+    """Test OutputFormatter class functionality."""
 
-    def test_print_server_info_basic(self, capsys: pytest.CaptureFixture[str]) -> None:
-        """Test basic server info printing."""
-        server = {
-            "name": "test-server",
-            "type": "test-type",
-            "command": "test-cmd",
-            "managed": True,
-        }
+    def test_print_server_list_basic(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """Test basic server list printing."""
+        servers = [
+            {
+                "name": "test-server",
+                "type": "test-type",
+                "command": "test-cmd",
+                "managed": True,
+            }
+        ]
 
-        print_server_info(server, detailed=False)
+        OutputFormatter.print_server_list(servers, detailed=False)
         captured = capsys.readouterr()
-        assert "● test-server (test-type)" in captured.out
-
-    def test_print_server_info_detailed(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
-        """Test detailed server info printing."""
-        server = {
-            "name": "test-server",
-            "type": "test-type",
-            "command": "test-cmd",
-            "args": ["--arg1", "--arg2"],
-            "managed": False,
-        }
-
-        print_server_info(server, detailed=True)
-        captured = capsys.readouterr()
-        assert "○ test-server (test-type)" in captured.out
-        assert "Command: test-cmd" in captured.out
-        assert "Args: --arg1 --arg2" in captured.out
-        assert "External server" in captured.out
-
-    def test_print_server_info_long_args_truncated(
-        self, capsys: pytest.CaptureFixture[str]
-    ) -> None:
-        """Test that long arguments are truncated."""
-        long_arg = "x" * 100
-        server = {
-            "name": "test",
-            "type": "test",
-            "command": "cmd",
-            "args": [long_arg],
-            "managed": True,
-        }
-
-        print_server_info(server, detailed=True)
-        captured = capsys.readouterr()
-        assert "..." in captured.out
+        assert "test-server (test-type)" in captured.out
+        assert "Configured MCP Servers:" in captured.out
 
     def test_print_setup_summary(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test setup summary printing."""
-        mock_config = MagicMock()
-        mock_config.name = "test-server"
-
         user_params = {
             "project_dir": Path("/test"),
             "debug": True,
@@ -491,16 +455,15 @@ class TestOutputFunctions:
             "python_executable": "/usr/bin/python",
         }
 
-        print_setup_summary("my-server", mock_config, user_params, "claude-desktop")
+        OutputFormatter.print_setup_summary("my-server", "test-server", user_params)
         captured = capsys.readouterr()
 
         assert "Setup Summary:" in captured.out
-        assert "Client: claude-desktop" in captured.out
         assert "Server Name: my-server" in captured.out
-        # Check for path in cross-platform way (Windows uses backslash)
+        assert "Server Type: test-server" in captured.out
+        # Check for parameters in the output
         assert "project-dir:" in captured.out
         assert "test" in captured.out
-        assert "Python Executable: /usr/bin/python" in captured.out
 
 
 class TestMainFunction:

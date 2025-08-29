@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config.validation import (
+from src.mcp_config.validation import (
     auto_detect_python_executable,
     auto_detect_venv_path,
     auto_generate_log_file_path,
@@ -188,7 +188,7 @@ class TestPathNormalization:
 class TestAutoDetection:
     """Test auto-detection functions."""
 
-    @patch("src.config.detection.detect_python_environment")
+    @patch("src.mcp_config.detection.detect_python_environment")
     def test_auto_detect_python_executable(
         self, mock_detect: MagicMock, tmp_path: Path
     ) -> None:
@@ -198,7 +198,7 @@ class TestAutoDetection:
         assert result == Path("/usr/bin/python3")
         mock_detect.assert_called_once_with(tmp_path)
 
-    @patch("src.config.detection.find_virtual_environments")
+    @patch("src.mcp_config.detection.find_virtual_environments")
     def test_auto_detect_venv_path(self, mock_find: MagicMock, tmp_path: Path) -> None:
         """Test virtual environment auto-detection."""
         venv_path = tmp_path / ".venv"

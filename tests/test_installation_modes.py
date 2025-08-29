@@ -98,11 +98,11 @@ class TestInstallationModes:
 
     def test_config_generation_with_cli_command(self) -> None:
         """Test configuration generation when CLI command is available."""
-        with patch("src.config.integration.is_command_available") as mock_cmd:
+        with patch("src.mcp_config.integration.is_command_available") as mock_cmd:
             mock_cmd.return_value = True
             
-            from src.config.integration import build_server_config
-            from src.config.servers import registry
+            from src.mcp_config.integration import build_server_config
+            from src.mcp_config.servers import registry
             
             server_config = registry.get("mcp-code-checker")
             assert server_config is not None
@@ -115,11 +115,11 @@ class TestInstallationModes:
 
     def test_config_generation_without_cli_command(self) -> None:
         """Test configuration generation without CLI command."""
-        with patch("src.config.integration.get_mcp_code_checker_command_mode") as mock_mode:
+        with patch("src.mcp_config.integration.get_mcp_code_checker_command_mode") as mock_mode:
             mock_mode.return_value = "python_module"
             
-            from src.config.integration import build_server_config
-            from src.config.servers import registry
+            from src.mcp_config.integration import build_server_config
+            from src.mcp_config.servers import registry
             
             server_config = registry.get("mcp-code-checker")
             assert server_config is not None
@@ -133,7 +133,7 @@ class TestInstallationModes:
 
     def test_validation_with_different_modes(self) -> None:  # pylint: disable=invalid-sequence-index
         """Test validation messages for different installation modes."""
-        from src.config.validation import validate_server_configuration
+        from src.mcp_config.validation import validate_server_configuration
         
         # Mock different scenarios
         test_cases = [
