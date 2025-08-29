@@ -40,7 +40,7 @@ dev = [
 ]
 
 [project.scripts]
-mcp-config = "src.mcp_config.main:main"
+mcp-config = "mcp_config.main:main"
 
 [project.urls]
 "Homepage" = "https://github.com/MarcusJellinghaus/mcp-config"
@@ -90,3 +90,10 @@ ignore_missing_imports = true
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["mcp_config*"]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
