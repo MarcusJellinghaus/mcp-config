@@ -7,7 +7,7 @@ with helpful suggestions for users.
 from pathlib import Path
 from typing import Any, Callable
 
-from src.config.output import OutputFormatter
+from .output import OutputFormatter
 
 
 class ConfigError(Exception):
@@ -57,7 +57,7 @@ class MissingParameterError(ConfigError):
         message = f"Required parameter --{param_name} not specified"
 
         suggestions = [
-            f"Run: mcp-config setup {server_type} <name> --{param_name} <value>",
+            f"Run: mcp-config setup {server_type} <n> --{param_name} <value>",
             f"Use --help to see all available parameters",
         ]
 

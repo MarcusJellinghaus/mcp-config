@@ -40,7 +40,7 @@ dev = [
     ]
 
 [project.scripts]
-mcp-config = "src.main:main"
+mcp-config = "src.mcp_config.main:main"
 
 [project.urls]
 "Homepage" = "https://github.com/MarcusJellinghaus/mcp-config"

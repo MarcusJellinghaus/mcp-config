@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Optional
 
-from src.config.paths import PathConstants, normalize_path
+from .paths import PathConstants, normalize_path
 
 
 @dataclass

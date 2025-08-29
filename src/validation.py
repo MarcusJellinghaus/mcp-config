@@ -50,7 +50,7 @@ def validate_server_configuration(
     client_handler: Any
 ) -> Dict[str, Any]:
     """Run comprehensive validation on a server configuration."""
-    result = {
+    result: Dict[str, Any] = {
         "success": True,
         "checks": {},
         "warnings": [],
@@ -58,27 +58,29 @@ def validate_server_configuration(
     }
     
     # Basic configuration check
-    result["checks"]["config_file_exists"] = client_handler.get_config_path().exists()
+    checks = result["checks"]
+    checks["config_file_exists"] = client_handler.get_config_path().exists()
     
     # Parameter validation
     if "project_dir" in params:
         project_path = Path(params["project_dir"])
-        result["checks"]["project_dir_exists"] = project_path.exists()
-        result["checks"]["project_dir_readable"] = project_path.is_dir()
+        checks["project_dir_exists"] = project_path.exists()
+        checks["project_dir_readable"] = project_path.is_dir()
     
     if "python_executable" in params:
         python_path = Path(params["python_executable"])
-        result["checks"]["python_executable_exists"] = python_path.exists()
+        checks["python_executable_exists"] = python_path.exists()
     
     if "venv_path" in params:
         venv_path = Path(params["venv_path"])
-        result["checks"]["venv_path_exists"] = venv_path.exists()
+        checks["venv_path_exists"] = venv_path.exists()
     
     # Check for any failed checks
-    failed_checks = [k for k, v in result["checks"].items() if not v]
+    failed_checks = [k for k, v in checks.items() if not v]
     if failed_checks:
         result["success"] = False
-        result["errors"].extend([f"Check failed: {check}" for check in failed_checks])
+        errors = result["errors"]
+        errors.extend([f"Check failed: {check}" for check in failed_checks])
     
     return result
 

@@ -172,7 +172,7 @@ class OutputFormatter:
         if "installation_mode" in validation_result:
             mode = validation_result["installation_mode"]
             if mode != "cli_command":
-                from src.config.validation import get_installation_instructions
+                from .validation import get_installation_instructions
                 instructions = get_installation_instructions("mcp-code-checker", mode)
                 if instructions and instructions != "Please check the documentation for installation instructions.":
                     print(f"\n{instructions}")

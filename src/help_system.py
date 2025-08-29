@@ -1,9 +1,11 @@
 """Help system for mcp-config CLI tool."""
 
+from typing import Optional
+
 from .servers import registry
 
 
-def print_command_help(command: str = None, verbose: bool = False) -> int:
+def print_command_help(command: Optional[str] = None, verbose: bool = False) -> int:
     """Print help for a specific command or general overview."""
     if command is None or command == "all":
         print("MCP Configuration Helper")
@@ -76,7 +78,7 @@ def print_command_help(command: str = None, verbose: bool = False) -> int:
         return 1
 
 
-def print_parameter_help(server_type: str, parameter: str = None, verbose: bool = False) -> int:
+def print_parameter_help(server_type: str, parameter: Optional[str] = None, verbose: bool = False) -> int:
     """Print help for server parameters."""
     server_config = registry.get(server_type)
     if not server_config:
@@ -126,7 +128,7 @@ def print_parameter_help(server_type: str, parameter: str = None, verbose: bool 
     return 0
 
 
-def print_quick_reference(server_type: str = None) -> int:
+def print_quick_reference(server_type: Optional[str] = None) -> int:
     """Print quick reference for server setup."""
     if server_type:
         server_config = registry.get(server_type)
