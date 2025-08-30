@@ -11,11 +11,11 @@ from pathlib import Path
 
 def run_command(cmd: list[str], description: str) -> bool:
     """Run a command and report results.
-    
+
     Args:
         cmd: Command and arguments to run
         description: Description of what the command does
-        
+
     Returns:
         True if command succeeded, False otherwise
     """
@@ -24,7 +24,7 @@ def run_command(cmd: list[str], description: str) -> bool:
     print(f"Command: {' '.join(cmd)}")
     print("-" * 60)
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
     if result.returncode == 0:
         print(f"✅ SUCCESS: {description}")
@@ -42,7 +42,7 @@ def run_command(cmd: list[str], description: str) -> bool:
 
 def main() -> int:
     """Run all VSCode tests.
-    
+
     Returns:
         0 if all tests pass, 1 if some tests fail
     """

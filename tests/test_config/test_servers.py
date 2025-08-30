@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from src.config.servers import (
+from src.mcp_config.servers import (
     MCP_CODE_CHECKER,
     ParameterDef,
     ServerConfig,
@@ -114,7 +114,7 @@ class TestServerConfig:
         assert MCP_CODE_CHECKER.name == "mcp-code-checker"
         assert MCP_CODE_CHECKER.display_name == "MCP Code Checker"
         assert MCP_CODE_CHECKER.main_module == "src/main.py"
-        assert len(MCP_CODE_CHECKER.parameters) == 8
+        assert len(MCP_CODE_CHECKER.parameters) == 7
 
         # Check all parameter names are present
         param_names = [p.name for p in MCP_CODE_CHECKER.parameters]
@@ -126,7 +126,6 @@ class TestServerConfig:
             "keep-temp-files",
             "log-level",
             "log-file",
-            "console-only",
         ]
         assert set(param_names) == set(expected_names)
 
@@ -151,7 +150,7 @@ class TestServerConfig:
         assert (
             "log-file" in non_auto_params
         )  # Changed: log-file is no longer auto-detect
-        assert "console-only" in non_auto_params
+        # console-only parameter was removed
 
     def test_generate_args_basic(self) -> None:
         """Test basic argument generation."""
@@ -170,8 +169,8 @@ class TestServerConfig:
         args = config.generate_args({"input": "test.txt", "output": "out.txt"})
         assert args == ["main.py", "--input", "test.txt", "--output", "out.txt"]
 
-    @patch("src.config.validation.auto_detect_python_executable")
-    @patch("src.config.validation.auto_detect_venv_path")
+    @patch("src.mcp_config.validation.auto_detect_python_executable")
+    @patch("src.mcp_config.validation.auto_detect_venv_path")
     def test_generate_args_with_auto_detection(
         self, mock_venv: MagicMock, mock_python: MagicMock
     ) -> None:
@@ -342,16 +341,17 @@ class TestServerConfig:
         with TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir)
 
-            # Initially invalid (missing structure)
-            assert not MCP_CODE_CHECKER.validate_project(project_dir)
+            # With module invocation mode, any valid directory should work
+            # since we use -m mcp_code_checker which doesn't require development structure
+            assert MCP_CODE_CHECKER.validate_project(project_dir)
 
-            # Create expected structure
+            # Create some project structure to ensure it still validates
             src_dir = project_dir / "src"
             src_dir.mkdir()
             main_file = src_dir / "main.py"
             main_file.write_text("# Main module")
 
-            # Now valid
+            # Still valid with development structure
             assert MCP_CODE_CHECKER.validate_project(project_dir)
 
     def test_get_parameter_by_name(self) -> None:
@@ -480,7 +480,7 @@ class TestGlobalRegistry:
         config = registry.get("mcp-code-checker")
         assert config is not None
         assert config.name == "mcp-code-checker"
-        assert len(config.parameters) == 8
+        assert len(config.parameters) == 7
 
     def test_registry_completeness(self) -> None:
         """Test that the global registry has expected servers."""

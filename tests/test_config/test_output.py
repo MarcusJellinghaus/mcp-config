@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from src.config.output import OutputFormatter
+from src.mcp_config.output import OutputFormatter
 
 
 class TestOutputFormatter:

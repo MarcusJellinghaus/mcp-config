@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from src.config.clients import VSCodeHandler
+from src.mcp_config.clients import VSCodeHandler
 
 
 class TestVSCodePerformance:
@@ -15,7 +15,7 @@ class TestVSCodePerformance:
 
     def test_large_config_handling(self, tmp_path: Path) -> None:
         """Test handling of large configuration files."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -72,7 +72,7 @@ class TestVSCodePerformance:
 
     def test_repeated_operations(self, tmp_path: Path) -> None:
         """Test that repeated operations don't degrade performance."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -118,7 +118,7 @@ class TestVSCodePerformance:
 
     def test_config_validation_performance(self, tmp_path: Path) -> None:
         """Test that validation is performant even with complex configs."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -159,7 +159,7 @@ class TestVSCodePerformance:
 
     def test_file_operations_efficiency(self, tmp_path: Path) -> None:
         """Test that file operations are efficient."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -191,7 +191,7 @@ class TestVSCodePerformance:
     @pytest.mark.parametrize("num_servers", [10, 50, 100])
     def test_scalability(self, tmp_path: Path, num_servers: int) -> None:
         """Test that operations scale reasonably with number of servers."""
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
             handler = VSCodeHandler(workspace=True)
 
@@ -225,7 +225,7 @@ class TestVSCodePerformance:
         """Test that concurrent operations don't cause issues."""
         import threading
 
-        with patch("src.config.clients.Path.cwd") as mock_cwd:
+        with patch("src.mcp_config.clients.Path.cwd") as mock_cwd:
             mock_cwd.return_value = tmp_path
 
             # Create multiple handlers (simulating concurrent access)

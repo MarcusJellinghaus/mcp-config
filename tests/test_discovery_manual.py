@@ -3,12 +3,12 @@
 import sys
 from pathlib import Path
 
-from src.config.discovery import (
+from src.mcp_config.discovery import (
     ExternalServerValidator,
     discover_external_servers,
     initialize_external_servers,
 )
-from src.config.servers import ParameterDef, ServerConfig
+from src.mcp_config.servers import ParameterDef, ServerConfig
 
 # Add src to path for testing
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))

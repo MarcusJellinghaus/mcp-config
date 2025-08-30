@@ -9,7 +9,7 @@ from unittest.mock import MagicMock, call, patch
 
 import pytest
 
-from src.config.detection import (
+from src.mcp_config.detection import (
     detect_python_environment,
     find_project_python_executable,
     find_virtual_environments,
@@ -232,7 +232,7 @@ class TestPythonExecutableValidation:
         fake_python.touch()
 
         with patch(
-            "src.config.detection.validate_python_executable", return_value=True
+            "src.mcp_config.detection.validate_python_executable", return_value=True
         ):
             with patch("subprocess.run") as mock_run:
                 mock_output = json.dumps(
@@ -278,7 +278,7 @@ class TestPythonEnvironmentDetection:
 
         # Mock validation
         with patch(
-            "src.config.detection.validate_python_executable", return_value=True
+            "src.mcp_config.detection.validate_python_executable", return_value=True
         ):
             exe, venv = detect_python_environment(tmp_path)
             assert exe == str(python_exe)
@@ -286,16 +286,20 @@ class TestPythonEnvironmentDetection:
 
     def test_detect_python_environment_no_venv(self) -> None:
         """Test detection without virtual environment."""
-        with patch("src.config.detection.find_virtual_environments", return_value=[]):
+        with patch(
+            "src.mcp_config.detection.find_virtual_environments", return_value=[]
+        ):
             exe, venv = detect_python_environment(Path.cwd())
             assert exe == sys.executable
             assert venv is None
 
     def test_detect_python_environment_fallback(self, tmp_path: Path) -> None:
         """Test fallback to system Python."""
-        with patch("src.config.detection.find_virtual_environments", return_value=[]):
+        with patch(
+            "src.mcp_config.detection.find_virtual_environments", return_value=[]
+        ):
             with patch(
-                "src.config.detection.validate_python_executable"
+                "src.mcp_config.detection.validate_python_executable"
             ) as mock_validate:
                 # First call (sys.executable) fails, second (from PATH) succeeds
                 mock_validate.side_effect = [False, True]
@@ -312,7 +316,7 @@ class TestPythonEnvironmentDetection:
 
     def test_find_project_python_executable(self, tmp_path: Path) -> None:
         """Test convenience function for finding Python."""
-        with patch("src.config.detection.detect_python_environment") as mock_detect:
+        with patch("src.mcp_config.detection.detect_python_environment") as mock_detect:
             mock_detect.return_value = ("/usr/bin/python3", None)
             exe = find_project_python_executable(tmp_path)
             assert exe == "/usr/bin/python3"

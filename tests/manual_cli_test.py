@@ -16,7 +16,9 @@ def run_command(cmd: list[str]) -> tuple[int, str, str]:
         Tuple of (return_code, stdout, stderr)
     """
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=30, check=False
+        )
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "Command timed out"
@@ -28,35 +30,35 @@ def test_cli_commands() -> None:
     """Test basic CLI commands."""
     tests = [
         # Help commands
-        (["python", "-m", "src.config.main", "--help"], 0, "Should show main help"),
+        (["python", "-m", "src.mcp_config.main", "--help"], 0, "Should show main help"),
         (
-            ["python", "-m", "src.config.main", "setup", "--help"],
+            ["python", "-m", "src.mcp_config.main", "setup", "--help"],
             0,
             "Should show setup help",
         ),
         (
-            ["python", "-m", "src.config.main", "remove", "--help"],
+            ["python", "-m", "src.mcp_config.main", "remove", "--help"],
             0,
             "Should show remove help",
         ),
         (
-            ["python", "-m", "src.config.main", "list", "--help"],
+            ["python", "-m", "src.mcp_config.main", "list", "--help"],
             0,
             "Should show list help",
         ),
         # List command (should work even with no config)
         (
-            ["python", "-m", "src.config.main", "list"],
+            ["python", "-m", "src.mcp_config.main", "list"],
             0,
             "Should list servers (even if empty)",
         ),
         (
-            ["python", "-m", "src.config.main", "list", "--detailed"],
+            ["python", "-m", "src.mcp_config.main", "list", "--detailed"],
             0,
             "Should list servers with details",
         ),
         (
-            ["python", "-m", "src.config.main", "list", "--managed-only"],
+            ["python", "-m", "src.mcp_config.main", "list", "--managed-only"],
             0,
             "Should list only managed servers",
         ),
@@ -65,7 +67,7 @@ def test_cli_commands() -> None:
             [
                 "python",
                 "-m",
-                "src.config.main",
+                "src.mcp_config.main",
                 "setup",
                 "mcp-code-checker",
                 "test",
@@ -80,7 +82,7 @@ def test_cli_commands() -> None:
             [
                 "python",
                 "-m",
-                "src.config.main",
+                "src.mcp_config.main",
                 "setup",
                 "mcp-code-checker",
                 "test",
@@ -94,7 +96,7 @@ def test_cli_commands() -> None:
         ),
         # Invalid commands (should fail)
         (
-            ["python", "-m", "src.config.main", "invalid"],
+            ["python", "-m", "src.mcp_config.main", "invalid"],
             2,
             "Should fail with invalid command",
         ),
@@ -102,7 +104,7 @@ def test_cli_commands() -> None:
             [
                 "python",
                 "-m",
-                "src.config.main",
+                "src.mcp_config.main",
                 "setup",
                 "invalid-server",
                 "test",
@@ -113,13 +115,13 @@ def test_cli_commands() -> None:
             "Should fail with invalid server type",
         ),
         (
-            ["python", "-m", "src.config.main", "remove"],
+            ["python", "-m", "src.mcp_config.main", "remove"],
             2,
             "Should fail without server name",
         ),
         # Remove non-existent server
         (
-            ["python", "-m", "src.config.main", "remove", "nonexistent"],
+            ["python", "-m", "src.mcp_config.main", "remove", "nonexistent"],
             1,
             "Should fail for non-existent server",
         ),
@@ -200,7 +202,14 @@ def test_parameter_validation() -> None:
     tests = [
         # Missing required parameter
         (
-            ["python", "-m", "src.config.main", "setup", "mcp-code-checker", "test"],
+            [
+                "python",
+                "-m",
+                "src.mcp_config.main",
+                "setup",
+                "mcp-code-checker",
+                "test",
+            ],
             1,
             "Should fail without required --project-dir",
         ),
@@ -209,7 +218,7 @@ def test_parameter_validation() -> None:
             [
                 "python",
                 "-m",
-                "src.config.main",
+                "src.mcp_config.main",
                 "setup",
                 "mcp-code-checker",
                 "test",

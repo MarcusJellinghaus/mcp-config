@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.config.output import OutputFormatter
+from src.mcp_config.output import OutputFormatter
 
 
 class TestOutputFormatter:

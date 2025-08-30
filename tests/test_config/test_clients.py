@@ -10,7 +10,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from src.config.clients import ClaudeDesktopHandler, get_client_handler
+from src.mcp_config.clients import ClaudeDesktopHandler, get_client_handler
 
 
 def mock_path_for_platform(base_path: str) -> Type[Any]:
@@ -127,7 +127,7 @@ class TestClaudeDesktopHandler:
             patch("os.name", "posix"),
             patch("platform.system", return_value="Darwin"),
             patch("pathlib.Path.home", return_value=mock_home),
-            patch("src.config.clients.Path", MockPath),
+            patch("src.mcp_config.clients.Path", MockPath),
         ):
             path = handler.get_config_path()
             path_str = str(path)
@@ -147,7 +147,7 @@ class TestClaudeDesktopHandler:
             patch("os.name", "posix"),
             patch("platform.system", return_value="Linux"),
             patch("pathlib.Path.home", return_value=mock_home),
-            patch("src.config.clients.Path", MockPath),
+            patch("src.mcp_config.clients.Path", MockPath),
         ):
             path = handler.get_config_path()
             path_str = str(path)
@@ -438,7 +438,7 @@ class TestClientRegistry:
 
     def test_registry_contains_claude_desktop(self) -> None:
         """Test that claude-desktop is in the registry."""
-        from src.config.clients import CLIENT_HANDLERS
+        from src.mcp_config.clients import CLIENT_HANDLERS
 
         assert "claude-desktop" in CLIENT_HANDLERS
         assert CLIENT_HANDLERS["claude-desktop"] == ClaudeDesktopHandler

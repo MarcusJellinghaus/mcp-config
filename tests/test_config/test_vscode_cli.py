@@ -8,10 +8,12 @@ from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
 
-from src.config.main import create_main_parser, main
+from src.mcp_config.main import create_main_parser, main
 
 
-def create_mock_parameter(name: str, required: bool = False, default: str | None = None) -> Mock:
+def create_mock_parameter(
+    name: str, required: bool = False, default: str | None = None
+) -> Mock:
     """Helper to create a mock parameter object."""
     param = Mock()
     param.name = name
@@ -46,16 +48,18 @@ class TestVSCodeCLI:
         mock_registry.list_servers.return_value = ["mcp-code-checker"]
 
         with (
-            patch("src.config.main.registry", mock_registry),
-            patch("src.config.cli_utils.registry", mock_registry),
-            patch("src.config.main.initialize_all_servers"),
-            patch("src.config.main.detect_python_environment") as mock_detect,
-            patch("src.config.main.validate_required_parameters") as mock_validate_req,
+            patch("src.mcp_config.main.registry", mock_registry),
+            patch("src.mcp_config.cli_utils.registry", mock_registry),
+            patch("src.mcp_config.main.initialize_all_servers"),
+            patch("src.mcp_config.main.detect_python_environment") as mock_detect,
             patch(
-                "src.config.main.validate_parameter_combination"
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
-            patch("src.config.main.validate_setup_args") as mock_validate_setup,
-            patch("src.config.main.setup_mcp_server") as mock_setup,
+            patch("src.mcp_config.main.validate_setup_args") as mock_validate_setup,
+            patch("src.mcp_config.main.setup_mcp_server") as mock_setup,
         ):
 
             # Setup return values
@@ -104,16 +108,18 @@ class TestVSCodeCLI:
         mock_registry.list_servers.return_value = ["mcp-code-checker"]
 
         with (
-            patch("src.config.main.registry", mock_registry),
-            patch("src.config.cli_utils.registry", mock_registry),
-            patch("src.config.main.initialize_all_servers"),
-            patch("src.config.main.detect_python_environment") as mock_detect,
-            patch("src.config.main.validate_required_parameters") as mock_validate_req,
+            patch("src.mcp_config.main.registry", mock_registry),
+            patch("src.mcp_config.cli_utils.registry", mock_registry),
+            patch("src.mcp_config.main.initialize_all_servers"),
+            patch("src.mcp_config.main.detect_python_environment") as mock_detect,
             patch(
-                "src.config.main.validate_parameter_combination"
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
-            patch("src.config.main.validate_setup_args") as mock_validate_setup,
-            patch("src.config.main.setup_mcp_server") as mock_setup,
+            patch("src.mcp_config.main.validate_setup_args") as mock_validate_setup,
+            patch("src.mcp_config.main.setup_mcp_server") as mock_setup,
         ):
 
             # Setup return values
@@ -163,16 +169,18 @@ class TestVSCodeCLI:
         mock_registry.list_servers.return_value = ["mcp-code-checker"]
 
         with (
-            patch("src.config.main.registry", mock_registry),
-            patch("src.config.cli_utils.registry", mock_registry),
-            patch("src.config.main.initialize_all_servers"),
-            patch("src.config.main.detect_python_environment") as mock_detect,
-            patch("src.config.main.validate_required_parameters") as mock_validate_req,
+            patch("src.mcp_config.main.registry", mock_registry),
+            patch("src.mcp_config.cli_utils.registry", mock_registry),
+            patch("src.mcp_config.main.initialize_all_servers"),
+            patch("src.mcp_config.main.detect_python_environment") as mock_detect,
             patch(
-                "src.config.main.validate_parameter_combination"
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
-            patch("src.config.main.validate_setup_args") as mock_validate_setup,
-            patch("src.config.main.setup_mcp_server") as mock_setup,
+            patch("src.mcp_config.main.validate_setup_args") as mock_validate_setup,
+            patch("src.mcp_config.main.setup_mcp_server") as mock_setup,
         ):
 
             # Setup return values
@@ -221,7 +229,7 @@ class TestVSCodeCLI:
         mock_handler.get_config_path.return_value = Path(".vscode/mcp.json")
 
         with (
-            patch("src.config.main.get_client_handler") as mock_get_handler,
+            patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
             patch.object(Path, "exists", return_value=True),
         ):
             mock_get_handler.return_value = mock_handler
@@ -253,7 +261,7 @@ class TestVSCodeCLI:
         ).expanduser()
 
         with (
-            patch("src.config.main.get_client_handler") as mock_get_handler,
+            patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
             patch.object(Path, "exists", return_value=True),
         ):
             mock_get_handler.return_value = mock_handler
@@ -289,8 +297,8 @@ class TestVSCodeCLI:
         ]
 
         with (
-            patch("src.config.main.get_client_handler") as mock_get_handler,
-            patch("src.config.main.remove_mcp_server") as mock_remove,
+            patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
+            patch("src.mcp_config.main.remove_mcp_server") as mock_remove,
         ):
             mock_get_handler.return_value = mock_handler
             mock_remove.return_value = {"success": True}
@@ -310,7 +318,7 @@ class TestVSCodeCLI:
         mock_handler.list_managed_servers.return_value = []
         mock_handler.list_all_servers.return_value = []
 
-        with patch("src.config.main.get_client_handler") as mock_get_handler:
+        with patch("src.mcp_config.main.get_client_handler") as mock_get_handler:
             mock_get_handler.return_value = mock_handler
 
             with patch(
@@ -349,8 +357,8 @@ class TestVSCodeCLI:
         mock_handler.get_config_path.return_value = Path(".vscode/mcp.json")
 
         with (
-            patch("src.config.main.get_client_handler") as mock_get_handler,
-            patch("src.config.main.validate_server_configuration") as mock_validate,
+            patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
+            patch("src.mcp_config.main.validate_server_configuration") as mock_validate,
         ):
             mock_get_handler.return_value = mock_handler
             mock_validate.return_value = {
@@ -395,8 +403,8 @@ class TestVSCodeCLI:
         mock_handler.get_config_path.return_value = Path(".vscode/mcp.json")
 
         with (
-            patch("src.config.main.get_client_handler") as mock_get_handler,
-            patch("src.config.main.validate_server_configuration") as mock_validate,
+            patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
+            patch("src.mcp_config.main.validate_server_configuration") as mock_validate,
         ):
             mock_get_handler.return_value = mock_handler
             mock_validate.return_value = {
@@ -425,7 +433,7 @@ class TestVSCodeCLI:
         mock_handler.get_config_path.return_value = Path(".vscode/mcp.json")
 
         with (
-            patch("src.config.main.get_client_handler") as mock_get_handler,
+            patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
             patch.object(Path, "exists", return_value=True),
         ):
             mock_get_handler.return_value = mock_handler
@@ -469,16 +477,18 @@ class TestVSCodeCLI:
         mock_registry.list_servers.return_value = ["mcp-code-checker"]
 
         with (
-            patch("src.config.main.registry", mock_registry),
-            patch("src.config.cli_utils.registry", mock_registry),
-            patch("src.config.main.initialize_all_servers"),
-            patch("src.config.main.detect_python_environment") as mock_detect,
-            patch("src.config.main.validate_required_parameters") as mock_validate_req,
+            patch("src.mcp_config.main.registry", mock_registry),
+            patch("src.mcp_config.cli_utils.registry", mock_registry),
+            patch("src.mcp_config.main.initialize_all_servers"),
+            patch("src.mcp_config.main.detect_python_environment") as mock_detect,
             patch(
-                "src.config.main.validate_parameter_combination"
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
-            patch("src.config.main.validate_setup_args") as mock_validate_setup,
-            patch("src.config.main.setup_mcp_server") as mock_setup,
+            patch("src.mcp_config.main.validate_setup_args") as mock_validate_setup,
+            patch("src.mcp_config.main.setup_mcp_server") as mock_setup,
         ):
 
             # Setup return values
@@ -537,17 +547,19 @@ class TestVSCodeCLI:
         mock_handler.get_config_path.return_value = Path(".vscode/mcp.json")
 
         with (
-            patch("src.config.main.registry", mock_registry),
-            patch("src.config.cli_utils.registry", mock_registry),
-            patch("src.config.main.get_client_handler") as mock_get_handler,
-            patch("src.config.main.initialize_all_servers"),
-            patch("src.config.main.detect_python_environment") as mock_detect,
-            patch("src.config.main.validate_required_parameters") as mock_validate_req,
+            patch("src.mcp_config.main.registry", mock_registry),
+            patch("src.mcp_config.cli_utils.registry", mock_registry),
+            patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
+            patch("src.mcp_config.main.initialize_all_servers"),
+            patch("src.mcp_config.main.detect_python_environment") as mock_detect,
             patch(
-                "src.config.main.validate_parameter_combination"
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
-            patch("src.config.main.validate_setup_args") as mock_validate_setup,
-            patch("src.config.main.build_server_config") as mock_build,
+            patch("src.mcp_config.main.validate_setup_args") as mock_validate_setup,
+            patch("src.mcp_config.main.build_server_config") as mock_build,
         ):
 
             mock_get_handler.return_value = mock_handler
@@ -593,7 +605,7 @@ class TestVSCodeCLI:
         mock_registry.list_servers.return_value = ["mcp-code-checker"]
         mock_registry.get.return_value = mock_server_config
 
-        with patch("src.config.cli_utils.registry", mock_registry):
+        with patch("src.mcp_config.cli_utils.registry", mock_registry):
             # Test setup help
             with patch("sys.argv", ["mcp-config", "setup", "--help"]):
                 with patch("sys.stdout", new=StringIO()) as fake_out:

@@ -6,14 +6,14 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from src.config.discovery import (
+from src.mcp_config.discovery import (
     ExternalServerValidator,
     ServerDiscoveryError,
     discover_external_servers,
     initialize_external_servers,
     register_external_servers,
 )
-from src.config.servers import ParameterDef, ServerConfig
+from src.mcp_config.servers import ParameterDef, ServerConfig
 
 
 class TestExternalServerValidator:
@@ -215,7 +215,7 @@ class TestDiscoverExternalServers:
         assert discovered["external-server"][1] == "external-package"
 
     @patch("importlib.metadata.entry_points")
-    @patch("src.config.discovery.logger")
+    @patch("src.mcp_config.discovery.logger")
     def test_discover_invalid_external_server(
         self, mock_logger: Mock, mock_entry_points: Mock
     ) -> None:
@@ -246,7 +246,7 @@ class TestDiscoverExternalServers:
         assert mock_logger.warning.called
 
     @patch("importlib.metadata.entry_points")
-    @patch("src.config.discovery.logger")
+    @patch("src.mcp_config.discovery.logger")
     def test_discover_duplicate_server_names(
         self, mock_logger: Mock, mock_entry_points: Mock
     ) -> None:
@@ -295,7 +295,7 @@ class TestDiscoverExternalServers:
         assert mock_logger.warning.called
 
     @patch("importlib.metadata.entry_points")
-    @patch("src.config.discovery.logger")
+    @patch("src.mcp_config.discovery.logger")
     def test_discover_entry_point_load_error(
         self, mock_logger: Mock, mock_entry_points: Mock
     ) -> None:
@@ -321,7 +321,7 @@ class TestDiscoverExternalServers:
 class TestRegisterExternalServers:
     """Test the register_external_servers function."""
 
-    @patch("src.config.discovery.registry")
+    @patch("src.mcp_config.discovery.registry")
     def test_register_external_servers_success(self, mock_registry: Mock) -> None:
         """Test successful registration of external servers."""
         # Create test servers
@@ -353,8 +353,8 @@ class TestRegisterExternalServers:
         assert len(errors) == 0
         assert mock_registry.register.call_count == 2
 
-    @patch("src.config.discovery.registry")
-    @patch("src.config.discovery.logger")
+    @patch("src.mcp_config.discovery.registry")
+    @patch("src.mcp_config.discovery.logger")
     def test_register_already_registered_server(
         self, mock_logger: Mock, mock_registry: Mock
     ) -> None:
@@ -378,8 +378,8 @@ class TestRegisterExternalServers:
         mock_registry.register.assert_not_called()
         mock_logger.warning.assert_called()
 
-    @patch("src.config.discovery.registry")
-    @patch("src.config.discovery.logger")
+    @patch("src.mcp_config.discovery.registry")
+    @patch("src.mcp_config.discovery.logger")
     def test_register_server_registration_error(
         self, mock_logger: Mock, mock_registry: Mock
     ) -> None:
@@ -408,8 +408,8 @@ class TestRegisterExternalServers:
 class TestInitializeExternalServers:
     """Test the initialize_external_servers function."""
 
-    @patch("src.config.discovery.register_external_servers")
-    @patch("src.config.discovery.discover_external_servers")
+    @patch("src.mcp_config.discovery.register_external_servers")
+    @patch("src.mcp_config.discovery.discover_external_servers")
     def test_initialize_no_external_servers(
         self, mock_discover: Mock, mock_register: Mock
     ) -> None:
@@ -424,8 +424,8 @@ class TestInitializeExternalServers:
         mock_discover.assert_called_once()
         mock_register.assert_called_once_with({})
 
-    @patch("src.config.discovery.register_external_servers")
-    @patch("src.config.discovery.discover_external_servers")
+    @patch("src.mcp_config.discovery.register_external_servers")
+    @patch("src.mcp_config.discovery.discover_external_servers")
     @patch("builtins.print")
     def test_initialize_with_verbose_output(
         self, mock_print: Mock, mock_discover: Mock, mock_register: Mock
@@ -452,8 +452,8 @@ class TestInitializeExternalServers:
         assert any("Found 1 external" in str(call) for call in print_calls)
         assert any("Successfully registered" in str(call) for call in print_calls)
 
-    @patch("src.config.discovery.register_external_servers")
-    @patch("src.config.discovery.discover_external_servers")
+    @patch("src.mcp_config.discovery.register_external_servers")
+    @patch("src.mcp_config.discovery.discover_external_servers")
     @patch("builtins.print")
     def test_initialize_with_errors(
         self, mock_print: Mock, mock_discover: Mock, mock_register: Mock
