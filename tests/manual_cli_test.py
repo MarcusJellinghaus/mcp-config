@@ -16,7 +16,7 @@ def run_command(cmd: list[str]) -> tuple[int, str, str]:
         Tuple of (return_code, stdout, stderr)
     """
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, check=False)
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "Command timed out"

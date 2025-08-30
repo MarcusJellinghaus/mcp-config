@@ -24,7 +24,7 @@ def run_command(cmd: list[str], description: str) -> bool:
     print(f"Command: {' '.join(cmd)}")
     print("-" * 60)
 
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    result = subprocess.run(cmd, capture_output=True, text=True, check=False)
 
     if result.returncode == 0:
         print(f"✅ SUCCESS: {description}")

@@ -35,7 +35,8 @@ class TestCLICommand:
             ["mcp-config", "--help"],
             capture_output=True,
             text=True,
-            timeout=10
+            timeout=10,
+            check=False
         )
         
         assert result.returncode == 0
@@ -50,7 +51,8 @@ class TestCLICommand:
             capture_output=True,
             text=True,
             timeout=10,
-            cwd=Path(__file__).parent.parent  # Project root
+            cwd=Path(__file__).parent.parent,  # Project root
+            check=False
         )
         
         # Should work in development
