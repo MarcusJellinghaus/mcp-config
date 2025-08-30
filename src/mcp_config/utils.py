@@ -133,7 +133,7 @@ def detect_mcp_installation(project_dir: Path) -> dict[str, Any]:
 
             # Try to get version
             try:
-                import mcp_code_checker  # type: ignore[import-not-found]
+                import mcp_code_checker  # type: ignore[import-untyped]
 
                 if hasattr(mcp_code_checker, "__version__"):
                     info["version"] = mcp_code_checker.__version__
