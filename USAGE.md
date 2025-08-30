@@ -1,7 +1,8 @@
 # Usage
 
 ## Supported Servers
-- **mcp-code-checker** - Code analysis and testing server
+- **mcp-code-checker** - Code analysis and testing server (pylint, pytest, mypy)
+  - Repository: https://github.com/MarcusJellinghaus/mcp-code-checker
 - External servers via Python entry points (see `mcp-config validate`)
 
 ## Commands

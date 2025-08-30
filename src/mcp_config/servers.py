@@ -425,13 +425,7 @@ MCP_CODE_CHECKER = ServerConfig(
             help="Path for structured JSON logs. "
             "If not specified, logs only to console",
         ),
-        ParameterDef(
-            name="console-only",
-            arg_name="--console-only",
-            param_type="boolean",
-            is_flag=True,
-            help="Log only to console, ignore --log-file parameter",
-        ),
+
     ],
 )
 
