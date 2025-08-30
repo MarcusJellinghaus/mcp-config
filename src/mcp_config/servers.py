@@ -92,7 +92,9 @@ class ServerConfig:
     main_module: str
     parameters: list[ParameterDef] = field(default_factory=list)
 
-    def generate_args(self, user_params: dict[str, Any], use_cli_command: bool = False) -> list[str]:
+    def generate_args(
+        self, user_params: dict[str, Any], use_cli_command: bool = False
+    ) -> list[str]:
         """Generate command line args from user parameters.
 
         Args:
@@ -194,19 +196,20 @@ class ServerConfig:
 
     def supports_cli_command(self) -> bool:
         """Check if this server supports CLI command mode.
-        
+
         Returns:
             True if the server has a CLI command available
         """
         if self.name == "mcp-code-checker":
             import shutil
+
             return shutil.which("mcp-code-checker") is not None
         # Add other servers with CLI commands here in the future
         return False
 
     def get_cli_command_name(self) -> str | None:
         """Get the CLI command name for this server.
-        
+
         Returns:
             CLI command name if available, None otherwise
         """
@@ -217,18 +220,18 @@ class ServerConfig:
 
     def get_installation_mode(self) -> str:
         """Get the current installation mode for this server.
-        
+
         Returns:
             One of: 'cli_command', 'python_module', 'development', 'not_available'
         """
         if self.name == "mcp-code-checker":
             import shutil
             import importlib.util
-            
+
             # Check for CLI command
             if shutil.which("mcp-code-checker"):
                 return "cli_command"
-            
+
             # Check if package is installed
             try:
                 spec = importlib.util.find_spec("mcp_code_checker")
@@ -236,14 +239,15 @@ class ServerConfig:
                     return "python_module"
             except (ImportError, ModuleNotFoundError):
                 pass
-            
+
             # Check for development mode
             from pathlib import Path
+
             if Path("src/main.py").exists():
                 return "development"
-            
+
             return "not_available"
-        
+
         # Default for other servers
         return "not_available"
 
@@ -262,17 +266,18 @@ class ServerConfig:
             # If using CLI command, just verify directory exists
             if self.supports_cli_command():
                 return project_dir.exists() and project_dir.is_dir()
-            
+
             # Check if package is installed (module mode)
             try:
                 import importlib.util
+
                 spec = importlib.util.find_spec("mcp_code_checker")
                 if spec is not None:
                     # Package is installed, just need valid directory
                     return project_dir.exists() and project_dir.is_dir()
             except (ImportError, ModuleNotFoundError):
                 pass
-            
+
             # Development mode - check for expected structure
             main_path = project_dir / self.main_module
             src_path = project_dir / "src"
@@ -424,7 +429,6 @@ MCP_CODE_CHECKER = ServerConfig(
             help="Path for structured JSON logs. "
             "If not specified, logs only to console",
         ),
-
     ],
 )
 

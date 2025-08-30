@@ -369,18 +369,25 @@ class TestMCPCodeCheckerIntegration:
         assert "--keep-temp-files" in args
 
         # The command could be either CLI executable or Python with module
-        is_cli_mode = (config["command"].lower().endswith("mcp-code-checker.exe") or 
-                      config["command"].endswith("mcp-code-checker"))
-        
+        is_cli_mode = config["command"].lower().endswith(
+            "mcp-code-checker.exe"
+        ) or config["command"].endswith("mcp-code-checker")
+
         if is_cli_mode:
             # CLI command mode - arguments should NOT start with -m mcp_code_checker
-            assert not (len(args) >= 2 and args[0] == "-m" and args[1] == "mcp_code_checker"), f"CLI mode should not have -m args, but got: {args[:5]}"
+            assert not (
+                len(args) >= 2 and args[0] == "-m" and args[1] == "mcp_code_checker"
+            ), f"CLI mode should not have -m args, but got: {args[:5]}"
         else:
             # Python module mode
-            assert (config["command"] == "/usr/bin/python3" or 
-                   config["command"] == sys.executable), f"Expected Python executable, got: {config['command']}"
+            assert (
+                config["command"] == "/usr/bin/python3"
+                or config["command"] == sys.executable
+            ), f"Expected Python executable, got: {config['command']}"
             # The first two arguments should be "-m" and "mcp_code_checker" for module invocation
-            assert len(args) >= 2 and args[0] == "-m" and args[1] == "mcp_code_checker", f"Expected module invocation args, got: {args[:5]}"
+            assert (
+                len(args) >= 2 and args[0] == "-m" and args[1] == "mcp_code_checker"
+            ), f"Expected module invocation args, got: {args[:5]}"
 
         # Check environment
         assert "PYTHONPATH" in config["env"]
@@ -408,11 +415,12 @@ class TestMCPCodeCheckerIntegration:
         # Default log level should be included
         assert "--log-level" in args
         assert "INFO" in args
-        
+
         # Command could be CLI or Python module mode
-        is_cli_mode = (config["command"].lower().endswith("mcp-code-checker.exe") or 
-                      config["command"].endswith("mcp-code-checker"))
-        
+        is_cli_mode = config["command"].lower().endswith(
+            "mcp-code-checker.exe"
+        ) or config["command"].endswith("mcp-code-checker")
+
         if not is_cli_mode:
             # Python module mode
             assert config["command"] == sys.executable

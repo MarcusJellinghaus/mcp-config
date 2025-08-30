@@ -193,7 +193,9 @@ class TestDryRunOutput:
                 mock_client.get_config_path.return_value = Path("/tmp/config.json")
                 mock_get_client.return_value = mock_client
 
-                with patch("src.mcp_config.main.extract_user_parameters") as mock_extract:
+                with patch(
+                    "src.mcp_config.main.extract_user_parameters"
+                ) as mock_extract:
                     mock_extract.return_value = {"project_dir": "."}
 
                     with patch(

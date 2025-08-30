@@ -21,10 +21,10 @@ from .utils import (
 
 def is_command_available(command: str) -> bool:
     """Check if a command is available in the system PATH.
-    
+
     Args:
         command: Command name to check
-        
+
     Returns:
         True if command is available in PATH
     """
@@ -49,32 +49,32 @@ def is_package_installed(package_name: str) -> bool:
 
 def get_mcp_code_checker_command_mode() -> str:
     """Determine the best command mode for MCP Code Checker.
-    
+
     Returns:
         One of: 'cli_command', 'python_module', 'development', 'not_available'
     """
     # First check for CLI command
     if is_command_available("mcp-code-checker"):
         return "cli_command"
-    
+
     # Check if package is installed
     if is_package_installed("mcp_code_checker"):
         return "python_module"
-    
+
     # Check if we're in development mode (src/main.py exists)
     if Path("src/main.py").exists():
         return "development"
-    
+
     return "not_available"
 
 
 def _find_cli_executable(command_name: str, venv_path: str | None = None) -> str | None:
     """Find the CLI executable, checking venv first if provided.
-    
+
     Args:
         command_name: Name of the command to find (e.g., "mcp-code-checker")
         venv_path: Optional path to virtual environment to check first
-        
+
     Returns:
         Full path to executable if found, None otherwise
     """
@@ -86,10 +86,10 @@ def _find_cli_executable(command_name: str, venv_path: str | None = None) -> str
                 venv_exe = venv_path_obj / "Scripts" / f"{command_name}.exe"
             else:
                 venv_exe = venv_path_obj / "bin" / command_name
-            
+
             if venv_exe.exists():
                 return str(venv_exe)
-    
+
     # Fall back to system PATH
     system_exe = shutil.which(command_name)
     return system_exe
@@ -287,16 +287,23 @@ def build_server_config(
     if server_config.name == "mcp-code-checker":
         # Check for CLI command availability first
         command_mode = get_mcp_code_checker_command_mode()
-        
+
         if command_mode == "cli_command":
             # Use CLI command when available
-            cli_command = _find_cli_executable("mcp-code-checker", normalized_params.get("venv_path"))
+            cli_command = _find_cli_executable(
+                "mcp-code-checker", normalized_params.get("venv_path")
+            )
             if cli_command:
                 # Ensure python_executable is included in parameters for CLI command
-                if "python_executable" not in normalized_params or not normalized_params["python_executable"]:
+                if (
+                    "python_executable" not in normalized_params
+                    or not normalized_params["python_executable"]
+                ):
                     normalized_params["python_executable"] = effective_python
-                    
-                args = server_config.generate_args(normalized_params, use_cli_command=True)
+
+                args = server_config.generate_args(
+                    normalized_params, use_cli_command=True
+                )
                 config = {
                     "command": cli_command,
                     "args": args,
@@ -304,16 +311,19 @@ def build_server_config(
             else:
                 # Fallback to Python module mode
                 command_mode = "python_module"
-        
+
         if command_mode != "cli_command":
             # Use Python module mode (fallback or when CLI not available)
             # Ensure python_executable is always included in parameters
-            if "python_executable" not in normalized_params or not normalized_params["python_executable"]:
+            if (
+                "python_executable" not in normalized_params
+                or not normalized_params["python_executable"]
+            ):
                 normalized_params["python_executable"] = effective_python
-                
+
             # Generate args without the main script path (CLI mode)
             args = server_config.generate_args(normalized_params, use_cli_command=True)
-            
+
             # Use effective Python executable as command with -m mcp_code_checker
             config = {
                 "command": effective_python,
@@ -417,16 +427,23 @@ def generate_client_config(
     if server_config.name == "mcp-code-checker":
         # Check for CLI command availability first
         command_mode = get_mcp_code_checker_command_mode()
-        
+
         if command_mode == "cli_command":
             # Use CLI command when available
-            cli_command = _find_cli_executable("mcp-code-checker", normalized_params.get("venv_path"))
+            cli_command = _find_cli_executable(
+                "mcp-code-checker", normalized_params.get("venv_path")
+            )
             if cli_command:
                 # Ensure python_executable is included in parameters for CLI command
-                if "python_executable" not in normalized_params or not normalized_params["python_executable"]:
+                if (
+                    "python_executable" not in normalized_params
+                    or not normalized_params["python_executable"]
+                ):
                     normalized_params["python_executable"] = effective_python
-                    
-                args = server_config.generate_args(normalized_params, use_cli_command=True)
+
+                args = server_config.generate_args(
+                    normalized_params, use_cli_command=True
+                )
                 client_config = {
                     "command": cli_command,
                     "args": args,
@@ -434,16 +451,19 @@ def generate_client_config(
             else:
                 # Fallback to Python module mode
                 command_mode = "python_module"
-        
+
         if command_mode != "cli_command":
             # Use Python module mode (fallback or when CLI not available)
             # Ensure python_executable is always included in parameters
-            if "python_executable" not in normalized_params or not normalized_params["python_executable"]:
+            if (
+                "python_executable" not in normalized_params
+                or not normalized_params["python_executable"]
+            ):
                 normalized_params["python_executable"] = effective_python
-                
+
             # Generate args without the main script path (CLI mode)
             args = server_config.generate_args(normalized_params, use_cli_command=True)
-            
+
             # Use effective Python executable as command with -m mcp_code_checker
             client_config = {
                 "command": effective_python,

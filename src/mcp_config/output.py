@@ -134,12 +134,12 @@ class OutputFormatter:
             mode = validation_result["installation_mode"]
             mode_display = {
                 "cli_command": f"{OutputFormatter.SUCCESS} CLI Command",
-                "python_module": f"{OutputFormatter.WARNING} Python Module", 
+                "python_module": f"{OutputFormatter.WARNING} Python Module",
                 "development": f"{OutputFormatter.INFO} Development Mode",
-                "not_installed": f"{OutputFormatter.ERROR} Not Installed"
+                "not_installed": f"{OutputFormatter.ERROR} Not Installed",
             }.get(mode, mode)
             print(f"\nInstallation Mode: {mode_display}")
-        
+
         # Print each check with appropriate symbol
         for check in validation_result.get("checks", []):
             status = check.get("status", "unknown")
@@ -167,14 +167,19 @@ class OutputFormatter:
                 print("Status: Working")
         else:
             print("Status: Configuration has errors")
-            
+
         # Show installation instructions if needed
         if "installation_mode" in validation_result:
             mode = validation_result["installation_mode"]
             if mode != "cli_command":
                 from .validation import get_installation_instructions
+
                 instructions = get_installation_instructions("mcp-code-checker", mode)
-                if instructions and instructions != "Please check the documentation for installation instructions.":
+                if (
+                    instructions
+                    and instructions
+                    != "Please check the documentation for installation instructions."
+                ):
                     print(f"\n{instructions}")
 
     @staticmethod
@@ -223,7 +228,7 @@ class OutputFormatter:
             print("\nWould update configuration:")
             print(f"  Server: {config.get('name', 'unnamed')}")
             print(f"  Type: {config.get('type', 'unknown')}")
-            
+
             # Safely convert path to string to avoid encoding issues
             try:
                 config_path_str = str(config_path)
@@ -244,7 +249,9 @@ class OutputFormatter:
                 print(success_msg)
             except (UnicodeEncodeError, UnicodeDecodeError):
                 # Fallback without unicode symbols if encoding fails
-                print("\n[SUCCESS] Configuration valid. Run without --dry-run to apply.")
+                print(
+                    "\n[SUCCESS] Configuration valid. Run without --dry-run to apply."
+                )
         except Exception as e:
             # If anything fails in the preview, provide minimal fallback output
             print(f"\nWould update configuration (preview error: {e})")
@@ -253,7 +260,9 @@ class OutputFormatter:
                 success_msg = f"\n{OutputFormatter.SUCCESS} Configuration valid. Run without --dry-run to apply."
                 print(success_msg)
             except (UnicodeEncodeError, UnicodeDecodeError):
-                print("\n[SUCCESS] Configuration valid. Run without --dry-run to apply.")
+                print(
+                    "\n[SUCCESS] Configuration valid. Run without --dry-run to apply."
+                )
             # Don't re-raise the exception in dry-run mode to avoid breaking tests
             return
 

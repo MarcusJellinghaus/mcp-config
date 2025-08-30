@@ -286,14 +286,18 @@ class TestPythonEnvironmentDetection:
 
     def test_detect_python_environment_no_venv(self) -> None:
         """Test detection without virtual environment."""
-        with patch("src.mcp_config.detection.find_virtual_environments", return_value=[]):
+        with patch(
+            "src.mcp_config.detection.find_virtual_environments", return_value=[]
+        ):
             exe, venv = detect_python_environment(Path.cwd())
             assert exe == sys.executable
             assert venv is None
 
     def test_detect_python_environment_fallback(self, tmp_path: Path) -> None:
         """Test fallback to system Python."""
-        with patch("src.mcp_config.detection.find_virtual_environments", return_value=[]):
+        with patch(
+            "src.mcp_config.detection.find_virtual_environments", return_value=[]
+        ):
             with patch(
                 "src.mcp_config.detection.validate_python_executable"
             ) as mock_validate:

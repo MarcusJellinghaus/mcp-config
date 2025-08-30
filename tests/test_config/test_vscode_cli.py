@@ -11,7 +11,9 @@ import pytest
 from src.mcp_config.main import create_main_parser, main
 
 
-def create_mock_parameter(name: str, required: bool = False, default: str | None = None) -> Mock:
+def create_mock_parameter(
+    name: str, required: bool = False, default: str | None = None
+) -> Mock:
     """Helper to create a mock parameter object."""
     param = Mock()
     param.name = name
@@ -50,7 +52,9 @@ class TestVSCodeCLI:
             patch("src.mcp_config.cli_utils.registry", mock_registry),
             patch("src.mcp_config.main.initialize_all_servers"),
             patch("src.mcp_config.main.detect_python_environment") as mock_detect,
-            patch("src.mcp_config.main.validate_required_parameters") as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
             patch(
                 "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
@@ -108,7 +112,9 @@ class TestVSCodeCLI:
             patch("src.mcp_config.cli_utils.registry", mock_registry),
             patch("src.mcp_config.main.initialize_all_servers"),
             patch("src.mcp_config.main.detect_python_environment") as mock_detect,
-            patch("src.mcp_config.main.validate_required_parameters") as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
             patch(
                 "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
@@ -167,7 +173,9 @@ class TestVSCodeCLI:
             patch("src.mcp_config.cli_utils.registry", mock_registry),
             patch("src.mcp_config.main.initialize_all_servers"),
             patch("src.mcp_config.main.detect_python_environment") as mock_detect,
-            patch("src.mcp_config.main.validate_required_parameters") as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
             patch(
                 "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
@@ -473,7 +481,9 @@ class TestVSCodeCLI:
             patch("src.mcp_config.cli_utils.registry", mock_registry),
             patch("src.mcp_config.main.initialize_all_servers"),
             patch("src.mcp_config.main.detect_python_environment") as mock_detect,
-            patch("src.mcp_config.main.validate_required_parameters") as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
             patch(
                 "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,
@@ -542,7 +552,9 @@ class TestVSCodeCLI:
             patch("src.mcp_config.main.get_client_handler") as mock_get_handler,
             patch("src.mcp_config.main.initialize_all_servers"),
             patch("src.mcp_config.main.detect_python_environment") as mock_detect,
-            patch("src.mcp_config.main.validate_required_parameters") as mock_validate_req,
+            patch(
+                "src.mcp_config.main.validate_required_parameters"
+            ) as mock_validate_req,
             patch(
                 "src.mcp_config.main.validate_parameter_combination"
             ) as mock_validate_comb,

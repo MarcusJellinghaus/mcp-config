@@ -49,7 +49,9 @@ class TestVSCodeCommandGeneration:
 
     def test_generate_vscode_command_with_package(self) -> None:
         """Test command generation when package is installed."""
-        with patch("src.mcp_config.integration.is_package_installed", return_value=True):
+        with patch(
+            "src.mcp_config.integration.is_package_installed", return_value=True
+        ):
             config = {
                 "command": sys.executable,
                 "args": ["-m", "mcp_code_checker", "--project-dir", "/path/to/project"],
@@ -67,7 +69,9 @@ class TestVSCodeCommandGeneration:
 
     def test_generate_vscode_command_without_package(self) -> None:
         """Test command generation when package is not installed."""
-        with patch("src.mcp_config.integration.is_package_installed", return_value=False):
+        with patch(
+            "src.mcp_config.integration.is_package_installed", return_value=False
+        ):
             config = {
                 "command": sys.executable,
                 "args": ["src/main.py", "--project-dir", "/path/to/project"],
@@ -320,8 +324,12 @@ class TestIntegrationWithVSCodeHandler:
         handler = VSCodeHandler(workspace=True)
 
         # Mock both package installation check AND CLI command check to force module mode
-        with patch("src.mcp_config.integration.is_package_installed", return_value=True), \
-             patch("src.mcp_config.integration.is_command_available", return_value=False):
+        with (
+            patch("src.mcp_config.integration.is_package_installed", return_value=True),
+            patch(
+                "src.mcp_config.integration.is_command_available", return_value=False
+            ),
+        ):
             config = generate_client_config(
                 server_config,
                 "test-server",
@@ -361,8 +369,12 @@ class TestIntegrationWithVSCodeHandler:
         handler.setup_server.return_value = True
 
         # Mock package detection and CLI command availability to force module mode
-        with patch("src.mcp_config.integration.is_package_installed", return_value=True), \
-             patch("src.mcp_config.integration.is_command_available", return_value=False):
+        with (
+            patch("src.mcp_config.integration.is_package_installed", return_value=True),
+            patch(
+                "src.mcp_config.integration.is_command_available", return_value=False
+            ),
+        ):
             result = setup_mcp_server(
                 handler,
                 server_config,

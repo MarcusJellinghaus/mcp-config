@@ -141,20 +141,23 @@ def handle_setup_command(args: argparse.Namespace) -> int:
 
             # Generate backup path based on client type
             backup_path = None
-            use_backup = getattr(args, 'backup', True)
-            
+            use_backup = getattr(args, "backup", True)
+
             if use_backup:
                 try:
                     from datetime import datetime
+
                     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     config_name = (
-                        "mcp_config" if client.startswith("vscode") else "claude_desktop_config"
+                        "mcp_config"
+                        if client.startswith("vscode")
+                        else "claude_desktop_config"
                     )
                     config_path = client_handler.get_config_path()
                     backup_path = (
                         config_path.parent / f"{config_name}.backup_{timestamp}.json"
                     )
-                    
+
                     # Ensure backup path parent directory exists for path operations
                     backup_path.parent.mkdir(parents=True, exist_ok=True)
                 except Exception:
@@ -186,20 +189,27 @@ def handle_setup_command(args: argparse.Namespace) -> int:
                 print(f"\nError generating preview: {e}")
                 if args.verbose:
                     import traceback
+
                     traceback.print_exc()
-                    
+
                 # Still show basic info even if preview fails
                 print("\nWould update configuration:")
                 print(f"  Server: {args.server_name}")
-                print(f"  Type: {server_config.name if hasattr(server_config, 'name') else args.server_type}")
+                print(
+                    f"  Type: {server_config.name if hasattr(server_config, 'name') else args.server_type}"
+                )
                 print(f"  File: {client_handler.get_config_path()}")
                 if backup_path and use_backup:
                     print(f"  Backup: {backup_path}")
                 # Use safe printing for success message
                 try:
-                    print(f"\n{OutputFormatter.SUCCESS} Configuration valid. Run without --dry-run to apply.")
+                    print(
+                        f"\n{OutputFormatter.SUCCESS} Configuration valid. Run without --dry-run to apply."
+                    )
                 except (UnicodeEncodeError, UnicodeDecodeError):
-                    print("\n[SUCCESS] Configuration valid. Run without --dry-run to apply.")
+                    print(
+                        "\n[SUCCESS] Configuration valid. Run without --dry-run to apply."
+                    )
                 return 0
         elif args.verbose:
             OutputFormatter.print_configuration_details(
@@ -227,9 +237,13 @@ def handle_setup_command(args: argparse.Namespace) -> int:
             return 0
         else:
             try:
-                print(f"✗ Failed to configure server: {result.get('error', 'Unknown error')}")
+                print(
+                    f"✗ Failed to configure server: {result.get('error', 'Unknown error')}"
+                )
             except (UnicodeEncodeError, UnicodeDecodeError):
-                print(f"[ERROR] Failed to configure server: {result.get('error', 'Unknown error')}")
+                print(
+                    f"[ERROR] Failed to configure server: {result.get('error', 'Unknown error')}"
+                )
             return 1
 
     except Exception as e:
@@ -331,9 +345,13 @@ def handle_remove_command(args: argparse.Namespace) -> int:
             return 0
         else:
             try:
-                print(f"✗ Failed to remove server: {result.get('error', 'Unknown error')}")
+                print(
+                    f"✗ Failed to remove server: {result.get('error', 'Unknown error')}"
+                )
             except (UnicodeEncodeError, UnicodeDecodeError):
-                print(f"[ERROR] Failed to remove server: {result.get('error', 'Unknown error')}")
+                print(
+                    f"[ERROR] Failed to remove server: {result.get('error', 'Unknown error')}"
+                )
             return 1
 
     except Exception as e:

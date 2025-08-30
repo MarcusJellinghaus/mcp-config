@@ -16,7 +16,9 @@ def run_command(cmd: list[str]) -> tuple[int, str, str]:
         Tuple of (return_code, stdout, stderr)
     """
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=30, check=False)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=30, check=False
+        )
         return result.returncode, result.stdout, result.stderr
     except subprocess.TimeoutExpired:
         return 1, "", "Command timed out"
@@ -200,7 +202,14 @@ def test_parameter_validation() -> None:
     tests = [
         # Missing required parameter
         (
-            ["python", "-m", "src.mcp_config.main", "setup", "mcp-code-checker", "test"],
+            [
+                "python",
+                "-m",
+                "src.mcp_config.main",
+                "setup",
+                "mcp-code-checker",
+                "test",
+            ],
             1,
             "Should fail without required --project-dir",
         ),

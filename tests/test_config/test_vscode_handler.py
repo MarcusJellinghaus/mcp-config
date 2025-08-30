@@ -299,7 +299,9 @@ class TestVSCodeHandler:
                 f.write("{ invalid json }")
 
             # load_config should handle gracefully and return default config
-            config: dict[str, dict[str, dict[str, str | list[str]]]] = handler.load_config()
+            config: dict[str, dict[str, dict[str, str | list[str]]]] = (
+                handler.load_config()
+            )
             assert config == {"servers": {}}  # Should return default config
 
             # List operations should work even with malformed JSON

@@ -216,32 +216,32 @@ def auto_generate_log_file_path(project_dir: Path) -> Path:
 
 def validate_cli_command(command: str) -> list[str]:
     """Validate that a CLI command is available.
-    
+
     Args:
         command: Command name to validate
-        
+
     Returns:
         List of validation errors (empty if valid)
     """
     errors = []
-    
+
     if not shutil.which(command):
         errors.append(
             f"Command '{command}' not found. "
             f"Please install the package with 'pip install mcp-code-checker' "
             f"or 'pip install -e .' in development mode."
         )
-    
+
     return errors
 
 
 def get_installation_instructions(server_type: str, mode: str) -> str:
     """Get installation instructions based on server type and current mode.
-    
+
     Args:
         server_type: Type of server
         mode: Current installation mode
-        
+
     Returns:
         Helpful installation instructions
     """
@@ -267,7 +267,7 @@ def get_installation_instructions(server_type: str, mode: str) -> str:
                 "  2. Install in editable mode: pip install -e .\n"
                 "  3. Verify: mcp-code-checker --help"
             )
-    
+
     return "Please check the documentation for installation instructions."
 
 
@@ -296,22 +296,27 @@ def validate_server_configuration(
     if server_type == "mcp-code-checker":
         # Check if CLI command is available
         if shutil.which("mcp-code-checker"):
-            checks.append({
-                "status": "success",
-                "message": "CLI command 'mcp-code-checker' is available",
-            })
+            checks.append(
+                {
+                    "status": "success",
+                    "message": "CLI command 'mcp-code-checker' is available",
+                }
+            )
             installation_mode = "cli_command"
         else:
             # Check if package is installed
             try:
                 import importlib.util
-                spec = importlib.util.find_spec('mcp_code_checker')
+
+                spec = importlib.util.find_spec("mcp_code_checker")
                 installed = spec is not None
                 if installed:
-                    checks.append({
-                        "status": "warning",
-                        "message": "Package installed but CLI command not found. Run 'pip install -e .' to install command.",
-                    })
+                    checks.append(
+                        {
+                            "status": "warning",
+                            "message": "Package installed but CLI command not found. Run 'pip install -e .' to install command.",
+                        }
+                    )
                     warnings.append(
                         "CLI command 'mcp-code-checker' not available. "
                         "Using Python module fallback."
@@ -324,16 +329,20 @@ def validate_server_configuration(
                 current_dir = Path.cwd()
                 package_path = current_dir / "src" / "mcp_config" / "main.py"
                 if package_path.exists():
-                    checks.append({
-                        "status": "info",
-                        "message": "Running in development mode (source files)",
-                    })
+                    checks.append(
+                        {
+                            "status": "info",
+                            "message": "Running in development mode (source files)",
+                        }
+                    )
                     installation_mode = "development"
                 else:
-                    checks.append({
-                        "status": "error",
-                        "message": "MCP Code Checker not properly installed",
-                    })
+                    checks.append(
+                        {
+                            "status": "error",
+                            "message": "MCP Code Checker not properly installed",
+                        }
+                    )
                     errors.append(
                         "MCP Code Checker is not installed. "
                         "Please run 'pip install mcp-code-checker' or 'pip install -e .' in the project directory."
@@ -436,11 +445,11 @@ def validate_server_configuration(
         "errors": errors,
         "warnings": warnings,
     }
-    
+
     # Add installation mode if we detected it
     if server_type == "mcp-code-checker":
         result["installation_mode"] = installation_mode
-        
+
     return result
 
 
