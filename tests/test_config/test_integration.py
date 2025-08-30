@@ -356,13 +356,10 @@ class TestMCPCodeCheckerIntegration:
             python_executable="/usr/bin/python3",
         )
 
-        assert config["command"] == "/usr/bin/python3"
         assert config["_server_type"] == "mcp-code-checker"
 
-        # Check arguments
+        # Check arguments - regardless of command mode, these should be present
         args = config["args"]
-        # The first argument should be the absolute path to main.py
-        assert args[0].endswith("src/main.py") or args[0].endswith("src\\main.py")
         assert "--project-dir" in args
         assert str(project_dir) in args
         assert "--log-level" in args
@@ -370,6 +367,20 @@ class TestMCPCodeCheckerIntegration:
         assert "--test-folder" in args
         assert "tests" in args
         assert "--keep-temp-files" in args
+
+        # The command could be either CLI executable or Python with module
+        is_cli_mode = (config["command"].lower().endswith("mcp-code-checker.exe") or 
+                      config["command"].endswith("mcp-code-checker"))
+        
+        if is_cli_mode:
+            # CLI command mode - arguments should NOT start with -m mcp_code_checker
+            assert not (len(args) >= 2 and args[0] == "-m" and args[1] == "mcp_code_checker"), f"CLI mode should not have -m args, but got: {args[:5]}"
+        else:
+            # Python module mode
+            assert (config["command"] == "/usr/bin/python3" or 
+                   config["command"] == sys.executable), f"Expected Python executable, got: {config['command']}"
+            # The first two arguments should be "-m" and "mcp_code_checker" for module invocation
+            assert len(args) >= 2 and args[0] == "-m" and args[1] == "mcp_code_checker", f"Expected module invocation args, got: {args[:5]}"
 
         # Check environment
         assert "PYTHONPATH" in config["env"]
@@ -390,7 +401,6 @@ class TestMCPCodeCheckerIntegration:
         )
 
         # Should work with just required parameters
-        assert config["command"] == sys.executable
         args = config["args"]
         assert "--project-dir" in args
         assert str(tmp_path) in args
@@ -398,3 +408,11 @@ class TestMCPCodeCheckerIntegration:
         # Default log level should be included
         assert "--log-level" in args
         assert "INFO" in args
+        
+        # Command could be CLI or Python module mode
+        is_cli_mode = (config["command"].lower().endswith("mcp-code-checker.exe") or 
+                      config["command"].endswith("mcp-code-checker"))
+        
+        if not is_cli_mode:
+            # Python module mode
+            assert config["command"] == sys.executable

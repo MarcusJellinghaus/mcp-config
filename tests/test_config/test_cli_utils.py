@@ -124,7 +124,7 @@ class TestParameterHandling:
     """Test parameter-specific functionality."""
 
     def test_all_mcp_code_checker_parameters(self) -> None:
-        """Test that all 8 MCP Code Checker parameters are supported."""
+        """Test that all 7 MCP Code Checker parameters are supported."""
         parser = build_setup_parser("mcp-code-checker")
 
         # Parse with all parameters
@@ -145,7 +145,6 @@ class TestParameterHandling:
                 "DEBUG",
                 "--log-file",
                 "test.log",
-                "--console-only",
             ]
         )
 
@@ -156,7 +155,6 @@ class TestParameterHandling:
         assert args.keep_temp_files is True
         assert args.log_level == "DEBUG"
         assert args.log_file == Path("test.log")
-        assert args.console_only is True
 
     def test_required_parameters(self) -> None:
         """Test that required parameters are enforced."""
@@ -177,7 +175,6 @@ class TestParameterHandling:
         assert args.test_folder == "tests"  # Default value
         assert args.log_level == "INFO"  # Default value
         assert args.keep_temp_files is False  # Default for flags
-        assert args.console_only is False  # Default for flags
 
     def test_choice_validation(self) -> None:
         """Test that choice parameters are validated."""
@@ -282,7 +279,7 @@ class TestHelpText:
         assert "--log-level DEBUG" in examples
         assert "--python-executable" in examples
         assert "--venv-path" in examples
-        assert "--console-only" in examples
+        assert "--keep-temp-files" in examples
         assert "--dry-run" in examples
 
     def test_get_remove_examples(self) -> None:

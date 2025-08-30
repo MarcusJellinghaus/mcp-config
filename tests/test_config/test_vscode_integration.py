@@ -52,7 +52,7 @@ class TestVSCodeCommandGeneration:
         with patch("src.mcp_config.integration.is_package_installed", return_value=True):
             config = {
                 "command": sys.executable,
-                "args": ["src/main.py", "--project-dir", "/path/to/project"],
+                "args": ["-m", "mcp_code_checker", "--project-dir", "/path/to/project"],
                 "_server_type": "mcp-code-checker",
             }
 
@@ -319,8 +319,9 @@ class TestIntegrationWithVSCodeHandler:
         # Create VSCode handler
         handler = VSCodeHandler(workspace=True)
 
-        # Mock package installation check
-        with patch("src.mcp_config.integration.is_package_installed", return_value=True):
+        # Mock both package installation check AND CLI command check to force module mode
+        with patch("src.mcp_config.integration.is_package_installed", return_value=True), \
+             patch("src.mcp_config.integration.is_command_available", return_value=False):
             config = generate_client_config(
                 server_config,
                 "test-server",
@@ -328,7 +329,7 @@ class TestIntegrationWithVSCodeHandler:
                 client_handler=handler,
             )
 
-        # Should use module invocation for VSCode
+        # Should use module invocation when CLI is not available
         assert config["args"][:2] == ["-m", "mcp_code_checker"]
         assert config["command"] == sys.executable
 
@@ -359,8 +360,9 @@ class TestIntegrationWithVSCodeHandler:
         handler.get_config_path.return_value = tmp_path / ".vscode" / "mcp.json"
         handler.setup_server.return_value = True
 
-        # Mock package detection
-        with patch("src.mcp_config.integration.is_package_installed", return_value=True):
+        # Mock package detection and CLI command availability to force module mode
+        with patch("src.mcp_config.integration.is_package_installed", return_value=True), \
+             patch("src.mcp_config.integration.is_command_available", return_value=False):
             result = setup_mcp_server(
                 handler,
                 server_config,

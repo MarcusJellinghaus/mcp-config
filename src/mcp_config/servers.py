@@ -166,9 +166,8 @@ class ServerConfig:
             if value is None:
                 continue
 
-            # Skip python-executable in CLI command mode (not needed)
-            if use_cli_command and param.name == "python-executable":
-                continue
+            # Always include python-executable parameter for reliable execution
+            # (Previously skipped in CLI command mode, but now we always want it)
 
             # Handle boolean flags
             if param.is_flag:

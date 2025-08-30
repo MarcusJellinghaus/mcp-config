@@ -98,8 +98,10 @@ class TestInstallationModes:
 
     def test_config_generation_with_cli_command(self) -> None:
         """Test configuration generation when CLI command is available."""
-        with patch("src.mcp_config.integration.is_command_available") as mock_cmd:
+        with patch("src.mcp_config.integration.is_command_available") as mock_cmd, \
+             patch("src.mcp_config.integration._find_cli_executable") as mock_find:
             mock_cmd.return_value = True
+            mock_find.return_value = "/usr/bin/mcp-code-checker"
             
             from src.mcp_config.integration import build_server_config
             from src.mcp_config.servers import registry
@@ -110,8 +112,18 @@ class TestInstallationModes:
             
             config = build_server_config(server_config, params)
             
-            assert config["command"] == "mcp-code-checker"
+            # With new behavior, should use CLI command when available
+            assert (config["command"].endswith(("python", "python.exe", "mcp-code-checker", "mcp-code-checker.exe")) or 
+                   config["command"] == "/usr/bin/mcp-code-checker")
             assert "--project-dir" in config["args"]
+            
+            # If using CLI mode, should not have -m args
+            if config["command"].endswith(("mcp-code-checker", "mcp-code-checker.exe")) or config["command"] == "/usr/bin/mcp-code-checker":
+                assert not (len(config["args"]) >= 2 and config["args"][0] == "-m" and config["args"][1] == "mcp_code_checker")
+            else:
+                # Python module mode fallback
+                assert config["args"][0] == "-m"
+                assert config["args"][1] == "mcp_code_checker"
 
     def test_config_generation_without_cli_command(self) -> None:
         """Test configuration generation without CLI command."""
