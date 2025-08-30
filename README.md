@@ -22,6 +22,11 @@ mcp-config list
 mcp-config remove my-server
 ```
 
+## Supported MCP Servers
+
+**MCP Code Checker** (`mcp-code-checker`)
+- **Repository**: https://github.com/MarcusJellinghaus/mcp-code-checker
+
 ## Features
 - Auto-detects Python environments
 - Backs up configurations
