@@ -10,8 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.mcp_config.validation import (
-    auto_detect_log_file,
     auto_detect_filesystem_log_file,
+    auto_detect_log_file,
     auto_detect_python_executable,
     auto_detect_venv_path,
     auto_generate_log_file_path,

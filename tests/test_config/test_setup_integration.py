@@ -14,7 +14,7 @@ import pytest
 
 # Import the modules we need to test
 from src.mcp_config.integration import generate_client_config
-from src.mcp_config.servers import registry, MCP_FILESYSTEM_SERVER
+from src.mcp_config.servers import MCP_FILESYSTEM_SERVER, registry
 
 
 class TestMCPSetupIntegration:

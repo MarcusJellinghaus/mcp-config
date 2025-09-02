@@ -2,18 +2,18 @@
 
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, Mock
 from typing import Any
+from unittest.mock import Mock, patch
 
 import pytest
 
 from src.mcp_config.validation import (
+    get_installation_instructions,
     validate_cli_command,
     validate_code_checker_project,
     validate_filesystem_server_directory,
     validate_server_configuration,
     validate_server_installation,
-    get_installation_instructions,
 )
 
 

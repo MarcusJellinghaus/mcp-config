@@ -234,8 +234,8 @@ class ServerConfig:
         Returns:
             One of: 'cli_command', 'python_module', 'development', 'not_available'
         """
-        import shutil
         import importlib.util
+        import shutil
 
         if self.name == "mcp-code-checker":
             # Check for CLI command
