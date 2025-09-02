@@ -135,12 +135,14 @@ class TestServerConfig:
         assert MCP_FILESYSTEM_SERVER.name == "mcp-server-filesystem"
         assert MCP_FILESYSTEM_SERVER.display_name == "MCP Filesystem Server"
         assert MCP_FILESYSTEM_SERVER.main_module == "mcp-server-filesystem"
-        assert len(MCP_FILESYSTEM_SERVER.parameters) == 3
+        assert len(MCP_FILESYSTEM_SERVER.parameters) == 5
 
         # Check all parameter names are present
         param_names = [p.name for p in MCP_FILESYSTEM_SERVER.parameters]
         expected_names = [
             "project-dir",
+            "python-executable",
+            "venv-path",
             "log-level",
             "log-file",
         ]
@@ -159,34 +161,65 @@ class TestServerConfig:
         assert log_level_param.default == "INFO"
         assert log_level_param.choices == ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
-        # Check log-file is optional path
+        # Check log-file is optional path with auto-detect
         log_file_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("log-file")
         assert log_file_param is not None
         assert log_file_param.param_type == "path"
         assert log_file_param.required is False
+        assert log_file_param.auto_detect is True
+        
+        # Check python-executable has auto-detect
+        python_exe_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("python-executable")
+        assert python_exe_param is not None
+        assert python_exe_param.param_type == "path"
+        assert python_exe_param.required is False
+        assert python_exe_param.auto_detect is True
+        
+        # Check venv-path has auto-detect
+        venv_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("venv-path")
+        assert venv_param is not None
+        assert venv_param.param_type == "path"
+        assert venv_param.required is False
+        assert venv_param.auto_detect is True
 
     def test_auto_detect_parameters(self) -> None:
         """Test that auto-detect is set for appropriate parameters."""
-        auto_detect_params = [
+        # Test MCP Code Checker auto-detect parameters
+        code_checker_auto = [
             p.name for p in MCP_CODE_CHECKER.parameters if p.auto_detect
         ]
 
-        # These should have auto-detect
-        assert "python-executable" in auto_detect_params
-        assert "venv-path" in auto_detect_params
+        # These should have auto-detect for code checker
+        assert "python-executable" in code_checker_auto
+        assert "venv-path" in code_checker_auto
+        assert "log-file" in code_checker_auto  # log-file now HAS auto-detect for code checker
 
         # These should NOT have auto-detect
-        non_auto_params = [
+        code_checker_non_auto = [
             p.name for p in MCP_CODE_CHECKER.parameters if not p.auto_detect
         ]
-        assert "project-dir" in non_auto_params
-        assert "test-folder" in non_auto_params
-        assert "keep-temp-files" in non_auto_params
-        assert "log-level" in non_auto_params
-        assert (
-            "log-file" in non_auto_params
-        )  # Changed: log-file is no longer auto-detect
-        # console-only parameter was removed
+        assert "project-dir" in code_checker_non_auto
+        assert "test-folder" in code_checker_non_auto
+        assert "keep-temp-files" in code_checker_non_auto
+        assert "log-level" in code_checker_non_auto
+        # Note: log-file now HAS auto-detect for code checker too!
+        
+        # Test MCP Filesystem Server auto-detect parameters
+        filesystem_auto = [
+            p.name for p in MCP_FILESYSTEM_SERVER.parameters if p.auto_detect
+        ]
+        
+        # These should have auto-detect for filesystem server
+        assert "python-executable" in filesystem_auto
+        assert "venv-path" in filesystem_auto
+        assert "log-file" in filesystem_auto  # log-file IS auto-detect for filesystem server
+        
+        # These should NOT have auto-detect
+        filesystem_non_auto = [
+            p.name for p in MCP_FILESYSTEM_SERVER.parameters if not p.auto_detect
+        ]
+        assert "project-dir" in filesystem_non_auto
+        assert "log-level" in filesystem_non_auto
 
     def test_generate_args_basic(self) -> None:
         """Test basic argument generation."""
@@ -340,6 +373,67 @@ class TestServerConfig:
         assert "--python-executable" in args  # auto-detected
         # log-file is no longer auto-detected, so it won't be present unless explicitly provided
 
+    @patch("src.mcp_config.validation.auto_detect_python_executable")
+    @patch("src.mcp_config.validation.auto_detect_venv_path")
+    @patch("src.mcp_config.validation.auto_detect_log_file")
+    def test_generate_args_mcp_filesystem_server(
+        self, mock_log_file: MagicMock, mock_venv: MagicMock, mock_python: MagicMock
+    ) -> None:
+        """Test argument generation for MCP Filesystem Server with auto-detection."""
+        # Setup mocks
+        mock_python.return_value = Path("/auto/python")
+        mock_venv.return_value = Path("/auto/venv")
+        mock_log_file.return_value = Path("/auto/logs/filesystem.log")
+
+        # Use underscore format as it comes from argparse
+        params = {
+            "project_dir": "/path/to/project",
+            "log_level": "DEBUG",
+        }
+
+        args = MCP_FILESYSTEM_SERVER.generate_args(params)
+
+        # Should include auto-detected values
+        assert "--project-dir" in args
+        proj_idx = args.index("--project-dir")
+        assert "path" in args[proj_idx + 1].lower() and "project" in args[proj_idx + 1].lower()
+        
+        assert "--log-level" in args
+        assert "DEBUG" in args
+        
+        # Auto-detected parameters should be present
+        assert "--python-executable" in args
+        python_idx = args.index("--python-executable")
+        assert "auto" in args[python_idx + 1] and "python" in args[python_idx + 1]
+        
+        assert "--venv-path" in args
+        venv_idx = args.index("--venv-path")
+        assert "auto" in args[venv_idx + 1] and "venv" in args[venv_idx + 1]
+        
+        assert "--log-file" in args
+        log_idx = args.index("--log-file")
+        assert "filesystem.log" in args[log_idx + 1]
+
+    def test_mcp_filesystem_server_minimal_config(self) -> None:
+        """Test minimal configuration for MCP Filesystem Server."""
+        params = {
+            "project_dir": "/path/to/project",
+        }
+
+        args = MCP_FILESYSTEM_SERVER.generate_args(params)
+
+        # Should include required parameter
+        assert "--project-dir" in args
+        
+        # Should include default log level
+        assert "--log-level" in args
+        assert "INFO" in args
+        
+        # Auto-detected parameters will be included if detection succeeds
+        # This depends on the actual environment, so we just check the method works
+        assert isinstance(args, list)
+        assert len(args) > 0
+
     def test_get_required_params(self) -> None:
         """Test getting required parameters."""
         config = ServerConfig(
@@ -389,6 +483,28 @@ class TestServerConfig:
 
             # Still valid with development structure
             assert MCP_CODE_CHECKER.validate_project(project_dir)
+            
+    def test_validate_project_mcp_filesystem_server(self) -> None:
+        """Test enhanced project validation for MCP Filesystem Server."""
+        with TemporaryDirectory() as tmpdir:
+            project_dir = Path(tmpdir)
+
+            # Basic validation should pass for readable directory
+            assert MCP_FILESYSTEM_SERVER.validate_project(project_dir)
+
+            # Create some test content
+            test_file = project_dir / "test.txt"
+            test_file.write_text("test content")
+            
+            # Should still validate with content
+            assert MCP_FILESYSTEM_SERVER.validate_project(project_dir)
+            
+            # Test with non-existent directory
+            non_existent = project_dir / "does_not_exist"
+            assert not MCP_FILESYSTEM_SERVER.validate_project(non_existent)
+            
+            # Test with file instead of directory
+            assert not MCP_FILESYSTEM_SERVER.validate_project(test_file)
 
     def test_get_parameter_by_name(self) -> None:
         """Test parameter lookup by name."""
@@ -523,7 +639,7 @@ class TestGlobalRegistry:
         config = registry.get("mcp-server-filesystem")
         assert config is not None
         assert config.name == "mcp-server-filesystem"
-        assert len(config.parameters) == 3
+        assert len(config.parameters) == 5
 
     def test_registry_completeness(self) -> None:
         """Test that the global registry has expected servers."""

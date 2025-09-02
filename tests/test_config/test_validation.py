@@ -10,6 +10,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.mcp_config.validation import (
+    auto_detect_log_file,
+    auto_detect_filesystem_log_file,
     auto_detect_python_executable,
     auto_detect_venv_path,
     auto_generate_log_file_path,
@@ -209,7 +211,7 @@ class TestAutoDetection:
 
     def test_auto_generate_log_file_path(self, tmp_path: Path) -> None:
         """Test log file path generation."""
-        # Generate log path
+        # Generate log path for code checker (default)
         log_path = auto_generate_log_file_path(tmp_path)
 
         # Check structure
@@ -224,6 +226,71 @@ class TestAutoDetection:
         timestamp_part = log_path.stem.replace("mcp_code_checker_", "")
         # Should be able to parse as datetime
         datetime.strptime(timestamp_part, "%Y%m%d_%H%M%S")
+        
+        # Test filesystem server log path generation
+        fs_log_path = auto_generate_log_file_path(tmp_path, "mcp-server-filesystem")
+        assert fs_log_path.parent == tmp_path / "logs"
+        assert fs_log_path.name.startswith("mcp_filesystem_server_")
+        assert fs_log_path.suffix == ".log"
+        
+        # Check timestamp format for filesystem server
+        fs_timestamp_part = fs_log_path.stem.replace("mcp_filesystem_server_", "")
+        datetime.strptime(fs_timestamp_part, "%Y%m%d_%H%M%S")
+        
+        # Test generic server log path generation
+        generic_log_path = auto_generate_log_file_path(tmp_path, "mcp-custom-server")
+        assert generic_log_path.parent == tmp_path / "logs"
+        assert generic_log_path.name.startswith("mcp_custom_server_")
+        assert generic_log_path.suffix == ".log"
+        
+        # Check timestamp format for generic server
+        generic_timestamp_part = generic_log_path.stem.replace("mcp_custom_server_", "")
+        datetime.strptime(generic_timestamp_part, "%Y%m%d_%H%M%S")
+        
+    def test_auto_detect_log_file_unified(self, tmp_path: Path) -> None:
+        """Test unified log file auto-detection for any server type."""
+        # Test code checker
+        code_log = auto_detect_log_file(tmp_path, "mcp-code-checker")
+        assert code_log is not None
+        assert code_log.parent == tmp_path / "logs"
+        assert code_log.name.startswith("mcp_code_checker_")
+        
+        # Test filesystem server
+        fs_log = auto_detect_log_file(tmp_path, "mcp-server-filesystem")
+        assert fs_log is not None
+        assert fs_log.parent == tmp_path / "logs"
+        assert fs_log.name.startswith("mcp_filesystem_server_")
+        
+        # Test generic server
+        generic_log = auto_detect_log_file(tmp_path, "mcp-custom-server")
+        assert generic_log is not None
+        assert generic_log.parent == tmp_path / "logs"
+        assert generic_log.name.startswith("mcp_custom_server_")
+        
+        # Test with existing logs
+        logs_dir = tmp_path / "logs"
+        logs_dir.mkdir(exist_ok=True)
+        
+        # Create existing log for code checker
+        import time
+        old_code_log = logs_dir / "mcp_code_checker_20240101_120000.log"
+        new_code_log = logs_dir / "mcp_code_checker_20240102_120000.log"
+        old_code_log.write_text("old")
+        time.sleep(0.01)
+        new_code_log.write_text("new")
+        
+        # Should return the most recent existing log
+        detected = auto_detect_log_file(tmp_path, "mcp-code-checker")
+        assert detected == new_code_log
+        
+    def test_auto_detect_filesystem_log_file(self, tmp_path: Path) -> None:
+        """Test backward compatibility for filesystem server log file auto-detection."""
+        # The old function should still work (calls the new unified function)
+        log_path = auto_detect_filesystem_log_file(tmp_path)
+        assert log_path is not None
+        assert log_path.parent == tmp_path / "logs"
+        assert log_path.name.startswith("mcp_filesystem_server_")
+        assert log_path.suffix == ".log"
 
 
 class TestParameterCombination:

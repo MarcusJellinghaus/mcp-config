@@ -505,8 +505,13 @@ class TestMCPFilesystemServerIntegration:
         assert "--log-level" in args
         assert "INFO" in args
 
-        # log-file should not be present since it wasn't specified
-        assert "--log-file" not in args
+        # log-file will be auto-detected and included due to unified auto-detection
+        assert "--log-file" in args  # Now automatically included
+        # Should contain auto-generated log file path
+        log_file_index = args.index("--log-file")
+        log_file_path = args[log_file_index + 1]
+        assert "mcp_filesystem_server_" in log_file_path
+        assert log_file_path.endswith(".log")
 
         # Command could be CLI or Python module mode
         is_cli_mode = config["command"].lower().endswith(

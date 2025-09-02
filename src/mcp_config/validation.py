@@ -199,11 +199,59 @@ def auto_detect_venv_path(project_dir: Path) -> Path | None:
     return venvs[0] if venvs else None
 
 
-def auto_generate_log_file_path(project_dir: Path) -> Path:
+def auto_detect_log_file(project_dir: Path, server_type: str) -> Path | None:
+    """Auto-detect or generate a log file path for any MCP server.
+
+    Args:
+        project_dir: Project directory
+        server_type: Type of server (e.g., 'mcp-code-checker', 'mcp-server-filesystem')
+
+    Returns:
+        Path to log file, auto-generated if needed
+    """
+    # Check if logs directory exists and has existing server logs
+    logs_dir = project_dir / "logs"
+    if logs_dir.exists():
+        # Look for existing log files for this server type
+        # Convert server type to log file pattern
+        if server_type == "mcp-code-checker":
+            pattern = "mcp_code_checker_*.log"
+        elif server_type == "mcp-server-filesystem":
+            pattern = "mcp_filesystem_server_*.log"
+        else:
+            # Generic pattern for other servers
+            safe_name = server_type.replace("-", "_")
+            pattern = f"{safe_name}_*.log"
+        
+        existing_logs = list(logs_dir.glob(pattern))
+        if existing_logs:
+            # Return the most recent one
+            return max(existing_logs, key=lambda p: p.stat().st_mtime)
+    
+    # Auto-generate a new log file path
+    return auto_generate_log_file_path(project_dir, server_type)
+
+
+def auto_detect_filesystem_log_file(project_dir: Path) -> Path | None:
+    """Auto-detect or generate a log file path for MCP Filesystem Server.
+    
+    Deprecated: Use auto_detect_log_file(project_dir, 'mcp-server-filesystem') instead.
+
+    Args:
+        project_dir: Project directory
+
+    Returns:
+        Path to log file, auto-generated if needed
+    """
+    return auto_detect_log_file(project_dir, "mcp-server-filesystem")
+
+
+def auto_generate_log_file_path(project_dir: Path, server_type: str = "mcp-code-checker") -> Path:
     """Auto-generate a log file path with timestamp.
 
     Args:
         project_dir: Project directory
+        server_type: Type of server for log file naming
 
     Returns:
         Generated log file path
@@ -211,14 +259,26 @@ def auto_generate_log_file_path(project_dir: Path) -> Path:
     logs_dir = project_dir / "logs"
     logs_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    return logs_dir / f"mcp_code_checker_{timestamp}.log"
+    
+    # Convert server type to safe filename
+    if server_type == "mcp-code-checker":
+        filename = f"mcp_code_checker_{timestamp}.log"
+    elif server_type == "mcp-server-filesystem":
+        filename = f"mcp_filesystem_server_{timestamp}.log"
+    else:
+        # Generic naming for other servers
+        safe_name = server_type.replace("-", "_")
+        filename = f"{safe_name}_{timestamp}.log"
+    
+    return logs_dir / filename
 
 
-def validate_cli_command(command: str) -> list[str]:
+def validate_cli_command(command: str, server_type: str = "") -> list[str]:
     """Validate that a CLI command is available.
 
     Args:
         command: Command name to validate
+        server_type: Type of server for better error messages
 
     Returns:
         List of validation errors (empty if valid)
@@ -226,12 +286,111 @@ def validate_cli_command(command: str) -> list[str]:
     errors = []
 
     if not shutil.which(command):
-        errors.append(
-            f"Command '{command}' not found. "
-            f"Please install the package with 'pip install mcp-code-checker' "
-            f"or 'pip install -e .' in development mode."
-        )
+        if server_type == "mcp-code-checker":
+            errors.append(
+                f"Command '{command}' not found. "
+                f"Please install with 'pip install mcp-code-checker' "
+                f"or 'pip install -e .' in development mode."
+            )
+        elif server_type == "mcp-server-filesystem":
+            errors.append(
+                f"Command '{command}' not found. "
+                f"Please install with 'pip install mcp-server-filesystem'."
+            )
+        else:
+            errors.append(
+                f"Command '{command}' not found. "
+                f"Please check installation instructions for this server."
+            )
 
+    return errors
+
+
+def validate_filesystem_server_directory(project_dir: Path) -> list[str]:
+    """Validate directory for MCP Filesystem Server.
+
+    Args:
+        project_dir: Project directory to validate
+
+    Returns:
+        List of validation errors (empty if valid)
+    """
+    errors = []
+    
+    # Basic existence and type check
+    path_errors = validate_path(
+        project_dir, "project_dir", must_exist=True, must_be_dir=True
+    )
+    if path_errors:
+        return path_errors
+    
+    # Check permissions
+    try:
+        # Must be readable
+        if not os.access(project_dir, os.R_OK):
+            errors.append(f"Directory is not readable: {project_dir}")
+            
+        # Try to list contents
+        try:
+            list(project_dir.iterdir())
+        except (OSError, PermissionError) as e:
+            errors.append(f"Cannot list directory contents: {e}")
+            
+        # Test write capability for logs (optional)
+        if os.access(project_dir, os.W_OK):
+            # Try to create a test file
+            test_file = project_dir / ".mcp_fs_test"
+            try:
+                test_file.touch()
+                test_file.unlink()
+            except (OSError, PermissionError) as e:
+                errors.append(f"Write test failed (logs may not work): {e}")
+                
+    except (OSError, PermissionError) as e:
+        errors.append(f"Permission error accessing directory: {e}")
+        
+    return errors
+
+
+def validate_code_checker_project(project_dir: Path, test_folder: str = "tests") -> list[str]:
+    """Validate project structure for MCP Code Checker.
+
+    Args:
+        project_dir: Project directory to validate
+        test_folder: Name of test folder to check
+
+    Returns:
+        List of validation errors (empty if valid)
+    """
+    errors = []
+    
+    # Basic directory validation
+    path_errors = validate_path(
+        project_dir, "project_dir", must_exist=True, must_be_dir=True
+    )
+    if path_errors:
+        return path_errors
+    
+    # Check for test folder
+    test_path = project_dir / test_folder
+    if not test_path.exists():
+        errors.append(f"Test folder '{test_folder}' not found in project directory")
+    elif not test_path.is_dir():
+        errors.append(f"Test folder '{test_folder}' exists but is not a directory")
+    
+    # Check for common Python project structure
+    common_files = ["setup.py", "pyproject.toml", "requirements.txt", "Pipfile"]
+    common_dirs = ["src", "lib", "app"]
+    
+    has_setup = any((project_dir / f).exists() for f in common_files)
+    has_src = any((project_dir / d).exists() and (project_dir / d).is_dir() for d in common_dirs)
+    
+    if not (has_setup or has_src):
+        errors.append(
+            "No common Python project structure detected. "
+            "Consider adding setup.py, pyproject.toml, or src/ directory."
+        )
+        
     return errors
 
 
@@ -246,7 +405,7 @@ def get_installation_instructions(server_type: str, mode: str) -> str:
         Helpful installation instructions
     """
     if server_type == "mcp-code-checker":
-        if mode == "not_installed":
+        if mode == "not_available":
             return (
                 "To install MCP Code Checker:\n"
                 "  1. From PyPI: pip install mcp-code-checker\n"
@@ -267,8 +426,123 @@ def get_installation_instructions(server_type: str, mode: str) -> str:
                 "  2. Install in editable mode: pip install -e .\n"
                 "  3. Verify: mcp-code-checker --help"
             )
+    elif server_type == "mcp-server-filesystem":
+        if mode == "not_available":
+            return (
+                "To install MCP Filesystem Server:\n"
+                "  1. From PyPI: pip install mcp-server-filesystem\n"
+                "  2. From source: git clone <repo> && cd mcp-server-filesystem && pip install -e .\n"
+                "  3. Verify: mcp-server-filesystem --help"
+            )
+        elif mode == "python_module":
+            return (
+                "CLI command not available. To enable it:\n"
+                "  1. Reinstall: pip install --force-reinstall mcp-server-filesystem\n"
+                "  2. Then verify: which mcp-server-filesystem (or 'where' on Windows)"
+            )
+        elif mode == "development":
+            return (
+                "Running in development mode. To install CLI command:\n"
+                "  1. Navigate to project: cd /path/to/mcp-server-filesystem\n"
+                "  2. Install in editable mode: pip install -e .\n"
+                "  3. Verify: mcp-server-filesystem --help"
+            )
 
     return "Please check the documentation for installation instructions."
+
+
+def validate_server_installation(server_type: str) -> tuple[str, dict[str, Any]]:
+    """Validate server installation and return mode and check results.
+    
+    Args:
+        server_type: Type of server to validate
+        
+    Returns:
+        Tuple of (installation_mode, check_result)
+    """
+    check_result = {"status": "unknown", "message": "", "details": []}
+    
+    if server_type == "mcp-code-checker":
+        # Check if CLI command is available
+        if shutil.which("mcp-code-checker"):
+            check_result.update({
+                "status": "success",
+                "message": "CLI command 'mcp-code-checker' is available",
+                "details": ["Found CLI executable in system PATH"]
+            })
+            return "cli_command", check_result
+        else:
+            # Check if package is installed
+            try:
+                import importlib.util
+                spec = importlib.util.find_spec("mcp_code_checker")
+                if spec is not None:
+                    check_result.update({
+                        "status": "warning",
+                        "message": "Package installed but CLI command not found. Run 'pip install -e .' to install command.",
+                        "details": ["Python package found", "CLI command missing"]
+                    })
+                    return "python_module", check_result
+                else:
+                    raise ImportError("Package not found")
+            except ImportError:
+                # Development mode - check for source files
+                current_dir = Path.cwd()
+                package_path = current_dir / "src" / "main.py"
+                if package_path.exists():
+                    check_result.update({
+                        "status": "info",
+                        "message": "Running in development mode (source files)",
+                        "details": ["Found source files in development structure"]
+                    })
+                    return "development", check_result
+                else:
+                    check_result.update({
+                        "status": "error",
+                        "message": "MCP Code Checker not properly installed",
+                        "details": ["No CLI command found", "No Python package found", "No development files found"]
+                    })
+                    return "not_available", check_result
+                    
+    elif server_type == "mcp-server-filesystem":
+        # Check if CLI command is available
+        if shutil.which("mcp-server-filesystem"):
+            check_result.update({
+                "status": "success",
+                "message": "CLI command 'mcp-server-filesystem' is available",
+                "details": ["Found CLI executable in system PATH"]
+            })
+            return "cli_command", check_result
+        else:
+            # Check if package is installed
+            try:
+                import importlib.util
+                spec = importlib.util.find_spec("mcp_server_filesystem")
+                if spec is not None:
+                    check_result.update({
+                        "status": "warning",
+                        "message": "Package installed but CLI command not found. Run 'pip install -e .' to install command.",
+                        "details": ["Python package found", "CLI command missing"]
+                    })
+                    return "python_module", check_result
+                else:
+                    raise ImportError("Package not found")
+            except ImportError:
+                # For filesystem server, check for common installation patterns
+                check_result.update({
+                    "status": "error",
+                    "message": "MCP Filesystem Server not properly installed",
+                    "details": ["No CLI command found", "No Python package found", "Install with: pip install mcp-server-filesystem"]
+                })
+                return "not_available", check_result
+    
+    # Default for unknown server types
+    check_result.update({
+        "status": "unknown",
+        "message": f"Unknown server type: {server_type}",
+        "details": ["Cannot validate installation for unknown server type"]
+    })
+    return "unknown", check_result
 
 
 def validate_server_configuration(
@@ -277,11 +551,11 @@ def validate_server_configuration(
     params: dict[str, Any],
     client_handler: Any | None = None,
 ) -> dict[str, Any]:
-    """Simplified validation of server configuration.
+    """Comprehensive validation of server configuration.
 
     Args:
         server_name: Name of the server
-        server_type: Type of server (e.g., 'mcp-code-checker')
+        server_type: Type of server (e.g., 'mcp-code-checker', 'mcp-server-filesystem')
         params: Server parameters
         client_handler: Optional client handler for config validation
 
@@ -292,62 +566,19 @@ def validate_server_configuration(
     errors = []
     warnings = []
 
-    # Add CLI command check for mcp-code-checker
-    if server_type == "mcp-code-checker":
-        # Check if CLI command is available
-        if shutil.which("mcp-code-checker"):
-            checks.append(
-                {
-                    "status": "success",
-                    "message": "CLI command 'mcp-code-checker' is available",
-                }
-            )
-            installation_mode = "cli_command"
-        else:
-            # Check if package is installed
-            try:
-                import importlib.util
-
-                spec = importlib.util.find_spec("mcp_code_checker")
-                installed = spec is not None
-                if installed:
-                    checks.append(
-                        {
-                            "status": "warning",
-                            "message": "Package installed but CLI command not found. Run 'pip install -e .' to install command.",
-                        }
-                    )
-                    warnings.append(
-                        "CLI command 'mcp-code-checker' not available. "
-                        "Using Python module fallback."
-                    )
-                    installation_mode = "python_module"
-                else:
-                    raise ImportError("Package not found")
-            except ImportError:
-                # Development mode - check for source files
-                current_dir = Path.cwd()
-                package_path = current_dir / "src" / "mcp_config" / "main.py"
-                if package_path.exists():
-                    checks.append(
-                        {
-                            "status": "info",
-                            "message": "Running in development mode (source files)",
-                        }
-                    )
-                    installation_mode = "development"
-                else:
-                    checks.append(
-                        {
-                            "status": "error",
-                            "message": "MCP Code Checker not properly installed",
-                        }
-                    )
-                    errors.append(
-                        "MCP Code Checker is not installed. "
-                        "Please run 'pip install mcp-code-checker' or 'pip install -e .' in the project directory."
-                    )
-                    installation_mode = "not_installed"
+    # Validate server installation for both server types
+    installation_mode, install_check = validate_server_installation(server_type)
+    
+    if install_check["status"] == "success":
+        checks.append(install_check)
+    elif install_check["status"] == "warning":
+        checks.append(install_check)
+        warnings.append(install_check["message"])
+    elif install_check["status"] == "error":
+        checks.append(install_check)
+        errors.append(install_check["message"])
+    else:
+        checks.append(install_check)
 
     # Configuration existence check
     if client_handler:
@@ -419,25 +650,93 @@ def validate_server_configuration(
             )
             warnings.extend(venv_errors)
 
-    # Test folder check for mcp-code-checker
-    if (
-        server_type == "mcp-code-checker"
-        and "project_dir" in params
-        and params["project_dir"]
-    ):
+    # Server-specific validation checks
+    if "project_dir" in params and params["project_dir"]:
         project_dir = Path(params["project_dir"])
-        test_folder = params.get("test_folder", "tests")
-        test_path = project_dir / test_folder
+        
+        if server_type == "mcp-code-checker":
+            # Test folder check for mcp-code-checker
+            test_folder = params.get("test_folder", "tests")
+            test_path = project_dir / test_folder
 
-        if test_path.exists() and test_path.is_dir():
-            checks.append(
-                {"status": "success", "message": f"Test folder exists: {test_folder}"}
-            )
-        else:
-            checks.append(
-                {"status": "warning", "message": f"Test folder missing: {test_folder}"}
-            )
-            warnings.append(f"Test folder '{test_folder}' not found")
+            if test_path.exists() and test_path.is_dir():
+                checks.append(
+                    {"status": "success", "message": f"Test folder exists: {test_folder}"}
+                )
+            else:
+                checks.append(
+                    {"status": "warning", "message": f"Test folder missing: {test_folder}"}
+                )
+                warnings.append(f"Test folder '{test_folder}' not found")
+                
+        elif server_type == "mcp-server-filesystem":
+            # Filesystem-specific validation checks
+            # Check directory permissions
+            try:
+                if os.access(project_dir, os.R_OK):
+                    checks.append(
+                        {"status": "success", "message": "Project directory is readable"}
+                    )
+                else:
+                    checks.append(
+                        {"status": "error", "message": "Project directory is not readable"}
+                    )
+                    errors.append(f"No read permission for project directory: {project_dir}")
+                    
+                if os.access(project_dir, os.W_OK):
+                    checks.append(
+                        {"status": "success", "message": "Project directory is writable"}
+                    )
+                else:
+                    checks.append(
+                        {"status": "warning", "message": "Project directory is not writable"}
+                    )
+                    warnings.append(f"No write permission for project directory: {project_dir}")
+                    
+            except (OSError, PermissionError) as e:
+                checks.append(
+                    {"status": "error", "message": f"Permission error: {e}"}
+                )
+                errors.append(f"Permission error for project directory: {e}")
+                
+            # Check for common filesystem patterns
+            common_dirs = ["src", "docs", "tests", "scripts", "config"]
+            found_dirs = []
+            for dir_name in common_dirs:
+                dir_path = project_dir / dir_name
+                if dir_path.exists() and dir_path.is_dir():
+                    found_dirs.append(dir_name)
+                    
+            if found_dirs:
+                checks.append(
+                    {"status": "info", "message": f"Found common directories: {', '.join(found_dirs)}"}
+                )
+            else:
+                checks.append(
+                    {"status": "info", "message": "No common project directories found (may be a simple directory)"}
+                )
+                
+            # Check log directory creation ability
+            logs_dir = project_dir / "logs"
+            if not logs_dir.exists():
+                try:
+                    # Test if we can create the logs directory
+                    logs_dir.mkdir(parents=True, exist_ok=True)
+                    checks.append(
+                        {"status": "success", "message": "Can create logs directory"}
+                    )
+                    # Clean up test directory if we created it
+                    if logs_dir.exists() and not any(logs_dir.iterdir()):
+                        logs_dir.rmdir()
+                except (OSError, PermissionError) as e:
+                    checks.append(
+                        {"status": "warning", "message": f"Cannot create logs directory: {e}"}
+                    )
+                    warnings.append(f"May not be able to create log files: {e}")
+            else:
+                checks.append(
+                    {"status": "success", "message": "Logs directory already exists"}
+                )
 
     result = {
         "success": len(errors) == 0,
@@ -446,9 +745,8 @@ def validate_server_configuration(
         "warnings": warnings,
     }
 
-    # Add installation mode if we detected it
-    if server_type == "mcp-code-checker":
-        result["installation_mode"] = installation_mode
+    # Add installation mode for all server types
+    result["installation_mode"] = installation_mode
 
     return result
 

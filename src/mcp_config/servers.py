@@ -154,8 +154,11 @@ class ServerConfig:
                     if detected:
                         processed_params[param_key] = str(detected)
                 elif param.name == "log-file":
-                    # Don't auto-generate - log-file is now truly optional
-                    pass
+                    # Auto-detect log file for any server type
+                    from .validation import auto_detect_log_file
+                    detected = auto_detect_log_file(project_dir, self.name)
+                    if detected:
+                        processed_params[param_key] = str(detected)
 
         # Generate arguments
         for param in self.parameters:
@@ -278,7 +281,7 @@ class ServerConfig:
         """Check if project is compatible (server-specific logic).
 
         For MCP Code Checker, validates based on installation mode.
-        For MCP Filesystem Server, validates that directory exists.
+        For MCP Filesystem Server, validates directory structure and permissions.
 
         Args:
             project_dir: Path to the project directory
@@ -309,8 +312,32 @@ class ServerConfig:
             # Both the main module and src directory should exist
             return main_path.exists() and src_path.exists()
         elif self.name == "mcp-server-filesystem":
-            # For filesystem server, just need a valid directory
-            return project_dir.exists() and project_dir.is_dir()
+            # Enhanced validation for filesystem server
+            if not (project_dir.exists() and project_dir.is_dir()):
+                return False
+                
+            # Check basic permissions
+            import os
+            try:
+                # Must be readable
+                if not os.access(project_dir, os.R_OK):
+                    return False
+                    
+                # Test if we can list the directory contents
+                list(project_dir.iterdir())
+                
+                # Test if we can create files (for logging)
+                test_file = project_dir / ".mcp_test_write"
+                try:
+                    test_file.touch()
+                    test_file.unlink()  # Clean up
+                    return True
+                except (OSError, PermissionError):
+                    # Read-only is still acceptable for filesystem server
+                    return True
+                    
+            except (OSError, PermissionError):
+                return False
 
         # Default validation for other servers
         return True
@@ -452,9 +479,9 @@ MCP_CODE_CHECKER = ServerConfig(
             name="log-file",
             arg_name="--log-file",
             param_type="path",
-            auto_detect=False,
+            auto_detect=True,
             help="Path for structured JSON logs. "
-            "If not specified, logs only to console",
+            "Auto-generates timestamped log file in project_dir/logs/ if not specified",
         ),
     ],
 )
@@ -473,6 +500,23 @@ MCP_FILESYSTEM_SERVER = ServerConfig(
             required=True,
             help="Directory to serve files from (required)",
         ),
+        # Python execution parameters (for consistency with code checker)
+        ParameterDef(
+            name="python-executable",
+            arg_name="--python-executable",
+            param_type="path",
+            auto_detect=True,
+            help="Path to Python interpreter to use. "
+            "If not specified, auto-detects from project or uses current interpreter",
+        ),
+        ParameterDef(
+            name="venv-path",
+            arg_name="--venv-path",
+            param_type="path",
+            auto_detect=True,
+            help="Path to virtual environment to activate. "
+            "Auto-detects common venv patterns (.venv, venv, env) if not specified",
+        ),
         # Logging parameters
         ParameterDef(
             name="log-level",
@@ -486,8 +530,9 @@ MCP_FILESYSTEM_SERVER = ServerConfig(
             name="log-file",
             arg_name="--log-file",
             param_type="path",
+            auto_detect=True,
             help="Path for structured JSON logs. "
-            "If not specified, logs to mcp_filesystem_server_{timestamp}.log in project_dir/logs/",
+            "Auto-generates timestamped log file in project_dir/logs/ if not specified",
         ),
     ],
 )
