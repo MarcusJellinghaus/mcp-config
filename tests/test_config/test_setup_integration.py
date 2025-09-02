@@ -156,7 +156,6 @@ class TestMCPSetupIntegration:
             print(f"\nRealistic configuration (safely tested):")
             print(json.dumps(json_entry, indent=2))
 
-
     def test_filesystem_server_setup_generates_correct_config(self) -> None:
         """Test that filesystem server setup generates the expected JSON configuration entry."""
 
@@ -183,7 +182,10 @@ class TestMCPSetupIntegration:
                 patch("pathlib.Path.mkdir"),
                 patch("builtins.open"),
                 patch("json.dump"),
-                patch("src.mcp_config.integration._find_cli_executable", return_value="mcp-server-filesystem"),  # Mock CLI availability
+                patch(
+                    "src.mcp_config.integration._find_cli_executable",
+                    return_value="mcp-server-filesystem",
+                ),  # Mock CLI availability
             ):
 
                 # Generate the client configuration (safely mocked)
@@ -252,7 +254,9 @@ class TestMCPSetupIntegration:
             patch("pathlib.Path.exists") as mock_exists,
             patch("builtins.open"),
             patch("json.dump"),
-            patch("src.mcp_config.integration._find_cli_executable", return_value=cli_exe),  # Mock CLI command availability
+            patch(
+                "src.mcp_config.integration._find_cli_executable", return_value=cli_exe
+            ),  # Mock CLI command availability
         ):
 
             # Mock path existence checks
@@ -298,7 +302,9 @@ class TestMCPSetupIntegration:
             if sys.platform == "win32":
                 assert pythonpath.endswith("\\")
 
-            print(f"\nFilesystem server realistic Windows configuration (safely tested):")
+            print(
+                f"\nFilesystem server realistic Windows configuration (safely tested):"
+            )
             print(json.dumps(json_entry, indent=2))
 
     def test_filesystem_server_parameter_combinations(self) -> None:
@@ -348,7 +354,9 @@ class TestMCPSetupIntegration:
                 assert "--log-level" in config_minimal["args"]
                 assert "INFO" in config_minimal["args"]
                 # log-file will be auto-detected and included due to unified auto-detection
-                assert "--log-file" in config_minimal["args"]  # Now automatically included
+                assert (
+                    "--log-file" in config_minimal["args"]
+                )  # Now automatically included
                 # Should contain auto-generated log file path
                 args = config_minimal["args"]
                 log_file_index = args.index("--log-file")

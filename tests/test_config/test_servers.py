@@ -159,7 +159,13 @@ class TestServerConfig:
         assert log_level_param is not None
         assert log_level_param.param_type == "choice"
         assert log_level_param.default == "INFO"
-        assert log_level_param.choices == ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+        assert log_level_param.choices == [
+            "DEBUG",
+            "INFO",
+            "WARNING",
+            "ERROR",
+            "CRITICAL",
+        ]
 
         # Check log-file is optional path with auto-detect
         log_file_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("log-file")
@@ -167,14 +173,16 @@ class TestServerConfig:
         assert log_file_param.param_type == "path"
         assert log_file_param.required is False
         assert log_file_param.auto_detect is True
-        
+
         # Check python-executable has auto-detect
-        python_exe_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("python-executable")
+        python_exe_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name(
+            "python-executable"
+        )
         assert python_exe_param is not None
         assert python_exe_param.param_type == "path"
         assert python_exe_param.required is False
         assert python_exe_param.auto_detect is True
-        
+
         # Check venv-path has auto-detect
         venv_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("venv-path")
         assert venv_param is not None
@@ -192,7 +200,9 @@ class TestServerConfig:
         # These should have auto-detect for code checker
         assert "python-executable" in code_checker_auto
         assert "venv-path" in code_checker_auto
-        assert "log-file" in code_checker_auto  # log-file now HAS auto-detect for code checker
+        assert (
+            "log-file" in code_checker_auto
+        )  # log-file now HAS auto-detect for code checker
 
         # These should NOT have auto-detect
         code_checker_non_auto = [
@@ -203,17 +213,19 @@ class TestServerConfig:
         assert "keep-temp-files" in code_checker_non_auto
         assert "log-level" in code_checker_non_auto
         # Note: log-file now HAS auto-detect for code checker too!
-        
+
         # Test MCP Filesystem Server auto-detect parameters
         filesystem_auto = [
             p.name for p in MCP_FILESYSTEM_SERVER.parameters if p.auto_detect
         ]
-        
+
         # These should have auto-detect for filesystem server
         assert "python-executable" in filesystem_auto
         assert "venv-path" in filesystem_auto
-        assert "log-file" in filesystem_auto  # log-file IS auto-detect for filesystem server
-        
+        assert (
+            "log-file" in filesystem_auto
+        )  # log-file IS auto-detect for filesystem server
+
         # These should NOT have auto-detect
         filesystem_non_auto = [
             p.name for p in MCP_FILESYSTEM_SERVER.parameters if not p.auto_detect
@@ -396,20 +408,23 @@ class TestServerConfig:
         # Should include auto-detected values
         assert "--project-dir" in args
         proj_idx = args.index("--project-dir")
-        assert "path" in args[proj_idx + 1].lower() and "project" in args[proj_idx + 1].lower()
-        
+        assert (
+            "path" in args[proj_idx + 1].lower()
+            and "project" in args[proj_idx + 1].lower()
+        )
+
         assert "--log-level" in args
         assert "DEBUG" in args
-        
+
         # Auto-detected parameters should be present
         assert "--python-executable" in args
         python_idx = args.index("--python-executable")
         assert "auto" in args[python_idx + 1] and "python" in args[python_idx + 1]
-        
+
         assert "--venv-path" in args
         venv_idx = args.index("--venv-path")
         assert "auto" in args[venv_idx + 1] and "venv" in args[venv_idx + 1]
-        
+
         assert "--log-file" in args
         log_idx = args.index("--log-file")
         assert "filesystem.log" in args[log_idx + 1]
@@ -424,11 +439,11 @@ class TestServerConfig:
 
         # Should include required parameter
         assert "--project-dir" in args
-        
+
         # Should include default log level
         assert "--log-level" in args
         assert "INFO" in args
-        
+
         # Auto-detected parameters will be included if detection succeeds
         # This depends on the actual environment, so we just check the method works
         assert isinstance(args, list)
@@ -483,7 +498,7 @@ class TestServerConfig:
 
             # Still valid with development structure
             assert MCP_CODE_CHECKER.validate_project(project_dir)
-            
+
     def test_validate_project_mcp_filesystem_server(self) -> None:
         """Test enhanced project validation for MCP Filesystem Server."""
         with TemporaryDirectory() as tmpdir:
@@ -495,14 +510,14 @@ class TestServerConfig:
             # Create some test content
             test_file = project_dir / "test.txt"
             test_file.write_text("test content")
-            
+
             # Should still validate with content
             assert MCP_FILESYSTEM_SERVER.validate_project(project_dir)
-            
+
             # Test with non-existent directory
             non_existent = project_dir / "does_not_exist"
             assert not MCP_FILESYSTEM_SERVER.validate_project(non_existent)
-            
+
             # Test with file instead of directory
             assert not MCP_FILESYSTEM_SERVER.validate_project(test_file)
 

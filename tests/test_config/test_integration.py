@@ -14,7 +14,12 @@ from src.mcp_config.integration import (
     remove_mcp_server,
     setup_mcp_server,
 )
-from src.mcp_config.servers import MCP_CODE_CHECKER, MCP_FILESYSTEM_SERVER, ParameterDef, ServerConfig
+from src.mcp_config.servers import (
+    MCP_CODE_CHECKER,
+    MCP_FILESYSTEM_SERVER,
+    ParameterDef,
+    ServerConfig,
+)
 
 
 class TestGenerateClientConfig:
@@ -426,7 +431,6 @@ class TestMCPCodeCheckerIntegration:
             assert config["command"] == sys.executable
 
 
-
 class TestMCPFilesystemServerIntegration:
     """Test integration with the actual MCP Filesystem Server config."""
 
@@ -476,7 +480,9 @@ class TestMCPFilesystemServerIntegration:
                 or config["command"] == sys.executable
             ), f"Expected Python executable, got: {config['command']}"
             # For filesystem server, it uses the main_module directly (not -m style)
-            assert "mcp-server-filesystem" in args[0] or args[0] == "mcp-server-filesystem"
+            assert (
+                "mcp-server-filesystem" in args[0] or args[0] == "mcp-server-filesystem"
+            )
 
         # Check environment
         assert "PYTHONPATH" in config["env"]
@@ -529,7 +535,10 @@ class TestMCPFilesystemServerIntegration:
         user_params = {"project_dir": str(tmp_path)}
 
         # Test with CLI command available
-        with patch("src.mcp_config.integration._find_cli_executable", return_value="/usr/bin/mcp-server-filesystem"):
+        with patch(
+            "src.mcp_config.integration._find_cli_executable",
+            return_value="/usr/bin/mcp-server-filesystem",
+        ):
             config = generate_client_config(
                 MCP_FILESYSTEM_SERVER,
                 "cli-test",
@@ -542,8 +551,12 @@ class TestMCPFilesystemServerIntegration:
             assert config["args"][0] == "--project-dir"
 
         # Test without CLI command available (fallback to Python module)
-        with patch("src.mcp_config.integration._find_cli_executable", return_value=None):
-            with patch("src.mcp_config.integration.is_package_installed", return_value=False):
+        with patch(
+            "src.mcp_config.integration._find_cli_executable", return_value=None
+        ):
+            with patch(
+                "src.mcp_config.integration.is_package_installed", return_value=False
+            ):
                 config = generate_client_config(
                     MCP_FILESYSTEM_SERVER,
                     "python-test",
@@ -555,7 +568,9 @@ class TestMCPFilesystemServerIntegration:
                 assert "-m" in config["args"]
                 assert "mcp_server_filesystem" in config["args"]
 
-    def test_mcp_filesystem_server_realistic_windows_config(self, tmp_path: Path) -> None:
+    def test_mcp_filesystem_server_realistic_windows_config(
+        self, tmp_path: Path
+    ) -> None:
         """Test realistic Windows configuration matching the example."""
         # Simulate the example config provided
         project_dir = r"C:\Users\Marcu\Documents\GitHub\mcp-config"
@@ -567,7 +582,9 @@ class TestMCPFilesystemServerIntegration:
         }
 
         # Mock CLI command availability
-        with patch("src.mcp_config.integration._find_cli_executable", return_value=cli_command):
+        with patch(
+            "src.mcp_config.integration._find_cli_executable", return_value=cli_command
+        ):
             config = generate_client_config(
                 MCP_FILESYSTEM_SERVER,
                 "fs on p config",
@@ -576,7 +593,7 @@ class TestMCPFilesystemServerIntegration:
 
             # Should match the example config structure
             assert "mcp-server-filesystem" in config["command"]
-            
+
             # Args should match the example
             args = config["args"]
             assert "--project-dir" in args
@@ -623,14 +640,24 @@ class TestMCPFilesystemServerIntegration:
             mode = MCP_FILESYSTEM_SERVER.get_installation_mode()
             # Should detect CLI command if available
             # Note: actual detection depends on system, so we test the method exists
-            assert mode in ["cli_command", "python_module", "development", "not_available"]
+            assert mode in [
+                "cli_command",
+                "python_module",
+                "development",
+                "not_available",
+            ]
 
         # Test Python module mode
         with patch("shutil.which", return_value=None):
             with patch("importlib.util.find_spec", return_value=True):
                 mode = MCP_FILESYSTEM_SERVER.get_installation_mode()
                 # Method should handle the case properly
-                assert mode in ["cli_command", "python_module", "development", "not_available"]
+                assert mode in [
+                    "cli_command",
+                    "python_module",
+                    "development",
+                    "not_available",
+                ]
 
     def test_mcp_filesystem_server_project_validation(self, tmp_path: Path) -> None:
         """Test project validation for filesystem server."""

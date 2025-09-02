@@ -87,13 +87,15 @@ def get_mcp_filesystem_server_command_mode() -> str:
         "setup.py",
         "pyproject.toml",
         "src/mcp_server_filesystem",
-        "mcp_server_filesystem/__init__.py"
+        "mcp_server_filesystem/__init__.py",
     ]
     if any(Path(indicator).exists() for indicator in dev_indicators):
         # Additional check: look for filesystem server specific files
-        if (Path("src").exists() and 
-            any(Path("src").glob("*filesystem*")) or
-            Path("mcp_server_filesystem").exists()):
+        if (
+            Path("src").exists()
+            and any(Path("src").glob("*filesystem*"))
+            or Path("mcp_server_filesystem").exists()
+        ):
             return "development"
 
     return "not_available"
@@ -122,10 +124,10 @@ def get_server_command_mode(server_type: str) -> str:
 
 def _get_server_module_name(server_name: str) -> str:
     """Get the Python module name for a server.
-    
+
     Args:
         server_name: Name of the server (e.g., "mcp-code-checker")
-        
+
     Returns:
         Python module name for -m execution
     """
@@ -143,16 +145,16 @@ def _build_server_config_with_cli_detection(
     module_name: str,
 ) -> dict[str, Any]:
     """Build server configuration with CLI command detection and fallback.
-    
+
     This function handles the common pattern for servers that support both CLI
     commands and Python module execution modes.
-    
+
     Args:
         server_config: Server configuration definition
         normalized_params: Normalized parameter dictionary
         effective_python: Python executable to use
         module_name: Python module name for -m execution (e.g., "mcp_code_checker")
-        
+
     Returns:
         Configuration dictionary with command and args
     """
@@ -164,10 +166,10 @@ def _build_server_config_with_cli_detection(
             "command": effective_python,
             "args": ["-m", module_name] + args,
         }
-    
+
     # Check for CLI command availability first
     command_mode = get_server_command_mode(server_config.name)
-    
+
     if command_mode == "cli_command":
         # Try to use CLI command when available
         cli_command = _find_cli_executable(
@@ -180,10 +182,8 @@ def _build_server_config_with_cli_detection(
                 or not normalized_params["python_executable"]
             ):
                 normalized_params["python_executable"] = effective_python
-            
-            args = server_config.generate_args(
-                normalized_params, use_cli_command=True
-            )
+
+            args = server_config.generate_args(normalized_params, use_cli_command=True)
             return {
                 "command": cli_command,
                 "args": args,
@@ -191,7 +191,7 @@ def _build_server_config_with_cli_detection(
         else:
             # CLI command not found, fallback to Python module mode
             command_mode = "python_module"
-    
+
     # Use Python module mode (fallback or when CLI not available)
     # Ensure python_executable is always included in parameters
     if (
@@ -199,10 +199,10 @@ def _build_server_config_with_cli_detection(
         or not normalized_params["python_executable"]
     ):
         normalized_params["python_executable"] = effective_python
-    
+
     # Generate args without the main script path (CLI mode)
     args = server_config.generate_args(normalized_params, use_cli_command=True)
-    
+
     # Use effective Python executable as command with -m module_name
     return {
         "command": effective_python,
@@ -241,7 +241,7 @@ def _find_cli_executable(command_name: str, venv_path: str | None = None) -> str
             # Replace with lowercase .exe
             system_path = system_path.with_suffix(".exe")
         return str(system_path)
-    
+
     return None
 
 

@@ -156,6 +156,7 @@ class ServerConfig:
                 elif param.name == "log-file":
                     # Auto-detect log file for any server type
                     from .validation import auto_detect_log_file
+
                     detected = auto_detect_log_file(project_dir, self.name)
                     if detected:
                         processed_params[param_key] = str(detected)
@@ -273,13 +274,15 @@ class ServerConfig:
                 "setup.py",
                 "pyproject.toml",
                 "src/mcp_server_filesystem",
-                "mcp_server_filesystem/__init__.py"
+                "mcp_server_filesystem/__init__.py",
             ]
             if any(Path(indicator).exists() for indicator in dev_indicators):
                 # Additional check: look for filesystem server specific files
-                if (Path("src").exists() and 
-                    any(Path("src").glob("*filesystem*")) or
-                    Path("mcp_server_filesystem").exists()):
+                if (
+                    Path("src").exists()
+                    and any(Path("src").glob("*filesystem*"))
+                    or Path("mcp_server_filesystem").exists()
+                ):
                     return "development"
 
             return "not_available"
@@ -325,7 +328,7 @@ class ServerConfig:
             # Enhanced validation for filesystem server
             if not (project_dir.exists() and project_dir.is_dir()):
                 return False
-                
+
             # If using CLI command, just verify directory exists and is accessible
             if self.supports_cli_command():
                 try:
@@ -334,10 +337,11 @@ class ServerConfig:
                     return True
                 except (OSError, PermissionError):
                     return False
-                    
+
             # Check if package is installed (module mode)
             try:
                 import importlib.util
+
                 spec = importlib.util.find_spec("mcp_server_filesystem")
                 if spec is not None:
                     # Package is installed, just need valid directory
@@ -348,17 +352,17 @@ class ServerConfig:
                         return False
             except (ImportError, ModuleNotFoundError):
                 pass
-                
+
             # Development mode - check for expected structure
             main_path = project_dir / self.main_module
             src_path = project_dir / "src"
-            
+
             # Check if main module exists or if we have a filesystem server development structure
             if main_path.exists():
                 return True
             elif src_path.exists() and any(src_path.glob("*filesystem*")):
                 return True
-            
+
             # Basic directory validation for unknown modes
             try:
                 list(project_dir.iterdir())
