@@ -235,7 +235,6 @@ class ServerConfig:
         """
         import shutil
         import importlib.util
-        from pathlib import Path
 
         if self.name == "mcp-code-checker":
             # Check for CLI command
