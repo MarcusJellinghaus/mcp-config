@@ -68,6 +68,58 @@ def get_mcp_code_checker_command_mode() -> str:
     return "not_available"
 
 
+def get_mcp_filesystem_server_command_mode() -> str:
+    """Determine the best command mode for MCP Filesystem Server.
+
+    Returns:
+        One of: 'cli_command', 'python_module', 'development', 'not_available'
+    """
+    # First check for CLI command
+    if is_command_available("mcp-server-filesystem"):
+        return "cli_command"
+
+    # Check if package is installed
+    if is_package_installed("mcp_server_filesystem"):
+        return "python_module"
+
+    # Check for development mode (if we're in a filesystem server project)
+    dev_indicators = [
+        "setup.py",
+        "pyproject.toml",
+        "src/mcp_server_filesystem",
+        "mcp_server_filesystem/__init__.py"
+    ]
+    if any(Path(indicator).exists() for indicator in dev_indicators):
+        # Additional check: look for filesystem server specific files
+        if (Path("src").exists() and 
+            any(Path("src").glob("*filesystem*")) or
+            Path("mcp_server_filesystem").exists()):
+            return "development"
+
+    return "not_available"
+
+
+def get_server_command_mode(server_type: str) -> str:
+    """Unified function to determine the best command mode for any supported server.
+
+    Args:
+        server_type: Type of server (e.g., 'mcp-code-checker', 'mcp-server-filesystem')
+
+    Returns:
+        One of: 'cli_command', 'python_module', 'development', 'not_available'
+    """
+    if server_type == "mcp-code-checker":
+        return get_mcp_code_checker_command_mode()
+    elif server_type == "mcp-server-filesystem":
+        return get_mcp_filesystem_server_command_mode()
+    else:
+        # For unknown server types, just check if CLI command exists
+        cli_command = server_type.replace("_", "-")
+        if is_command_available(cli_command):
+            return "cli_command"
+        return "not_available"
+
+
 def _find_cli_executable(command_name: str, venv_path: str | None = None) -> str | None:
     """Find the CLI executable, checking venv first if provided.
 
@@ -339,32 +391,49 @@ def build_server_config(
             }
     elif server_config.name == "mcp-server-filesystem":
         # Check for CLI command availability first
-        cli_command = _find_cli_executable(
-            "mcp-server-filesystem", normalized_params.get("venv_path")
-        )
-        
-        if cli_command:
-            # Use CLI command when available (preferred)
-            args = server_config.generate_args(normalized_params, use_cli_command=True)
-            config = {
-                "command": cli_command,
-                "args": args,
-            }
-        else:
-            # Fallback to Python module mode if available
-            if is_package_installed("mcp_server_filesystem"):
-                args = server_config.generate_args(normalized_params, use_cli_command=True)
+        command_mode = get_mcp_filesystem_server_command_mode()
+
+        if command_mode == "cli_command":
+            # Use CLI command when available
+            cli_command = _find_cli_executable(
+                "mcp-server-filesystem", normalized_params.get("venv_path")
+            )
+            if cli_command:
+                # Ensure python_executable is included in parameters for CLI command
+                if (
+                    "python_executable" not in normalized_params
+                    or not normalized_params["python_executable"]
+                ):
+                    normalized_params["python_executable"] = effective_python
+
+                args = server_config.generate_args(
+                    normalized_params, use_cli_command=True
+                )
                 config = {
-                    "command": effective_python,
-                    "args": ["-m", "mcp_server_filesystem"] + args,
-                }
-            else:
-                # Last resort: assume it's available as a command
-                args = server_config.generate_args(normalized_params, use_cli_command=True)
-                config = {
-                    "command": "mcp-server-filesystem",
+                    "command": cli_command,
                     "args": args,
                 }
+            else:
+                # Fallback to Python module mode
+                command_mode = "python_module"
+
+        if command_mode != "cli_command":
+            # Use Python module mode (fallback or when CLI not available)
+            # Ensure python_executable is always included in parameters
+            if (
+                "python_executable" not in normalized_params
+                or not normalized_params["python_executable"]
+            ):
+                normalized_params["python_executable"] = effective_python
+
+            # Generate args without the main script path (CLI mode)
+            args = server_config.generate_args(normalized_params, use_cli_command=True)
+
+            # Use effective Python executable as command with -m mcp_server_filesystem
+            config = {
+                "command": effective_python,
+                "args": ["-m", "mcp_server_filesystem"] + args,
+            }
     else:
         # Other servers - use standard approach with effective Python
         args = server_config.generate_args(normalized_params)
@@ -507,32 +576,49 @@ def generate_client_config(
             }
     elif server_config.name == "mcp-server-filesystem":
         # Check for CLI command availability first
-        cli_command = _find_cli_executable(
-            "mcp-server-filesystem", normalized_params.get("venv_path")
-        )
-        
-        if cli_command:
-            # Use CLI command when available (preferred)
-            args = server_config.generate_args(normalized_params, use_cli_command=True)
-            client_config = {
-                "command": cli_command,
-                "args": args,
-            }
-        else:
-            # Fallback to Python module mode if available
-            if is_package_installed("mcp_server_filesystem"):
-                args = server_config.generate_args(normalized_params, use_cli_command=True)
+        command_mode = get_mcp_filesystem_server_command_mode()
+
+        if command_mode == "cli_command":
+            # Use CLI command when available
+            cli_command = _find_cli_executable(
+                "mcp-server-filesystem", normalized_params.get("venv_path")
+            )
+            if cli_command:
+                # Ensure python_executable is included in parameters for CLI command
+                if (
+                    "python_executable" not in normalized_params
+                    or not normalized_params["python_executable"]
+                ):
+                    normalized_params["python_executable"] = effective_python
+
+                args = server_config.generate_args(
+                    normalized_params, use_cli_command=True
+                )
                 client_config = {
-                    "command": effective_python,
-                    "args": ["-m", "mcp_server_filesystem"] + args,
-                }
-            else:
-                # Last resort: assume it's available as a command
-                args = server_config.generate_args(normalized_params, use_cli_command=True)
-                client_config = {
-                    "command": "mcp-server-filesystem",
+                    "command": cli_command,
                     "args": args,
                 }
+            else:
+                # Fallback to Python module mode
+                command_mode = "python_module"
+
+        if command_mode != "cli_command":
+            # Use Python module mode (fallback or when CLI not available)
+            # Ensure python_executable is always included in parameters
+            if (
+                "python_executable" not in normalized_params
+                or not normalized_params["python_executable"]
+            ):
+                normalized_params["python_executable"] = effective_python
+
+            # Generate args without the main script path (CLI mode)
+            args = server_config.generate_args(normalized_params, use_cli_command=True)
+
+            # Use effective Python executable as command with -m mcp_server_filesystem
+            client_config = {
+                "command": effective_python,
+                "args": ["-m", "mcp_server_filesystem"] + args,
+            }
     else:
         # Other servers - use standard approach with effective Python
         args = server_config.generate_args(normalized_params)

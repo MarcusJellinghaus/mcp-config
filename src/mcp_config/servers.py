@@ -115,8 +115,8 @@ class ServerConfig:
             args = []
         else:
             # Get the absolute path to the main module
-            # For MCP Code Checker, resolve main_module relative to project_dir
-            if self.name == "mcp-code-checker" and "project_dir" in user_params:
+            # For both MCP servers, resolve main_module relative to project_dir if it exists
+            if "project_dir" in user_params and self.main_module.startswith("src/"):
                 proj_dir = Path(user_params["project_dir"]).resolve()
                 main_module_path = proj_dir / self.main_module
                 args = [str(main_module_path.resolve())]
@@ -233,10 +233,11 @@ class ServerConfig:
         Returns:
             One of: 'cli_command', 'python_module', 'development', 'not_available'
         """
-        if self.name == "mcp-code-checker":
-            import shutil
-            import importlib.util
+        import shutil
+        import importlib.util
+        from pathlib import Path
 
+        if self.name == "mcp-code-checker":
             # Check for CLI command
             if shutil.which("mcp-code-checker"):
                 return "cli_command"
@@ -250,16 +251,11 @@ class ServerConfig:
                 pass
 
             # Check for development mode
-            from pathlib import Path
-
             if Path("src/main.py").exists():
                 return "development"
 
             return "not_available"
         elif self.name == "mcp-server-filesystem":
-            import shutil
-            import importlib.util
-
             # Check for CLI command
             if shutil.which("mcp-server-filesystem"):
                 return "cli_command"
@@ -271,6 +267,21 @@ class ServerConfig:
                     return "python_module"
             except (ImportError, ModuleNotFoundError):
                 pass
+
+            # Check for development mode (if we're in a filesystem server project)
+            # Look for common filesystem server development patterns
+            dev_indicators = [
+                "setup.py",
+                "pyproject.toml",
+                "src/mcp_server_filesystem",
+                "mcp_server_filesystem/__init__.py"
+            ]
+            if any(Path(indicator).exists() for indicator in dev_indicators):
+                # Additional check: look for filesystem server specific files
+                if (Path("src").exists() and 
+                    any(Path("src").glob("*filesystem*")) or
+                    Path("mcp_server_filesystem").exists()):
+                    return "development"
 
             return "not_available"
 
@@ -316,26 +327,43 @@ class ServerConfig:
             if not (project_dir.exists() and project_dir.is_dir()):
                 return False
                 
-            # Check basic permissions
-            import os
-            try:
-                # Must be readable
-                if not os.access(project_dir, os.R_OK):
-                    return False
-                    
-                # Test if we can list the directory contents
-                list(project_dir.iterdir())
-                
-                # Test if we can create files (for logging)
-                test_file = project_dir / ".mcp_test_write"
+            # If using CLI command, just verify directory exists and is accessible
+            if self.supports_cli_command():
                 try:
-                    test_file.touch()
-                    test_file.unlink()  # Clean up
+                    # Test basic read access
+                    list(project_dir.iterdir())
                     return True
                 except (OSError, PermissionError):
-                    # Read-only is still acceptable for filesystem server
-                    return True
+                    return False
                     
+            # Check if package is installed (module mode)
+            try:
+                import importlib.util
+                spec = importlib.util.find_spec("mcp_server_filesystem")
+                if spec is not None:
+                    # Package is installed, just need valid directory
+                    try:
+                        list(project_dir.iterdir())
+                        return True
+                    except (OSError, PermissionError):
+                        return False
+            except (ImportError, ModuleNotFoundError):
+                pass
+                
+            # Development mode - check for expected structure
+            main_path = project_dir / self.main_module
+            src_path = project_dir / "src"
+            
+            # Check if main module exists or if we have a filesystem server development structure
+            if main_path.exists():
+                return True
+            elif src_path.exists() and any(src_path.glob("*filesystem*")):
+                return True
+            
+            # Basic directory validation for unknown modes
+            try:
+                list(project_dir.iterdir())
+                return True
             except (OSError, PermissionError):
                 return False
 
@@ -490,7 +518,7 @@ MCP_CODE_CHECKER = ServerConfig(
 MCP_FILESYSTEM_SERVER = ServerConfig(
     name="mcp-server-filesystem",
     display_name="MCP Filesystem Server",
-    main_module="mcp-server-filesystem",
+    main_module="src/mcp_server_filesystem/main.py",
     parameters=[
         # Required parameters
         ParameterDef(

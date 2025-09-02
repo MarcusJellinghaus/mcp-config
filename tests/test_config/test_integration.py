@@ -550,8 +550,10 @@ class TestMCPFilesystemServerIntegration:
                     user_params,
                 )
 
-                # Should fallback to assuming the command is available
-                assert "mcp-server-filesystem" in config["command"] or config["command"] == "mcp-server-filesystem"
+                # Should fallback to Python module mode
+                assert config["command"] == sys.executable
+                assert "-m" in config["args"]
+                assert "mcp_server_filesystem" in config["args"]
 
     def test_mcp_filesystem_server_realistic_windows_config(self, tmp_path: Path) -> None:
         """Test realistic Windows configuration matching the example."""

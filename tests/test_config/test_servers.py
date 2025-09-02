@@ -134,7 +134,7 @@ class TestServerConfig:
         """Test that MCP Filesystem Server configuration is complete."""
         assert MCP_FILESYSTEM_SERVER.name == "mcp-server-filesystem"
         assert MCP_FILESYSTEM_SERVER.display_name == "MCP Filesystem Server"
-        assert MCP_FILESYSTEM_SERVER.main_module == "mcp-server-filesystem"
+        assert MCP_FILESYSTEM_SERVER.main_module == "src/mcp_server_filesystem/main.py"
         assert len(MCP_FILESYSTEM_SERVER.parameters) == 5
 
         # Check all parameter names are present
