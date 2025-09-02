@@ -301,8 +301,8 @@ class TestMCPSetupIntegration:
             print(f"\nFilesystem server realistic Windows configuration (safely tested):")
             print(json.dumps(json_entry, indent=2))
 
-    def test_filesystem_server_dry_run_scenarios(self) -> None:
-        """Test filesystem server setup in various dry-run scenarios."""
+    def test_filesystem_server_parameter_combinations(self) -> None:
+        """Test filesystem server setup with different parameter combinations."""
 
         server_type = "mcp-server-filesystem"
         server_name = "test-filesystem"
@@ -371,10 +371,10 @@ class TestMCPSetupIntegration:
                 assert "--log-file" in args
                 assert "filesystem.log" in " ".join(args)
 
-                print("✓ Filesystem server dry-run scenarios tested successfully")
+                print("✓ Filesystem server parameter combinations tested successfully")
 
-    def test_filesystem_server_validation_scenarios(self) -> None:
-        """Test filesystem server validation error scenarios."""
+    def test_filesystem_server_parameter_validation_errors(self) -> None:
+        """Test filesystem server parameter validation error handling."""
 
         server_type = "mcp-server-filesystem"
         server_config = registry.get(server_type)
@@ -405,4 +405,4 @@ class TestMCPSetupIntegration:
             )
         assert "not in valid choices" in str(exc_info.value)
 
-        print("✓ Filesystem server validation scenarios tested successfully")
+        print("✓ Filesystem server parameter validation errors tested successfully")

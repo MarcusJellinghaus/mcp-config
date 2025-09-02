@@ -120,6 +120,96 @@ def get_server_command_mode(server_type: str) -> str:
         return "not_available"
 
 
+def _get_server_module_name(server_name: str) -> str:
+    """Get the Python module name for a server.
+    
+    Args:
+        server_name: Name of the server (e.g., "mcp-code-checker")
+        
+    Returns:
+        Python module name for -m execution
+    """
+    module_mapping = {
+        "mcp-code-checker": "mcp_code_checker",
+        "mcp-server-filesystem": "mcp_server_filesystem",
+    }
+    return module_mapping.get(server_name, server_name.replace("-", "_"))
+
+
+def _build_server_config_with_cli_detection(
+    server_config: ServerConfig,
+    normalized_params: dict[str, Any],
+    effective_python: str,
+    module_name: str,
+) -> dict[str, Any]:
+    """Build server configuration with CLI command detection and fallback.
+    
+    This function handles the common pattern for servers that support both CLI
+    commands and Python module execution modes.
+    
+    Args:
+        server_config: Server configuration definition
+        normalized_params: Normalized parameter dictionary
+        effective_python: Python executable to use
+        module_name: Python module name for -m execution (e.g., "mcp_code_checker")
+        
+    Returns:
+        Configuration dictionary with command and args
+    """
+    cli_command_name = server_config.get_cli_command_name()
+    if not cli_command_name:
+        # Server doesn't support CLI commands, use Python module mode
+        args = server_config.generate_args(normalized_params, use_cli_command=True)
+        return {
+            "command": effective_python,
+            "args": ["-m", module_name] + args,
+        }
+    
+    # Check for CLI command availability first
+    command_mode = get_server_command_mode(server_config.name)
+    
+    if command_mode == "cli_command":
+        # Try to use CLI command when available
+        cli_command = _find_cli_executable(
+            cli_command_name, normalized_params.get("venv_path")
+        )
+        if cli_command:
+            # Ensure python_executable is included in parameters for CLI command
+            if (
+                "python_executable" not in normalized_params
+                or not normalized_params["python_executable"]
+            ):
+                normalized_params["python_executable"] = effective_python
+            
+            args = server_config.generate_args(
+                normalized_params, use_cli_command=True
+            )
+            return {
+                "command": cli_command,
+                "args": args,
+            }
+        else:
+            # CLI command not found, fallback to Python module mode
+            command_mode = "python_module"
+    
+    # Use Python module mode (fallback or when CLI not available)
+    # Ensure python_executable is always included in parameters
+    if (
+        "python_executable" not in normalized_params
+        or not normalized_params["python_executable"]
+    ):
+        normalized_params["python_executable"] = effective_python
+    
+    # Generate args without the main script path (CLI mode)
+    args = server_config.generate_args(normalized_params, use_cli_command=True)
+    
+    # Use effective Python executable as command with -m module_name
+    return {
+        "command": effective_python,
+        "args": ["-m", module_name] + args,
+    }
+
+
 def _find_cli_executable(command_name: str, venv_path: str | None = None) -> str | None:
     """Find the CLI executable, checking venv first if provided.
 
@@ -342,98 +432,13 @@ def build_server_config(
             if venv_python.exists():
                 effective_python = str(venv_python)
 
-    # Generate configuration based on available command mode
-    config: dict[str, Any]
-    if server_config.name == "mcp-code-checker":
-        # Check for CLI command availability first
-        command_mode = get_mcp_code_checker_command_mode()
-
-        if command_mode == "cli_command":
-            # Use CLI command when available
-            cli_command = _find_cli_executable(
-                "mcp-code-checker", normalized_params.get("venv_path")
-            )
-            if cli_command:
-                # Ensure python_executable is included in parameters for CLI command
-                if (
-                    "python_executable" not in normalized_params
-                    or not normalized_params["python_executable"]
-                ):
-                    normalized_params["python_executable"] = effective_python
-
-                args = server_config.generate_args(
-                    normalized_params, use_cli_command=True
-                )
-                config = {
-                    "command": cli_command,
-                    "args": args,
-                }
-            else:
-                # Fallback to Python module mode
-                command_mode = "python_module"
-
-        if command_mode != "cli_command":
-            # Use Python module mode (fallback or when CLI not available)
-            # Ensure python_executable is always included in parameters
-            if (
-                "python_executable" not in normalized_params
-                or not normalized_params["python_executable"]
-            ):
-                normalized_params["python_executable"] = effective_python
-
-            # Generate args without the main script path (CLI mode)
-            args = server_config.generate_args(normalized_params, use_cli_command=True)
-
-            # Use effective Python executable as command with -m mcp_code_checker
-            config = {
-                "command": effective_python,
-                "args": ["-m", "mcp_code_checker"] + args,
-            }
-    elif server_config.name == "mcp-server-filesystem":
-        # Check for CLI command availability first
-        command_mode = get_mcp_filesystem_server_command_mode()
-
-        if command_mode == "cli_command":
-            # Use CLI command when available
-            cli_command = _find_cli_executable(
-                "mcp-server-filesystem", normalized_params.get("venv_path")
-            )
-            if cli_command:
-                # Ensure python_executable is included in parameters for CLI command
-                if (
-                    "python_executable" not in normalized_params
-                    or not normalized_params["python_executable"]
-                ):
-                    normalized_params["python_executable"] = effective_python
-
-                args = server_config.generate_args(
-                    normalized_params, use_cli_command=True
-                )
-                config = {
-                    "command": cli_command,
-                    "args": args,
-                }
-            else:
-                # Fallback to Python module mode
-                command_mode = "python_module"
-
-        if command_mode != "cli_command":
-            # Use Python module mode (fallback or when CLI not available)
-            # Ensure python_executable is always included in parameters
-            if (
-                "python_executable" not in normalized_params
-                or not normalized_params["python_executable"]
-            ):
-                normalized_params["python_executable"] = effective_python
-
-            # Generate args without the main script path (CLI mode)
-            args = server_config.generate_args(normalized_params, use_cli_command=True)
-
-            # Use effective Python executable as command with -m mcp_server_filesystem
-            config = {
-                "command": effective_python,
-                "args": ["-m", "mcp_server_filesystem"] + args,
-            }
+    # Generate configuration based on server type and available command mode
+    if server_config.name in ["mcp-code-checker", "mcp-server-filesystem"]:
+        # Use unified CLI detection for supported servers
+        module_name = _get_server_module_name(server_config.name)
+        config = _build_server_config_with_cli_detection(
+            server_config, normalized_params, effective_python, module_name
+        )
     else:
         # Other servers - use standard approach with effective Python
         args = server_config.generate_args(normalized_params)
@@ -528,97 +533,12 @@ def generate_client_config(
                 effective_python = str(venv_python)
 
     # Generate configuration based on server type
-    client_config: dict[str, Any]
-    if server_config.name == "mcp-code-checker":
-        # Check for CLI command availability first
-        command_mode = get_mcp_code_checker_command_mode()
-
-        if command_mode == "cli_command":
-            # Use CLI command when available
-            cli_command = _find_cli_executable(
-                "mcp-code-checker", normalized_params.get("venv_path")
-            )
-            if cli_command:
-                # Ensure python_executable is included in parameters for CLI command
-                if (
-                    "python_executable" not in normalized_params
-                    or not normalized_params["python_executable"]
-                ):
-                    normalized_params["python_executable"] = effective_python
-
-                args = server_config.generate_args(
-                    normalized_params, use_cli_command=True
-                )
-                client_config = {
-                    "command": cli_command,
-                    "args": args,
-                }
-            else:
-                # Fallback to Python module mode
-                command_mode = "python_module"
-
-        if command_mode != "cli_command":
-            # Use Python module mode (fallback or when CLI not available)
-            # Ensure python_executable is always included in parameters
-            if (
-                "python_executable" not in normalized_params
-                or not normalized_params["python_executable"]
-            ):
-                normalized_params["python_executable"] = effective_python
-
-            # Generate args without the main script path (CLI mode)
-            args = server_config.generate_args(normalized_params, use_cli_command=True)
-
-            # Use effective Python executable as command with -m mcp_code_checker
-            client_config = {
-                "command": effective_python,
-                "args": ["-m", "mcp_code_checker"] + args,
-            }
-    elif server_config.name == "mcp-server-filesystem":
-        # Check for CLI command availability first
-        command_mode = get_mcp_filesystem_server_command_mode()
-
-        if command_mode == "cli_command":
-            # Use CLI command when available
-            cli_command = _find_cli_executable(
-                "mcp-server-filesystem", normalized_params.get("venv_path")
-            )
-            if cli_command:
-                # Ensure python_executable is included in parameters for CLI command
-                if (
-                    "python_executable" not in normalized_params
-                    or not normalized_params["python_executable"]
-                ):
-                    normalized_params["python_executable"] = effective_python
-
-                args = server_config.generate_args(
-                    normalized_params, use_cli_command=True
-                )
-                client_config = {
-                    "command": cli_command,
-                    "args": args,
-                }
-            else:
-                # Fallback to Python module mode
-                command_mode = "python_module"
-
-        if command_mode != "cli_command":
-            # Use Python module mode (fallback or when CLI not available)
-            # Ensure python_executable is always included in parameters
-            if (
-                "python_executable" not in normalized_params
-                or not normalized_params["python_executable"]
-            ):
-                normalized_params["python_executable"] = effective_python
-
-            # Generate args without the main script path (CLI mode)
-            args = server_config.generate_args(normalized_params, use_cli_command=True)
-
-            # Use effective Python executable as command with -m mcp_server_filesystem
-            client_config = {
-                "command": effective_python,
-                "args": ["-m", "mcp_server_filesystem"] + args,
-            }
+    if server_config.name in ["mcp-code-checker", "mcp-server-filesystem"]:
+        # Use unified CLI detection for supported servers
+        module_name = _get_server_module_name(server_config.name)
+        client_config = _build_server_config_with_cli_detection(
+            server_config, normalized_params, effective_python, module_name
+        )
     else:
         # Other servers - use standard approach with effective Python
         args = server_config.generate_args(normalized_params)
