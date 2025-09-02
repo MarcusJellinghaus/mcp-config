@@ -204,6 +204,10 @@ class ServerConfig:
             import shutil
 
             return shutil.which("mcp-code-checker") is not None
+        elif self.name == "mcp-server-filesystem":
+            import shutil
+
+            return shutil.which("mcp-server-filesystem") is not None
         # Add other servers with CLI commands here in the future
         return False
 
@@ -215,6 +219,8 @@ class ServerConfig:
         """
         if self.name == "mcp-code-checker":
             return "mcp-code-checker"
+        elif self.name == "mcp-server-filesystem":
+            return "mcp-server-filesystem"
         # Add other servers here
         return None
 
@@ -247,6 +253,23 @@ class ServerConfig:
                 return "development"
 
             return "not_available"
+        elif self.name == "mcp-server-filesystem":
+            import shutil
+            import importlib.util
+
+            # Check for CLI command
+            if shutil.which("mcp-server-filesystem"):
+                return "cli_command"
+
+            # Check if package is installed
+            try:
+                spec = importlib.util.find_spec("mcp_server_filesystem")
+                if spec is not None:
+                    return "python_module"
+            except (ImportError, ModuleNotFoundError):
+                pass
+
+            return "not_available"
 
         # Default for other servers
         return "not_available"
@@ -255,6 +278,7 @@ class ServerConfig:
         """Check if project is compatible (server-specific logic).
 
         For MCP Code Checker, validates based on installation mode.
+        For MCP Filesystem Server, validates that directory exists.
 
         Args:
             project_dir: Path to the project directory
@@ -284,6 +308,9 @@ class ServerConfig:
 
             # Both the main module and src directory should exist
             return main_path.exists() and src_path.exists()
+        elif self.name == "mcp-server-filesystem":
+            # For filesystem server, just need a valid directory
+            return project_dir.exists() and project_dir.is_dir()
 
         # Default validation for other servers
         return True
@@ -432,5 +459,39 @@ MCP_CODE_CHECKER = ServerConfig(
     ],
 )
 
-# Register the built-in server
+# MCP Filesystem Server built-in config
+MCP_FILESYSTEM_SERVER = ServerConfig(
+    name="mcp-server-filesystem",
+    display_name="MCP Filesystem Server",
+    main_module="mcp-server-filesystem",
+    parameters=[
+        # Required parameters
+        ParameterDef(
+            name="project-dir",
+            arg_name="--project-dir",
+            param_type="path",
+            required=True,
+            help="Directory to serve files from (required)",
+        ),
+        # Logging parameters
+        ParameterDef(
+            name="log-level",
+            arg_name="--log-level",
+            param_type="choice",
+            default="INFO",
+            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            help="Set logging level (default: INFO)",
+        ),
+        ParameterDef(
+            name="log-file",
+            arg_name="--log-file",
+            param_type="path",
+            help="Path for structured JSON logs. "
+            "If not specified, logs to mcp_filesystem_server_{timestamp}.log in project_dir/logs/",
+        ),
+    ],
+)
+
+# Register the built-in servers
 registry.register(MCP_CODE_CHECKER)
+registry.register(MCP_FILESYSTEM_SERVER)

@@ -102,6 +102,39 @@ def add_global_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
+def add_deduplicated_server_parameters(parser: argparse.ArgumentParser) -> None:
+    """Add server parameters to parser, deduplicating by parameter name.
+    
+    When multiple servers have parameters with the same name (like --project-dir),
+    we only add it once to avoid argparse conflicts.
+    
+    Args:
+        parser: ArgumentParser to add parameters to
+    """
+    added_params = set()  # Track parameter names we've already added
+    
+    # Collect all parameters from all servers
+    all_params = []
+    for server_type in registry.list_servers():
+        server_config = registry.get(server_type)
+        if server_config:
+            for param in server_config.parameters:
+                if param.name not in added_params:
+                    all_params.append((server_config, param))
+                    added_params.add(param.name)
+    
+    # Group parameters by server for nice organization
+    if all_params:
+        # Create a general group for shared parameters
+        group = parser.add_argument_group(
+            "Server Options",
+            "Parameters for configuring MCP servers"
+        )
+        
+        for server_config, param in all_params:
+            add_parameter_to_parser(group, param)
+
+
 def add_server_parameters(parser: argparse.ArgumentParser, server_type: str) -> None:
     """Add server-specific parameters to argument parser.
 
@@ -250,10 +283,9 @@ def add_setup_subcommand(subparsers: Any) -> None:
     # Global options
     add_global_options(setup_parser)
 
-    # Add parameters for all registered servers
-    # This allows proper help display
-    for server_type in registry.list_servers():
-        add_server_parameters(setup_parser, server_type)
+    # Add parameters for all registered servers, but deduplicate by parameter name
+    # This allows proper help display while avoiding conflicts
+    add_deduplicated_server_parameters(setup_parser)
 
 
 def add_remove_subcommand(subparsers: Any) -> None:

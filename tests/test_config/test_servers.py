@@ -8,6 +8,7 @@ import pytest
 
 from src.mcp_config.servers import (
     MCP_CODE_CHECKER,
+    MCP_FILESYSTEM_SERVER,
     ParameterDef,
     ServerConfig,
     ServerRegistry,
@@ -128,6 +129,41 @@ class TestServerConfig:
             "log-file",
         ]
         assert set(param_names) == set(expected_names)
+
+    def test_mcp_filesystem_server_configuration(self) -> None:
+        """Test that MCP Filesystem Server configuration is complete."""
+        assert MCP_FILESYSTEM_SERVER.name == "mcp-server-filesystem"
+        assert MCP_FILESYSTEM_SERVER.display_name == "MCP Filesystem Server"
+        assert MCP_FILESYSTEM_SERVER.main_module == "mcp-server-filesystem"
+        assert len(MCP_FILESYSTEM_SERVER.parameters) == 3
+
+        # Check all parameter names are present
+        param_names = [p.name for p in MCP_FILESYSTEM_SERVER.parameters]
+        expected_names = [
+            "project-dir",
+            "log-level",
+            "log-file",
+        ]
+        assert set(param_names) == set(expected_names)
+
+        # Check project-dir is required
+        project_dir_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("project-dir")
+        assert project_dir_param is not None
+        assert project_dir_param.required is True
+        assert project_dir_param.param_type == "path"
+
+        # Check log-level choices
+        log_level_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("log-level")
+        assert log_level_param is not None
+        assert log_level_param.param_type == "choice"
+        assert log_level_param.default == "INFO"
+        assert log_level_param.choices == ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+
+        # Check log-file is optional path
+        log_file_param = MCP_FILESYSTEM_SERVER.get_parameter_by_name("log-file")
+        assert log_file_param is not None
+        assert log_file_param.param_type == "path"
+        assert log_file_param.required is False
 
     def test_auto_detect_parameters(self) -> None:
         """Test that auto-detect is set for appropriate parameters."""
@@ -482,15 +518,25 @@ class TestGlobalRegistry:
         assert config.name == "mcp-code-checker"
         assert len(config.parameters) == 7
 
+    def test_mcp_filesystem_server_registered(self) -> None:
+        """Test that MCP Filesystem Server is registered in global registry."""
+        config = registry.get("mcp-server-filesystem")
+        assert config is not None
+        assert config.name == "mcp-server-filesystem"
+        assert len(config.parameters) == 3
+
     def test_registry_completeness(self) -> None:
         """Test that the global registry has expected servers."""
         servers = registry.list_servers()
         assert "mcp-code-checker" in servers
+        assert "mcp-server-filesystem" in servers
+        assert len(servers) >= 2  # May have external servers
 
     def test_is_registered_with_global_registry(self) -> None:
         """Test is_registered method with global registry."""
-        # MCP Code Checker should be registered
+        # Built-in servers should be registered
         assert registry.is_registered("mcp-code-checker")
+        assert registry.is_registered("mcp-server-filesystem")
 
         # Non-existent server should not be registered
         assert not registry.is_registered("non-existent-server")
