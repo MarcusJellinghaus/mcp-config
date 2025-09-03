@@ -58,14 +58,14 @@ class MissingParameterError(ConfigError):
 
         suggestions = [
             f"Run: mcp-config setup {server_type} <n> --{param_name} <value>",
-            f"Use --help to see all available parameters",
+            "Use --help to see all available parameters",
         ]
 
         # Add specific suggestions based on parameter
         if param_name == "project-dir":
             suggestions.insert(0, "Use current directory: --project-dir .")
             suggestions.insert(
-                1, f"Specify project path: --project-dir /path/to/project"
+                1, "Specify project path: --project-dir /path/to/project"
             )
         elif param_name == "python-executable":
             suggestions.insert(0, "Auto-detection failed, specify Python path manually")

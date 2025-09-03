@@ -182,7 +182,7 @@ def test_with_installed_package() -> None:
         code, stdout, stderr = run_command(cmd)
 
         if code == expected_code:
-            print(f"  ✓ PASS")
+            print("  ✓ PASS")
         else:
             if "mcp-config" in stderr or "not found" in stderr.lower():
                 print("  ⚠ SKIP (package not installed, run: pip install -e .)")
@@ -237,7 +237,7 @@ def test_parameter_validation() -> None:
         code, stdout, stderr = run_command(cmd)
 
         if code == expected_code:
-            print(f"  ✓ PASS")
+            print("  ✓ PASS")
         else:
             print(f"  ✗ FAIL (expected: {expected_code}, got: {code})")
         print()
