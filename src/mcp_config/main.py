@@ -360,8 +360,10 @@ def handle_remove_command(args: argparse.Namespace) -> int:
                 OutputFormatter.print_error(
                     f"No managed servers found matching pattern '{args.server_name}'"
                 )
+                print("\nTip: Use 'mcp-config list' to see available servers")
             else:
                 OutputFormatter.print_error(f"Server '{args.server_name}' not found")
+                print("\nTip: Use 'mcp-config list' to see available servers")
             return 1
 
         # Show what will be removed
