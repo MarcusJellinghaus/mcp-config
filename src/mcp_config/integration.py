@@ -460,13 +460,13 @@ def build_server_config(
     # Add environment if needed
     # Use mcp-config directory for PYTHONPATH, not project directory
     mcp_config_dir = Path.cwd()
-    
+
     # If we have a venv_path, use its parent as the mcp-config directory
     if "venv_path" in normalized_params and normalized_params["venv_path"]:
         venv_path = Path(normalized_params["venv_path"])
         if venv_path.exists():
             mcp_config_dir = venv_path.parent
-    
+
     pythonpath = str(mcp_config_dir)
     # Ensure trailing separator on Windows
     if sys.platform == "win32" and not pythonpath.endswith("\\"):
@@ -576,14 +576,14 @@ def generate_client_config(
     # This ensures the virtual environment and dependencies are accessible
     # Use the current working directory as the base for mcp-config
     mcp_config_dir = Path.cwd()
-    
+
     # If we have a venv_path, use its parent as the mcp-config directory
     if "venv_path" in normalized_params and normalized_params["venv_path"]:
         venv_path = Path(normalized_params["venv_path"])
         if venv_path.exists():
             # Use the parent of the venv as the mcp-config directory
             mcp_config_dir = venv_path.parent
-    
+
     pythonpath = str(mcp_config_dir)
     # Ensure trailing separator on Windows
     if sys.platform == "win32" and not pythonpath.endswith("\\"):

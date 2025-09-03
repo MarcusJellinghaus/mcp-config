@@ -429,14 +429,14 @@ class TestServerConfig:
 
         # log-file should NOT be auto-detected (only included when explicitly provided)
         assert "--log-file" not in args
-        
+
         # Test with explicit log file
         params_with_log = {
             "project_dir": "/path/to/project",
             "log_level": "DEBUG",
             "log_file": "/path/to/log.log",
         }
-        
+
         args_with_log = MCP_FILESYSTEM_SERVER.generate_args(params_with_log)
         assert "--log-file" in args_with_log
         log_idx = args_with_log.index("--log-file")
