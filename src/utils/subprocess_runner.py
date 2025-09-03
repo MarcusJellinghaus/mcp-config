@@ -281,15 +281,9 @@ def _run_subprocess(
                         stdout_f.close()
                     if stderr_f and not stderr_f.closed:
                         stderr_f.close()
-            except subprocess.TimeoutExpired:
-                # This will be caught by the outer execute_subprocess
-                raise
-            except Exception:
-                # For any other exception, ensure files are closed
-                if stdout_f and not stdout_f.closed:
-                    stdout_f.close()
-                if stderr_f and not stderr_f.closed:
-                    stderr_f.close()
+            except Exception:  # pylint: disable=try-except-raise
+                # Let any other exceptions propagate after cleanup in finally block
+                # The except is needed for the try-finally structure
                 raise
 
             # Read output files after process completes
@@ -435,7 +429,8 @@ def _run_subprocess(
                 )
         except subprocess.TimeoutExpired:
             raise  # Re-raise for handling in execute_subprocess
-        except Exception:
+        except Exception:  # pylint: disable=try-except-raise
+            # Re-raise any other exceptions - the except is needed for completeness
             raise
 
 

@@ -115,8 +115,8 @@ class ServerConfig:
             args = []
         else:
             # Get the absolute path to the main module
-            # For MCP Code Checker, resolve main_module relative to project_dir
-            if self.name == "mcp-code-checker" and "project_dir" in user_params:
+            # For both MCP servers, resolve main_module relative to project_dir if it exists
+            if "project_dir" in user_params and self.main_module.startswith("src/"):
                 proj_dir = Path(user_params["project_dir"]).resolve()
                 main_module_path = proj_dir / self.main_module
                 args = [str(main_module_path.resolve())]
@@ -154,8 +154,12 @@ class ServerConfig:
                     if detected:
                         processed_params[param_key] = str(detected)
                 elif param.name == "log-file":
-                    # Don't auto-generate - log-file is now truly optional
-                    pass
+                    # Auto-detect log file for any server type
+                    from .validation import auto_detect_log_file
+
+                    detected = auto_detect_log_file(project_dir, self.name)
+                    if detected:
+                        processed_params[param_key] = str(detected)
 
         # Generate arguments
         for param in self.parameters:
@@ -204,6 +208,10 @@ class ServerConfig:
             import shutil
 
             return shutil.which("mcp-code-checker") is not None
+        elif self.name == "mcp-server-filesystem":
+            import shutil
+
+            return shutil.which("mcp-server-filesystem") is not None
         # Add other servers with CLI commands here in the future
         return False
 
@@ -215,6 +223,8 @@ class ServerConfig:
         """
         if self.name == "mcp-code-checker":
             return "mcp-code-checker"
+        elif self.name == "mcp-server-filesystem":
+            return "mcp-server-filesystem"
         # Add other servers here
         return None
 
@@ -224,10 +234,10 @@ class ServerConfig:
         Returns:
             One of: 'cli_command', 'python_module', 'development', 'not_available'
         """
-        if self.name == "mcp-code-checker":
-            import shutil
-            import importlib.util
+        import importlib.util
+        import shutil
 
+        if self.name == "mcp-code-checker":
             # Check for CLI command
             if shutil.which("mcp-code-checker"):
                 return "cli_command"
@@ -241,10 +251,39 @@ class ServerConfig:
                 pass
 
             # Check for development mode
-            from pathlib import Path
-
             if Path("src/main.py").exists():
                 return "development"
+
+            return "not_available"
+        elif self.name == "mcp-server-filesystem":
+            # Check for CLI command
+            if shutil.which("mcp-server-filesystem"):
+                return "cli_command"
+
+            # Check if package is installed
+            try:
+                spec = importlib.util.find_spec("mcp_server_filesystem")
+                if spec is not None:
+                    return "python_module"
+            except (ImportError, ModuleNotFoundError):
+                pass
+
+            # Check for development mode (if we're in a filesystem server project)
+            # Look for common filesystem server development patterns
+            dev_indicators = [
+                "setup.py",
+                "pyproject.toml",
+                "src/mcp_server_filesystem",
+                "mcp_server_filesystem/__init__.py",
+            ]
+            if any(Path(indicator).exists() for indicator in dev_indicators):
+                # Additional check: look for filesystem server specific files
+                if (
+                    Path("src").exists()
+                    and any(Path("src").glob("*filesystem*"))
+                    or Path("mcp_server_filesystem").exists()
+                ):
+                    return "development"
 
             return "not_available"
 
@@ -255,6 +294,7 @@ class ServerConfig:
         """Check if project is compatible (server-specific logic).
 
         For MCP Code Checker, validates based on installation mode.
+        For MCP Filesystem Server, validates directory structure and permissions.
 
         Args:
             project_dir: Path to the project directory
@@ -284,6 +324,51 @@ class ServerConfig:
 
             # Both the main module and src directory should exist
             return main_path.exists() and src_path.exists()
+        elif self.name == "mcp-server-filesystem":
+            # Enhanced validation for filesystem server
+            if not (project_dir.exists() and project_dir.is_dir()):
+                return False
+
+            # If using CLI command, just verify directory exists and is accessible
+            if self.supports_cli_command():
+                try:
+                    # Test basic read access
+                    list(project_dir.iterdir())
+                    return True
+                except (OSError, PermissionError):
+                    return False
+
+            # Check if package is installed (module mode)
+            try:
+                import importlib.util
+
+                spec = importlib.util.find_spec("mcp_server_filesystem")
+                if spec is not None:
+                    # Package is installed, just need valid directory
+                    try:
+                        list(project_dir.iterdir())
+                        return True
+                    except (OSError, PermissionError):
+                        return False
+            except (ImportError, ModuleNotFoundError):
+                pass
+
+            # Development mode - check for expected structure
+            main_path = project_dir / self.main_module
+            src_path = project_dir / "src"
+
+            # Check if main module exists or if we have a filesystem server development structure
+            if main_path.exists():
+                return True
+            elif src_path.exists() and any(src_path.glob("*filesystem*")):
+                return True
+
+            # Basic directory validation for unknown modes
+            try:
+                list(project_dir.iterdir())
+                return True
+            except (OSError, PermissionError):
+                return False
 
         # Default validation for other servers
         return True
@@ -425,12 +510,64 @@ MCP_CODE_CHECKER = ServerConfig(
             name="log-file",
             arg_name="--log-file",
             param_type="path",
-            auto_detect=False,
+            auto_detect=True,
             help="Path for structured JSON logs. "
-            "If not specified, logs only to console",
+            "Auto-generates timestamped log file in project_dir/logs/ if not specified",
         ),
     ],
 )
 
-# Register the built-in server
+# MCP Filesystem Server built-in config
+MCP_FILESYSTEM_SERVER = ServerConfig(
+    name="mcp-server-filesystem",
+    display_name="MCP Filesystem Server",
+    main_module="src/mcp_server_filesystem/main.py",
+    parameters=[
+        # Required parameters
+        ParameterDef(
+            name="project-dir",
+            arg_name="--project-dir",
+            param_type="path",
+            required=True,
+            help="Directory to serve files from (required)",
+        ),
+        # Python execution parameters (for consistency with code checker)
+        ParameterDef(
+            name="python-executable",
+            arg_name="--python-executable",
+            param_type="path",
+            auto_detect=True,
+            help="Path to Python interpreter to use. "
+            "If not specified, auto-detects from project or uses current interpreter",
+        ),
+        ParameterDef(
+            name="venv-path",
+            arg_name="--venv-path",
+            param_type="path",
+            auto_detect=True,
+            help="Path to virtual environment to activate. "
+            "Auto-detects common venv patterns (.venv, venv, env) if not specified",
+        ),
+        # Logging parameters
+        ParameterDef(
+            name="log-level",
+            arg_name="--log-level",
+            param_type="choice",
+            default="INFO",
+            choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            help="Set logging level (default: INFO)",
+        ),
+        ParameterDef(
+            name="log-file",
+            arg_name="--log-file",
+            param_type="path",
+            auto_detect=True,
+            help="Path for structured JSON logs. "
+            "Auto-generates timestamped log file in project_dir/logs/ if not specified",
+        ),
+    ],
+)
+
+# Register the built-in servers
 registry.register(MCP_CODE_CHECKER)
+registry.register(MCP_FILESYSTEM_SERVER)

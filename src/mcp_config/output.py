@@ -187,7 +187,7 @@ class OutputFormatter:
         server_name: str,
         server_type: str,
         params: dict[str, Any],
-        tree_format: bool = False,  # Deprecated parameter, kept for compatibility
+        _tree_format: bool = False,  # Deprecated parameter, kept for compatibility
     ) -> None:
         """Print configuration details in simple format.
 
@@ -195,7 +195,7 @@ class OutputFormatter:
             server_name: Name of the server
             server_type: Type of server
             params: Configuration parameters
-            tree_format: Deprecated, ignored
+            _tree_format: Deprecated, ignored (kept for compatibility)
         """
         print(f"\nConfiguration for '{server_name}':")
         print(f"  Type: {server_type}")

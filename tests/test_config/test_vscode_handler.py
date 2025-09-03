@@ -4,6 +4,7 @@ import json
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -46,15 +47,46 @@ class TestVSCodeHandler:
         """Test user profile configuration path on Windows."""
         handler = VSCodeHandler(workspace=False)
 
-        with patch("os.name", "nt"):
-            with patch("pathlib.Path.home") as mock_home:
-                mock_home.return_value = Path("C:/Users/TestUser")
-                config_path = handler.get_config_path()
+        # Create a mock Path that mimics Windows behavior on any OS
+        class MockWindowsPath:
+            def __init__(self, path: str = "C:/Users/TestUser") -> None:
+                self._path = path
 
-                # Check string representation for cross-platform compatibility
-                assert "AppData" in str(config_path)
-                assert "Code" in str(config_path)
-                assert "mcp.json" in str(config_path)
+            def __str__(self) -> str:
+                return self._path
+
+            def __truediv__(self, other: str) -> "MockWindowsPath":
+                return MockWindowsPath(f"{self._path}/{other}")
+
+            @property
+            def name(self) -> str:
+                return self._path.split("/")[-1]
+
+        mock_home = MockWindowsPath()
+
+        with (
+            patch("os.name", "nt"),
+            patch("pathlib.Path.home", return_value=mock_home),
+            patch("src.mcp_config.clients.Path") as mock_path_class,
+        ):
+            # Configure the mock to return our MockWindowsPath
+            mock_path_class.return_value = mock_home
+            mock_path_class.home.return_value = mock_home
+
+            # When Path(str) is called, return a mock that behaves like Windows Path
+            def path_constructor(path_str: Any) -> MockWindowsPath:
+                if isinstance(path_str, MockWindowsPath):
+                    return path_str
+                return MockWindowsPath(path_str)
+
+            mock_path_class.side_effect = path_constructor
+
+            config_path = handler.get_config_path()
+
+            # Check string representation for cross-platform compatibility
+            assert "AppData" in str(config_path)
+            assert "Code" in str(config_path)
+            assert "mcp.json" in str(config_path)
 
     @pytest.mark.skipif(
         os.name == "nt",

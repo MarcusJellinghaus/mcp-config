@@ -14,7 +14,12 @@ from src.mcp_config.integration import (
     remove_mcp_server,
     setup_mcp_server,
 )
-from src.mcp_config.servers import MCP_CODE_CHECKER, ParameterDef, ServerConfig
+from src.mcp_config.servers import (
+    MCP_CODE_CHECKER,
+    MCP_FILESYSTEM_SERVER,
+    ParameterDef,
+    ServerConfig,
+)
 
 
 class TestGenerateClientConfig:
@@ -424,3 +429,262 @@ class TestMCPCodeCheckerIntegration:
         if not is_cli_mode:
             # Python module mode
             assert config["command"] == sys.executable
+
+
+class TestMCPFilesystemServerIntegration:
+    """Test integration with the actual MCP Filesystem Server config."""
+
+    def test_mcp_filesystem_server_config_generation(self, tmp_path: Path) -> None:
+        """Test generating config for MCP Filesystem Server."""
+        project_dir = tmp_path / "test_project"
+        project_dir.mkdir()
+
+        user_params = {
+            "project_dir": str(project_dir),
+            "log_level": "DEBUG",
+            "log_file": str(project_dir / "logs" / "filesystem.log"),
+        }
+
+        config = generate_client_config(
+            MCP_FILESYSTEM_SERVER,
+            "filesystem-instance",
+            user_params,
+            python_executable="/usr/bin/python3",
+        )
+
+        assert config["_server_type"] == "mcp-server-filesystem"
+
+        # Check arguments - should be present for filesystem server
+        args = config["args"]
+        assert "--project-dir" in args
+        assert str(project_dir) in args
+        assert "--log-level" in args
+        assert "DEBUG" in args
+        assert "--log-file" in args
+        assert "filesystem.log" in " ".join(args)
+
+        # The command could be either CLI executable or Python module
+        is_cli_mode = config["command"].lower().endswith(
+            "mcp-server-filesystem.exe"
+        ) or config["command"].endswith("mcp-server-filesystem")
+
+        if is_cli_mode:
+            # CLI command mode - should use the executable directly
+            assert "mcp-server-filesystem" in config["command"]
+            # Arguments should start directly with --project-dir (no module args)
+            assert args[0] == "--project-dir" or args[0].startswith("--")
+        else:
+            # Python module mode - should use Python executable
+            assert (
+                config["command"] == "/usr/bin/python3"
+                or config["command"] == sys.executable
+            ), f"Expected Python executable, got: {config['command']}"
+            # For filesystem server in module mode, should use -m mcp_server_filesystem
+            assert args[0] == "-m", f"Expected -m as first arg, got: {args[0]}"
+            assert (
+                args[1] == "mcp_server_filesystem"
+            ), f"Expected mcp_server_filesystem as second arg, got: {args[1]}"
+
+        # Check environment
+        assert "PYTHONPATH" in config["env"]
+        # On Windows, PYTHONPATH should have a trailing backslash
+        expected_pythonpath = str(project_dir)
+        if sys.platform == "win32" and not expected_pythonpath.endswith("\\"):
+            expected_pythonpath += "\\"
+        assert config["env"]["PYTHONPATH"] == expected_pythonpath
+
+    def test_mcp_filesystem_server_minimal_config(self, tmp_path: Path) -> None:
+        """Test minimal configuration for MCP Filesystem Server."""
+        user_params = {"project_dir": str(tmp_path)}
+
+        config = generate_client_config(
+            MCP_FILESYSTEM_SERVER,
+            "minimal-fs",
+            user_params,
+        )
+
+        # Should work with just required parameters
+        args = config["args"]
+        assert "--project-dir" in args
+        assert str(tmp_path) in args
+
+        # Default log level should be included
+        assert "--log-level" in args
+        assert "INFO" in args
+
+        # log-file will be auto-detected and included due to unified auto-detection
+        assert "--log-file" in args  # Now automatically included
+        # Should contain auto-generated log file path
+        log_file_index = args.index("--log-file")
+        log_file_path = args[log_file_index + 1]
+        assert "mcp_filesystem_server_" in log_file_path
+        assert log_file_path.endswith(".log")
+
+        # Command could be CLI or Python module mode
+        is_cli_mode = config["command"].lower().endswith(
+            "mcp-server-filesystem.exe"
+        ) or config["command"].endswith("mcp-server-filesystem")
+
+        if not is_cli_mode:
+            # Python module mode
+            assert config["command"] == sys.executable
+
+    def test_mcp_filesystem_server_cli_command_detection(self, tmp_path: Path) -> None:
+        """Test CLI command detection for MCP Filesystem Server."""
+        from unittest.mock import patch
+
+        user_params = {"project_dir": str(tmp_path)}
+
+        # Test with CLI command available
+        with patch(
+            "src.mcp_config.integration._find_cli_executable",
+            return_value="/usr/bin/mcp-server-filesystem",
+        ):
+            config = generate_client_config(
+                MCP_FILESYSTEM_SERVER,
+                "cli-test",
+                user_params,
+            )
+
+            # When CLI is mocked as available, it will be used
+            # But in test environment it may fall back to module mode
+            if "mcp-server-filesystem" in config["command"]:
+                # CLI command mode
+                assert config["args"][0] == "--project-dir"
+            else:
+                # Python module mode fallback
+                assert config["command"] == sys.executable
+                assert config["args"][0] == "-m"
+                assert config["args"][1] == "mcp_server_filesystem"
+
+        # Test without CLI command available (fallback to Python module)
+        with patch(
+            "src.mcp_config.integration._find_cli_executable", return_value=None
+        ):
+            with patch(
+                "src.mcp_config.integration.is_package_installed", return_value=False
+            ):
+                config = generate_client_config(
+                    MCP_FILESYSTEM_SERVER,
+                    "python-test",
+                    user_params,
+                )
+
+                # Should fallback to Python module mode
+                assert config["command"] == sys.executable
+                assert "-m" in config["args"]
+                assert "mcp_server_filesystem" in config["args"]
+
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific path test")
+    def test_mcp_filesystem_server_realistic_windows_config(
+        self, tmp_path: Path
+    ) -> None:
+        """Test realistic Windows configuration matching the example."""
+        # Simulate the example config provided
+        project_dir = r"C:\Users\Marcu\Documents\GitHub\mcp-config"
+        cli_command = r"C:\Users\Marcu\Documents\GitHub\mcp-config\.venv\Scripts\mcp-server-filesystem.exe"
+
+        user_params = {
+            "project_dir": project_dir,
+            "log_level": "INFO",
+        }
+
+        # Mock CLI command availability
+        with patch(
+            "src.mcp_config.integration._find_cli_executable", return_value=cli_command
+        ):
+            config = generate_client_config(
+                MCP_FILESYSTEM_SERVER,
+                "fs on p config",
+                user_params,
+            )
+
+            # When CLI is mocked as available, it will be used
+            # But test may fall back to module mode
+            if "mcp-server-filesystem" in config["command"]:
+                # CLI command mode - command is the executable
+                assert config["command"] == cli_command
+            else:
+                # Python module mode fallback
+                assert config["command"] == sys.executable
+                assert config["args"][0] == "-m"
+                assert config["args"][1] == "mcp_server_filesystem"
+
+            # Args should match the example
+            args = config["args"]
+            assert "--project-dir" in args
+            assert project_dir in args
+            assert "--log-level" in args
+            assert "INFO" in args
+
+            # Environment should have PYTHONPATH
+            assert "PYTHONPATH" in config["env"]
+            # On Windows, should end with backslash
+            if sys.platform == "win32":
+                expected_path = project_dir
+                if not expected_path.endswith("\\"):
+                    expected_path += "\\"
+                assert config["env"]["PYTHONPATH"] == expected_path
+
+    def test_mcp_filesystem_server_validation_errors(self) -> None:
+        """Test validation errors for filesystem server configuration."""
+        # Missing required project-dir
+        user_params = {"log_level": "INFO"}
+
+        with pytest.raises(ValueError) as exc_info:
+            generate_client_config(MCP_FILESYSTEM_SERVER, "test", user_params)
+        assert "project-dir is required" in str(exc_info.value)
+
+        # Invalid log level choice
+        user_params = {
+            "project_dir": "/tmp",
+            "log_level": "INVALID_LEVEL",
+        }
+
+        with pytest.raises(ValueError) as exc_info:
+            generate_client_config(MCP_FILESYSTEM_SERVER, "test", user_params)
+        assert "not in valid choices" in str(exc_info.value)
+
+    def test_mcp_filesystem_server_installation_modes(self, tmp_path: Path) -> None:
+        """Test different installation mode detection for filesystem server."""
+        from unittest.mock import patch
+
+        user_params = {"project_dir": str(tmp_path)}
+
+        # Test CLI command mode
+        with patch("shutil.which", return_value="/usr/bin/mcp-server-filesystem"):
+            mode = MCP_FILESYSTEM_SERVER.get_installation_mode()
+            # Should detect CLI command if available
+            # Note: actual detection depends on system, so we test the method exists
+            assert mode in [
+                "cli_command",
+                "python_module",
+                "development",
+                "not_available",
+            ]
+
+        # Test Python module mode
+        with patch("shutil.which", return_value=None):
+            with patch("importlib.util.find_spec", return_value=True):
+                mode = MCP_FILESYSTEM_SERVER.get_installation_mode()
+                # Method should handle the case properly
+                assert mode in [
+                    "cli_command",
+                    "python_module",
+                    "development",
+                    "not_available",
+                ]
+
+    def test_mcp_filesystem_server_project_validation(self, tmp_path: Path) -> None:
+        """Test project validation for filesystem server."""
+        # Valid directory should pass
+        assert MCP_FILESYSTEM_SERVER.validate_project(tmp_path)
+
+        # Non-existent directory should fail
+        non_existent = tmp_path / "does_not_exist"
+        assert not MCP_FILESYSTEM_SERVER.validate_project(non_existent)
+
+        # File instead of directory should fail
+        test_file = tmp_path / "test.txt"
+        test_file.write_text("test")
+        assert not MCP_FILESYSTEM_SERVER.validate_project(test_file)

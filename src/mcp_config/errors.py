@@ -58,14 +58,14 @@ class MissingParameterError(ConfigError):
 
         suggestions = [
             f"Run: mcp-config setup {server_type} <n> --{param_name} <value>",
-            f"Use --help to see all available parameters",
+            "Use --help to see all available parameters",
         ]
 
         # Add specific suggestions based on parameter
         if param_name == "project-dir":
             suggestions.insert(0, "Use current directory: --project-dir .")
             suggestions.insert(
-                1, f"Specify project path: --project-dir /path/to/project"
+                1, "Specify project path: --project-dir /path/to/project"
             )
         elif param_name == "python-executable":
             suggestions.insert(0, "Auto-detection failed, specify Python path manually")
@@ -114,7 +114,7 @@ class InvalidServerError(ConfigError):
         super().__init__(message, suggestions=suggestions)
 
 
-class PermissionError(ConfigError):
+class MCPPermissionError(ConfigError):
     """Error for file/directory permission issues."""
 
     def __init__(self, path: Path, operation: str = "access"):
@@ -251,7 +251,7 @@ def handle_common_errors(func: Callable[..., int]) -> Callable[..., int]:
             return func(*args, **kwargs)
         except PermissionError as e:
             path = Path(str(e)) if str(e) else Path(".")
-            error = PermissionError(path, "access")
+            error = MCPPermissionError(path, "access")
             error.print_error()
             return 1
         except FileNotFoundError as e:
