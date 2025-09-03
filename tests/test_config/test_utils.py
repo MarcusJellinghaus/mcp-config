@@ -278,8 +278,15 @@ class TestNormalizePathParameter:
             expected = base_path / "sub" / "dir" / "file.txt"
             assert Path(result) == expected.resolve()
 
-            # Backslashes (Windows-style) - Path handles this
-            result = normalize_path_parameter("sub\\dir\\file.txt", base_path)
-            expected = base_path / "sub" / "dir" / "file.txt"
-            # Path normalizes separators based on OS
-            assert Path(result).name == "file.txt"
+            # Backslashes (Windows-style) - only test on Windows
+            import platform
+            if platform.system() == "Windows":
+                result = normalize_path_parameter("sub\\dir\\file.txt", base_path)
+                expected = base_path / "sub" / "dir" / "file.txt"
+                assert Path(result) == expected.resolve()
+            else:
+                # On non-Windows, backslashes are literal characters in filenames
+                # So "sub\\dir\\file.txt" is a single filename with backslashes in it
+                result = normalize_path_parameter("sub\\dir\\file.txt", base_path)
+                # On Linux/Mac, this creates a file literally named "sub\dir\file.txt"
+                assert "\\" in str(result) or result.endswith("sub\\dir\\file.txt")

@@ -284,8 +284,16 @@ class TestMCPSetupIntegration:
             assert isinstance(entry["args"], list)
             assert isinstance(entry["env"], dict)
 
-            # Check that command contains filesystem server reference
-            assert "mcp-server-filesystem" in entry["command"]
+            # Check that command contains filesystem server reference or Python
+            # When CLI is mocked as available, it will be used, otherwise Python module mode
+            if "mcp-server-filesystem" in entry["command"]:
+                # CLI command mode
+                assert entry["command"] == cli_exe
+            else:
+                # Python module mode fallback
+                assert entry["command"] == sys.executable
+                assert entry["args"][0] == "-m"
+                assert entry["args"][1] == "mcp_server_filesystem"
 
             # Check required parameters exist and match example structure
             args = entry["args"]

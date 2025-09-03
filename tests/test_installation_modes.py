@@ -58,44 +58,51 @@ class TestInstallationModes:
 
     def test_generate_args_cli_mode(self) -> None:
         """Test argument generation for CLI command mode."""
+        from tempfile import TemporaryDirectory
         from src.mcp_config.servers import registry
 
         config = registry.get("mcp-code-checker")
         assert config is not None
 
-        params = {"project_dir": "/test/project", "log_level": "DEBUG"}
+        with TemporaryDirectory() as tmpdir:
+            project_dir = Path(tmpdir) / "project"
+            project_dir.mkdir()
+            
+            params = {"project_dir": str(project_dir), "log_level": "DEBUG"}
 
-        # Test CLI command mode (no script path)
-        args = config.generate_args(params, use_cli_command=True)
+            # Test CLI command mode (no script path)
+            args = config.generate_args(params, use_cli_command=True)
 
-        # Should not include script path
-        assert not any(arg.endswith("main.py") for arg in args)
-        assert "--project-dir" in args
-        # Path may be converted to OS format
-        project_dir_idx = args.index("--project-dir")
-        assert (
-            "test" in args[project_dir_idx + 1]
-            and "project" in args[project_dir_idx + 1]
-        )
-        assert "--log-level" in args
-        assert "DEBUG" in args
+            # Should not include script path
+            assert not any(arg.endswith("main.py") for arg in args)
+            assert "--project-dir" in args
+            # Check that the project dir is in the args
+            project_dir_idx = args.index("--project-dir")
+            assert str(project_dir) in args[project_dir_idx + 1] or args[project_dir_idx + 1] == str(project_dir)
+            assert "--log-level" in args
+            assert "DEBUG" in args
 
     def test_generate_args_module_mode(self) -> None:
         """Test argument generation for module mode."""
+        from tempfile import TemporaryDirectory
         from src.mcp_config.servers import registry
 
         config = registry.get("mcp-code-checker")
         assert config is not None
 
-        params = {"project_dir": "/test/project", "log_level": "INFO"}
+        with TemporaryDirectory() as tmpdir:
+            project_dir = Path(tmpdir) / "project"
+            project_dir.mkdir()
+            
+            params = {"project_dir": str(project_dir), "log_level": "INFO"}
 
-        # Test module mode (includes script path)
-        args = config.generate_args(params, use_cli_command=False)
+            # Test module mode (includes script path)
+            args = config.generate_args(params, use_cli_command=False)
 
-        # Should include script path as first argument
-        assert args[0].endswith("main.py")
-        assert "--project-dir" in args
-        assert "--log-level" in args
+            # Should include script path as first argument
+            assert args[0].endswith("main.py")
+            assert "--project-dir" in args
+            assert "--log-level" in args
 
     def test_config_generation_with_cli_command(self) -> None:
         """Test configuration generation when CLI command is available."""
@@ -111,33 +118,38 @@ class TestInstallationModes:
 
             server_config = registry.get("mcp-code-checker")
             assert server_config is not None
-            params = {"project_dir": "/test/project"}
+            
+            from tempfile import TemporaryDirectory
+            with TemporaryDirectory() as tmpdir:
+                project_dir = Path(tmpdir) / "project"
+                project_dir.mkdir()
+                params = {"project_dir": str(project_dir)}
 
-            config = build_server_config(server_config, params)
+                config = build_server_config(server_config, params)
 
-            # With new behavior, should use CLI command when available
-            assert (
-                config["command"].endswith(
-                    ("python", "python.exe", "mcp-code-checker", "mcp-code-checker.exe")
+                # With new behavior, should use CLI command when available
+                assert (
+                    config["command"].endswith(
+                        ("python", "python.exe", "mcp-code-checker", "mcp-code-checker.exe")
+                    )
+                    or config["command"] == "/usr/bin/mcp-code-checker"
                 )
-                or config["command"] == "/usr/bin/mcp-code-checker"
-            )
-            assert "--project-dir" in config["args"]
+                assert "--project-dir" in config["args"]
 
-            # If using CLI mode, should not have -m args
-            if (
-                config["command"].endswith(("mcp-code-checker", "mcp-code-checker.exe"))
-                or config["command"] == "/usr/bin/mcp-code-checker"
-            ):
-                assert not (
-                    len(config["args"]) >= 2
-                    and config["args"][0] == "-m"
-                    and config["args"][1] == "mcp_code_checker"
-                )
-            else:
-                # Python module mode fallback
-                assert config["args"][0] == "-m"
-                assert config["args"][1] == "mcp_code_checker"
+                # If using CLI mode, should not have -m args
+                if (
+                    config["command"].endswith(("mcp-code-checker", "mcp-code-checker.exe"))
+                    or config["command"] == "/usr/bin/mcp-code-checker"
+                ):
+                    assert not (
+                        len(config["args"]) >= 2
+                        and config["args"][0] == "-m"
+                        and config["args"][1] == "mcp_code_checker"
+                    )
+                else:
+                    # Python module mode fallback
+                    assert config["args"][0] == "-m"
+                    assert config["args"][1] == "mcp_code_checker"
 
     def test_config_generation_without_cli_command(self) -> None:
         """Test configuration generation without CLI command."""
@@ -151,15 +163,20 @@ class TestInstallationModes:
 
             server_config = registry.get("mcp-code-checker")
             assert server_config is not None
-            params = {"project_dir": "/test/project"}
+            
+            from tempfile import TemporaryDirectory
+            with TemporaryDirectory() as tmpdir:
+                project_dir = Path(tmpdir) / "project"
+                project_dir.mkdir()
+                params = {"project_dir": str(project_dir)}
 
-            config = build_server_config(server_config, params)
+                config = build_server_config(server_config, params)
 
-            # Should use Python with module
-            assert config["command"].endswith("python") or config["command"].endswith(
-                "python.exe"
-            )
-            assert "-m" in config["args"] or config["args"][0].endswith("main.py")
+                # Should use Python with module
+                assert config["command"].endswith("python") or config["command"].endswith(
+                    "python.exe"
+                )
+                assert "-m" in config["args"] or config["args"][0].endswith("main.py")
 
     def test_validation_with_different_modes(
         self,
