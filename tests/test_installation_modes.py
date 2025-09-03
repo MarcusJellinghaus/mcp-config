@@ -59,6 +59,7 @@ class TestInstallationModes:
     def test_generate_args_cli_mode(self) -> None:
         """Test argument generation for CLI command mode."""
         from tempfile import TemporaryDirectory
+
         from src.mcp_config.servers import registry
 
         config = registry.get("mcp-code-checker")
@@ -67,7 +68,7 @@ class TestInstallationModes:
         with TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "project"
             project_dir.mkdir()
-            
+
             params = {"project_dir": str(project_dir), "log_level": "DEBUG"}
 
             # Test CLI command mode (no script path)
@@ -78,13 +79,16 @@ class TestInstallationModes:
             assert "--project-dir" in args
             # Check that the project dir is in the args
             project_dir_idx = args.index("--project-dir")
-            assert str(project_dir) in args[project_dir_idx + 1] or args[project_dir_idx + 1] == str(project_dir)
+            assert str(project_dir) in args[project_dir_idx + 1] or args[
+                project_dir_idx + 1
+            ] == str(project_dir)
             assert "--log-level" in args
             assert "DEBUG" in args
 
     def test_generate_args_module_mode(self) -> None:
         """Test argument generation for module mode."""
         from tempfile import TemporaryDirectory
+
         from src.mcp_config.servers import registry
 
         config = registry.get("mcp-code-checker")
@@ -93,7 +97,7 @@ class TestInstallationModes:
         with TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "project"
             project_dir.mkdir()
-            
+
             params = {"project_dir": str(project_dir), "log_level": "INFO"}
 
             # Test module mode (includes script path)
@@ -118,8 +122,9 @@ class TestInstallationModes:
 
             server_config = registry.get("mcp-code-checker")
             assert server_config is not None
-            
+
             from tempfile import TemporaryDirectory
+
             with TemporaryDirectory() as tmpdir:
                 project_dir = Path(tmpdir) / "project"
                 project_dir.mkdir()
@@ -130,7 +135,12 @@ class TestInstallationModes:
                 # With new behavior, should use CLI command when available
                 assert (
                     config["command"].endswith(
-                        ("python", "python.exe", "mcp-code-checker", "mcp-code-checker.exe")
+                        (
+                            "python",
+                            "python.exe",
+                            "mcp-code-checker",
+                            "mcp-code-checker.exe",
+                        )
                     )
                     or config["command"] == "/usr/bin/mcp-code-checker"
                 )
@@ -138,7 +148,9 @@ class TestInstallationModes:
 
                 # If using CLI mode, should not have -m args
                 if (
-                    config["command"].endswith(("mcp-code-checker", "mcp-code-checker.exe"))
+                    config["command"].endswith(
+                        ("mcp-code-checker", "mcp-code-checker.exe")
+                    )
                     or config["command"] == "/usr/bin/mcp-code-checker"
                 ):
                     assert not (
@@ -163,8 +175,9 @@ class TestInstallationModes:
 
             server_config = registry.get("mcp-code-checker")
             assert server_config is not None
-            
+
             from tempfile import TemporaryDirectory
+
             with TemporaryDirectory() as tmpdir:
                 project_dir = Path(tmpdir) / "project"
                 project_dir.mkdir()
@@ -173,9 +186,9 @@ class TestInstallationModes:
                 config = build_server_config(server_config, params)
 
                 # Should use Python with module
-                assert config["command"].endswith("python") or config["command"].endswith(
-                    "python.exe"
-                )
+                assert config["command"].endswith("python") or config[
+                    "command"
+                ].endswith("python.exe")
                 assert "-m" in config["args"] or config["args"][0].endswith("main.py")
 
     def test_validation_with_different_modes(

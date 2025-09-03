@@ -117,15 +117,15 @@ class TestClaudeDesktopHandler:
             # Configure the mock to return our MockWindowsPath
             mock_path_class.return_value = mock_home
             mock_path_class.home.return_value = mock_home
-            
+
             # When Path(str) is called, return a mock that behaves like Windows Path
             def path_constructor(path_str):
                 if isinstance(path_str, MockWindowsPath):
                     return path_str
                 return MockWindowsPath(path_str)
-            
+
             mock_path_class.side_effect = path_constructor
-            
+
             path = handler.get_config_path()
             path_str = str(path).replace("\\", "/")
             assert "AppData" in path_str

@@ -280,6 +280,7 @@ class TestNormalizePathParameter:
 
             # Backslashes (Windows-style) - only test on Windows
             import platform
+
             if platform.system() == "Windows":
                 result = normalize_path_parameter("sub\\dir\\file.txt", base_path)
                 expected = base_path / "sub" / "dir" / "file.txt"

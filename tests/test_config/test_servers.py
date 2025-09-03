@@ -359,7 +359,7 @@ class TestServerConfig:
         with TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "project"
             project_dir.mkdir()
-            
+
             # Use underscore format as it comes from argparse
             params = {
                 "project_dir": str(project_dir),
@@ -375,7 +375,9 @@ class TestServerConfig:
             assert "--project-dir" in args
             # Path will be normalized on Windows
             proj_idx = args.index("--project-dir")
-            assert str(project_dir) in args[proj_idx + 1] or args[proj_idx + 1] == str(project_dir)
+            assert str(project_dir) in args[proj_idx + 1] or args[proj_idx + 1] == str(
+                project_dir
+            )
 
             assert "--log-level" in args
             assert "DEBUG" in args
@@ -436,7 +438,7 @@ class TestServerConfig:
         with TemporaryDirectory() as tmpdir:
             project_dir = Path(tmpdir) / "project"
             project_dir.mkdir()
-            
+
             params = {
                 "project_dir": str(project_dir),
             }
@@ -494,7 +496,7 @@ class TestServerConfig:
 
             # The validation should pass if:
             # 1. CLI command is available, OR
-            # 2. Package is installed, OR  
+            # 2. Package is installed, OR
             # 3. Development structure exists
             # In test environment, may not have package installed,
             # so create development structure for validation
@@ -504,7 +506,7 @@ class TestServerConfig:
                 src_dir.mkdir()
                 main_file = src_dir / "main.py"
                 main_file.write_text("# Main module")
-            
+
             # Now it should validate
             assert MCP_CODE_CHECKER.validate_project(project_dir)
 

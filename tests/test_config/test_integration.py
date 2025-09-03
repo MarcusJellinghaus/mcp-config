@@ -481,7 +481,9 @@ class TestMCPFilesystemServerIntegration:
             ), f"Expected Python executable, got: {config['command']}"
             # For filesystem server in module mode, should use -m mcp_server_filesystem
             assert args[0] == "-m", f"Expected -m as first arg, got: {args[0]}"
-            assert args[1] == "mcp_server_filesystem", f"Expected mcp_server_filesystem as second arg, got: {args[1]}"
+            assert (
+                args[1] == "mcp_server_filesystem"
+            ), f"Expected mcp_server_filesystem as second arg, got: {args[1]}"
 
         # Check environment
         assert "PYTHONPATH" in config["env"]
