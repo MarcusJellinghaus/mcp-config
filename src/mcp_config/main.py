@@ -16,7 +16,11 @@ from .integration import (
 )
 from .output import OutputFormatter
 from .servers import registry
-from .utils import validate_required_parameters
+from .utils import (
+    find_matching_servers,
+    has_wildcard,
+    validate_required_parameters,
+)
 from .validation import (
     validate_client_installation,
     validate_parameter_combination,
@@ -258,101 +262,254 @@ def handle_setup_command(args: argparse.Namespace) -> int:
 def handle_remove_command(args: argparse.Namespace) -> int:
     """Handle the remove command with safety checks."""
     try:
+        # Check if using wildcards
+        is_wildcard = has_wildcard(args.server_name)
+
+        # If using wildcards, client must be explicitly specified
+        if (
+            is_wildcard
+            and args.client == "claude-desktop"
+            and "--client" not in sys.argv
+        ):
+            OutputFormatter.print_error(
+                "When using wildcards, --client must be explicitly specified"
+            )
+            print("Example: mcp-config remove 'checker*' --client claude-desktop")
+            return 1
+
         # Handle VSCode client selection
         client = args.client
         if client == "vscode":
-            # Default to workspace for remove command when just "vscode" is specified
-            # Note: remove command doesn't have the --user flag, so we default to workspace
-            client = "vscode-workspace"
+            # When using wildcards with vscode, we'll process both workspace and user
+            if is_wildcard:
+                clients_to_process = ["vscode-workspace", "vscode-user"]
+            else:
+                # Default to workspace for single remove when just "vscode" is specified
+                client = "vscode-workspace"
+                clients_to_process = [client]
         elif client == "vscode-workspace":
             # Explicit workspace selection
-            pass
+            clients_to_process = ["vscode-workspace"]
         elif client == "vscode-user":
             # Explicit user profile selection
-            pass
+            clients_to_process = ["vscode-user"]
+        else:
+            clients_to_process = [client]
 
-        # Get client handler
-        client_handler = get_client_handler(client)
+        # Process all relevant clients
+        total_removed = 0
+        all_matched_servers = []
 
-        # Check if server exists and is managed by us
-        managed_servers = client_handler.list_managed_servers()
-        managed_names = [s["name"] for s in managed_servers]
+        for client_name in clients_to_process:
+            try:
+                # Get client handler
+                client_handler = get_client_handler(client_name)
 
-        if args.server_name not in managed_names:
-            all_servers = client_handler.list_all_servers()
-            all_names = [s["name"] for s in all_servers]
+                # Skip if config doesn't exist
+                if not client_handler.get_config_path().exists():
+                    continue
 
-            if args.server_name in all_names:
+                # Get managed servers
+                managed_servers = client_handler.list_managed_servers()
+
+                # Find matching servers
+                if is_wildcard:
+                    matched = find_matching_servers(managed_servers, args.server_name)
+                    for server in matched:
+                        server["client"] = client_name  # Track which client
+                        all_matched_servers.append(server)
+                else:
+                    # Single server removal
+                    managed_names = [s["name"] for s in managed_servers]
+
+                    if args.server_name not in managed_names:
+                        all_servers = client_handler.list_all_servers()
+                        all_names = [s["name"] for s in all_servers]
+
+                        if args.server_name in all_names:
+                            OutputFormatter.print_error(
+                                f"Server '{args.server_name}' exists but is not managed by mcp-config"
+                            )
+                            print("Only servers created by mcp-config can be removed")
+                            return 1
+                        else:
+                            if len(clients_to_process) == 1:
+                                OutputFormatter.print_error(
+                                    f"Server '{args.server_name}' not found"
+                                )
+                                if managed_names:
+                                    print(
+                                        f"Managed servers: {', '.join(managed_names)}"
+                                    )
+                            continue
+
+                    server_info = next(
+                        s for s in managed_servers if s["name"] == args.server_name
+                    )
+                    server_info["client"] = client_name
+                    all_matched_servers.append(server_info)
+
+            except Exception as e:
+                if args.verbose:
+                    print(f"Error accessing {client_name}: {e}")
+                continue
+
+        # Check if we found any servers
+        if not all_matched_servers:
+            if is_wildcard:
                 OutputFormatter.print_error(
-                    f"Server '{args.server_name}' exists but is not managed by mcp-config"
+                    f'No managed servers found matching pattern "{args.server_name}"'
                 )
-                print("Only servers created by mcp-config can be removed")
-                return 1
+                print("\nTip: Use 'mcp-config list' to see available servers")
             else:
                 OutputFormatter.print_error(f"Server '{args.server_name}' not found")
-                if managed_names:
-                    print(f"Managed servers: {', '.join(managed_names)}")
-                return 1
-
-        # Get server info
-        server_info = next(s for s in managed_servers if s["name"] == args.server_name)
+                print("\nTip: Use 'mcp-config list' to see available servers")
+            return 1
 
         # Show what will be removed
         if args.dry_run:
             OutputFormatter.print_dry_run_header()
 
-            # Get other servers that will be preserved
-            all_servers = client_handler.list_all_servers()
-            other_servers = [s for s in all_servers if s["name"] != args.server_name]
+            if is_wildcard:
+                print(f'\nPattern: "{args.server_name}"')
+                print(f"Matched {len(all_matched_servers)} server(s):")
+                for server in all_matched_servers:
+                    print(
+                        f"  • {server['name']} ({server['type']}) - {server['client']}"
+                    )
+            else:
+                server_info = all_matched_servers[0]
+                # Get other servers that will be preserved
+                client_handler = get_client_handler(server_info["client"])
+                all_servers = client_handler.list_all_servers()
+                other_servers = [
+                    s for s in all_servers if s["name"] != args.server_name
+                ]
 
-            # Generate backup path
-            from datetime import datetime
+                # Generate backup path
+                from datetime import datetime
 
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            config_name = (
-                "mcp_config" if client.startswith("vscode") else "claude_desktop_config"
-            )
-            backup_path = (
-                client_handler.get_config_path().parent
-                / f"{config_name}.backup_{timestamp}.json"
-            )
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                config_name = (
+                    "mcp_config"
+                    if server_info["client"].startswith("vscode")
+                    else "claude_desktop_config"
+                )
+                backup_path = (
+                    client_handler.get_config_path().parent
+                    / f"{config_name}.backup_{timestamp}.json"
+                )
 
-            OutputFormatter.print_dry_run_remove_preview(
-                args.server_name,
-                server_info,
-                other_servers,
-                client_handler.get_config_path(),
-                backup_path if args.backup else None,
-            )
+                OutputFormatter.print_dry_run_remove_preview(
+                    args.server_name,
+                    server_info,
+                    other_servers,
+                    client_handler.get_config_path(),
+                    backup_path if args.backup else None,
+                )
             return 0
+
+        # For multiple servers, show confirmation unless --force is used
+        if is_wildcard and len(all_matched_servers) > 0 and not args.force:
+            print(f"\nAbout to remove {len(all_matched_servers)} server(s):")
+            for server in all_matched_servers:
+                print(f"  • {server['name']} ({server['type']}) - {server['client']}")
+
+            # Ask for confirmation
+            print(
+                "\nThis action cannot be undone"
+                + (" (backup will be created)" if args.backup else "")
+                + "."
+            )
+            response = input("Do you want to proceed? (y/N): ")
+            if response.lower() != "y":
+                print("Operation cancelled.")
+                return 0
         elif args.verbose:
-            print(f"Will remove server '{args.server_name}':")
-            print(f"  Type: {server_info['type']}")
-            print(f"  Command: {server_info['command']}")
-
-        # Perform removal
-        result = remove_mcp_server(
-            client_handler=client_handler, server_name=args.server_name, dry_run=False
-        )
-
-        if result["success"]:
-            try:
-                print(f"✓ Successfully removed server '{args.server_name}'")
-            except (UnicodeEncodeError, UnicodeDecodeError):
-                print(f"[SUCCESS] Successfully removed server '{args.server_name}'")
-            if "backup_path" in result:
-                print(f"  Backup created: {result['backup_path']}")
-            return 0
-        else:
-            try:
+            if is_wildcard:
                 print(
-                    f"✗ Failed to remove server: {result.get('error', 'Unknown error')}"
+                    f'Will remove {len(all_matched_servers)} server(s) matching "{args.server_name}"'
                 )
+            else:
+                server_info = all_matched_servers[0]
+                print(f"Will remove server '{server_info['name']}':")
+                print(f"  Type: {server_info['type']}")
+                print(f"  Command: {server_info['command']}")
+
+        # Perform removal(s)
+        failed_removals = []
+        success_removals = []
+        backup_paths = []
+
+        # Group servers by client for efficient removal
+        from collections import defaultdict
+
+        servers_by_client = defaultdict(list)
+        for server in all_matched_servers:
+            servers_by_client[server["client"]].append(server)
+
+        for client_name, servers in servers_by_client.items():
+            client_handler = get_client_handler(client_name)
+
+            for server in servers:
+                result = remove_mcp_server(
+                    client_handler=client_handler,
+                    server_name=server["name"],
+                    dry_run=False,
+                )
+
+                if result["success"]:
+                    success_removals.append((server["name"], client_name))
+                    if (
+                        "backup_path" in result
+                        and result["backup_path"] not in backup_paths
+                    ):
+                        backup_paths.append(result["backup_path"])
+                else:
+                    failed_removals.append(
+                        (
+                            server["name"],
+                            client_name,
+                            result.get("error", "Unknown error"),
+                        )
+                    )
+
+        # Report results
+        if success_removals:
+            if len(success_removals) == 1:
+                name, client = success_removals[0]
+                try:
+                    print(f"✓ Successfully removed server '{name}'")
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    print(f"[SUCCESS] Successfully removed server '{name}'")
+            else:
+                try:
+                    print(f"✓ Successfully removed {len(success_removals)} server(s):")
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    print(
+                        f"[SUCCESS] Successfully removed {len(success_removals)} server(s):"
+                    )
+                for name, client in success_removals:
+                    print(f"  • {name} ({client})")
+
+            if backup_paths:
+                if len(backup_paths) == 1:
+                    print(f"  Backup created: {backup_paths[0]}")
+                else:
+                    print("  Backups created:")
+                    for path in backup_paths:
+                        print(f"    • {path}")
+
+        if failed_removals:
+            try:
+                print(f"\n✗ Failed to remove {len(failed_removals)} server(s):")
             except (UnicodeEncodeError, UnicodeDecodeError):
-                print(
-                    f"[ERROR] Failed to remove server: {result.get('error', 'Unknown error')}"
-                )
+                print(f"\n[ERROR] Failed to remove {len(failed_removals)} server(s):")
+            for name, client, error in failed_removals:
+                print(f"  • {name} ({client}): {error}")
             return 1
+
+        return 0 if success_removals else 1
 
     except Exception as e:
         print(f"Remove failed: {e}")

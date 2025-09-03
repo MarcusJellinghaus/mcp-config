@@ -38,10 +38,25 @@ echo Using base branch: %DEFAULT_BRANCH%
 REM Create temporary file with unique name for large diffs
 set TEMP_FILE=%TEMP%\pr_review_%RANDOM%_%TIME:~6,2%%TIME:~9,2%.txt
 
-REM Generate git diff and create review prompt
+REM Generate git diff and create enhanced review prompt
 (
-    echo Can you please do a review of the current changes in this PR?
-    echo Do they all make sense? What should be changed / amended?
+    echo ## Code Review Request
+    echo.
+    echo Review the changes below and identify any issues.
+    echo.
+    echo ### Focus Areas:
+    echo - Logic errors or bugs
+    echo - Tests for `__main__` functions should be removed ^(not needed^)
+    echo - Unnecessary debug code or print statements
+    echo - Code that could break existing functionality
+    echo.
+    echo ### Output Format:
+    echo 1. **Summary** - What changed ^(1-2 sentences^)
+    echo 2. **Critical Issues** - Must fix before merging
+    echo 3. **Suggestions** - Nice to have improvements
+    echo 4. **Good** - What works well
+    echo.
+    echo Base: %DEFAULT_BRANCH%
     echo.
     echo === GIT DIFF ===
     echo.
@@ -61,5 +76,5 @@ REM Clean up
 del %TEMP_FILE%
 
 echo PR review prompt with git diff copied to clipboard!
-echo Paste it in the LLM to get a code review.
+echo Paste it in the LLM to get a structured code review.
 exit /b 0

@@ -4,6 +4,7 @@ This module provides functions for validating parameter values,
 required parameters, and path normalization.
 """
 
+import fnmatch
 import importlib.util
 from pathlib import Path
 from typing import Any
@@ -181,3 +182,54 @@ def recommend_command_format(
         return "Direct script execution with full paths"
 
     return "Default command format"
+
+
+def has_wildcard(pattern: str) -> bool:
+    """Check if a pattern contains wildcard characters.
+
+    Args:
+        pattern: Pattern string to check
+
+    Returns:
+        True if pattern contains wildcards (*, ?, [, ])
+    """
+    wildcard_chars = ["*", "?", "[", "]"]
+    return any(char in pattern for char in wildcard_chars)
+
+
+def match_pattern(name: str, pattern: str) -> bool:
+    """Match a name against a wildcard pattern.
+
+    Args:
+        name: Name to match
+        pattern: Pattern with wildcards (*, ?, [seq], [!seq])
+
+    Returns:
+        True if name matches the pattern
+    """
+    return fnmatch.fnmatch(name, pattern)
+
+
+def find_matching_servers(
+    servers: list[dict[str, Any]], pattern: str
+) -> list[dict[str, Any]]:
+    """Find all servers matching a wildcard pattern.
+
+    Args:
+        servers: List of server dictionaries with 'name' key
+        pattern: Pattern to match against server names
+
+    Returns:
+        List of matching servers
+    """
+    if not has_wildcard(pattern):
+        # No wildcards, exact match only
+        return [s for s in servers if s["name"] == pattern]
+
+    # Use pattern matching
+    matching = []
+    for server in servers:
+        if match_pattern(server["name"], pattern):
+            matching.append(server)
+
+    return matching

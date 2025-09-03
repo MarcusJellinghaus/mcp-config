@@ -303,14 +303,14 @@ def add_remove_subcommand(subparsers: Any) -> None:
 
     remove_parser.add_argument(
         "server_name",
-        help="Name of the server to remove",
+        help="Name of the server to remove (supports wildcards: *, ?)",
     )
 
     remove_parser.add_argument(
         "--client",
         default="claude-desktop",
         choices=SUPPORTED_CLIENTS,
-        help="MCP client to configure (claude-desktop, vscode, vscode-workspace, vscode-user)",
+        help="MCP client to configure (required when using wildcards)",
     )
     remove_parser.add_argument(
         "--dry-run",
@@ -333,6 +333,11 @@ def add_remove_subcommand(subparsers: Any) -> None:
         action="store_false",
         dest="backup",
         help="Skip backup creation",
+    )
+    remove_parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Skip confirmation prompt when removing multiple servers",
     )
 
 
@@ -546,7 +551,7 @@ def get_remove_examples() -> str:
         Formatted remove examples string
     """
     return """Examples:
-  # Remove a server from Claude Desktop
+  # Remove a single server from Claude Desktop
   mcp-config remove my-checker
   
   # Remove from VSCode workspace (default when using vscode)
@@ -557,6 +562,15 @@ def get_remove_examples() -> str:
   
   # Remove from VSCode user profile (explicit)
   mcp-config remove global --client vscode-user
+  
+  # Remove all servers starting with "checker" (client required)
+  mcp-config remove "checker*" --client claude-desktop
+  
+  # Remove all test servers from VSCode workspace
+  mcp-config remove "test-*" --client vscode-workspace --force
+  
+  # Remove servers ending with "-dev" from all VSCode configs
+  mcp-config remove "*-dev" --client vscode
   
   # Dry run to preview removal
   mcp-config remove my-checker --dry-run
