@@ -176,12 +176,17 @@ def _build_server_config_with_cli_detection(
             cli_command_name, normalized_params.get("venv_path")
         )
         if cli_command:
-            # Ensure python_executable is included in parameters for CLI command
-            if (
-                "python_executable" not in normalized_params
-                or not normalized_params["python_executable"]
-            ):
-                normalized_params["python_executable"] = effective_python
+            # For filesystem server, don't include python-executable
+            # For code checker, ensure python_executable is included
+            if server_config.name == "mcp-code-checker":
+                if (
+                    "python_executable" not in normalized_params
+                    or not normalized_params["python_executable"]
+                ):
+                    normalized_params["python_executable"] = effective_python
+            elif server_config.name == "mcp-server-filesystem":
+                # Remove python_executable for filesystem server if present
+                normalized_params.pop("python_executable", None)
 
             args = server_config.generate_args(normalized_params, use_cli_command=True)
             return {
@@ -193,12 +198,17 @@ def _build_server_config_with_cli_detection(
             command_mode = "python_module"
 
     # Use Python module mode (fallback or when CLI not available)
-    # Ensure python_executable is always included in parameters
-    if (
-        "python_executable" not in normalized_params
-        or not normalized_params["python_executable"]
-    ):
-        normalized_params["python_executable"] = effective_python
+    # For code checker, ensure python_executable is included
+    # For filesystem server, don't include it
+    if server_config.name == "mcp-code-checker":
+        if (
+            "python_executable" not in normalized_params
+            or not normalized_params["python_executable"]
+        ):
+            normalized_params["python_executable"] = effective_python
+    elif server_config.name == "mcp-server-filesystem":
+        # Remove python_executable for filesystem server
+        normalized_params.pop("python_executable", None)
 
     # Generate args without the main script path (CLI mode)
     args = server_config.generate_args(normalized_params, use_cli_command=True)
@@ -448,12 +458,20 @@ def build_server_config(
         }
 
     # Add environment if needed
-    if "project_dir" in normalized_params:
-        pythonpath = str(normalized_params["project_dir"])
-        # Ensure trailing separator on Windows
-        if sys.platform == "win32" and not pythonpath.endswith("\\"):
-            pythonpath += "\\"
-        config["env"] = {"PYTHONPATH": pythonpath}
+    # Use mcp-config directory for PYTHONPATH, not project directory
+    mcp_config_dir = Path.cwd()
+    
+    # If we have a venv_path, use its parent as the mcp-config directory
+    if "venv_path" in normalized_params and normalized_params["venv_path"]:
+        venv_path = Path(normalized_params["venv_path"])
+        if venv_path.exists():
+            mcp_config_dir = venv_path.parent
+    
+    pythonpath = str(mcp_config_dir)
+    # Ensure trailing separator on Windows
+    if sys.platform == "win32" and not pythonpath.endswith("\\"):
+        pythonpath += "\\"
+    config["env"] = {"PYTHONPATH": pythonpath}
 
     return config
 
@@ -554,13 +572,23 @@ def generate_client_config(
     # Add environment variables if needed
     env = {}
 
-    # Add PYTHONPATH to include the project directory
-    if "project_dir" in normalized_params:
-        pythonpath = normalized_params["project_dir"]
-        # Ensure trailing separator on Windows
-        if sys.platform == "win32" and not pythonpath.endswith("\\"):
-            pythonpath += "\\"
-        env["PYTHONPATH"] = pythonpath
+    # Add PYTHONPATH to include the mcp-config directory (where this tool is installed)
+    # This ensures the virtual environment and dependencies are accessible
+    # Use the current working directory as the base for mcp-config
+    mcp_config_dir = Path.cwd()
+    
+    # If we have a venv_path, use its parent as the mcp-config directory
+    if "venv_path" in normalized_params and normalized_params["venv_path"]:
+        venv_path = Path(normalized_params["venv_path"])
+        if venv_path.exists():
+            # Use the parent of the venv as the mcp-config directory
+            mcp_config_dir = venv_path.parent
+    
+    pythonpath = str(mcp_config_dir)
+    # Ensure trailing separator on Windows
+    if sys.platform == "win32" and not pythonpath.endswith("\\"):
+        pythonpath += "\\"
+    env["PYTHONPATH"] = pythonpath
 
     # Venv Python is already handled above in effective_python calculation
 

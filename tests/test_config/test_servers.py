@@ -391,15 +391,13 @@ class TestServerConfig:
 
     @patch("src.mcp_config.validation.auto_detect_python_executable")
     @patch("src.mcp_config.validation.auto_detect_venv_path")
-    @patch("src.mcp_config.validation.auto_detect_log_file")
     def test_generate_args_mcp_filesystem_server(
-        self, mock_log_file: MagicMock, mock_venv: MagicMock, mock_python: MagicMock
+        self, mock_venv: MagicMock, mock_python: MagicMock
     ) -> None:
         """Test argument generation for MCP Filesystem Server with auto-detection."""
         # Setup mocks
         mock_python.return_value = Path("/auto/python")
         mock_venv.return_value = Path("/auto/venv")
-        mock_log_file.return_value = Path("/auto/logs/filesystem.log")
 
         # Use underscore format as it comes from argparse
         params = {
@@ -429,9 +427,20 @@ class TestServerConfig:
         venv_idx = args.index("--venv-path")
         assert "auto" in args[venv_idx + 1] and "venv" in args[venv_idx + 1]
 
-        assert "--log-file" in args
-        log_idx = args.index("--log-file")
-        assert "filesystem.log" in args[log_idx + 1]
+        # log-file should NOT be auto-detected (only included when explicitly provided)
+        assert "--log-file" not in args
+        
+        # Test with explicit log file
+        params_with_log = {
+            "project_dir": "/path/to/project",
+            "log_level": "DEBUG",
+            "log_file": "/path/to/log.log",
+        }
+        
+        args_with_log = MCP_FILESYSTEM_SERVER.generate_args(params_with_log)
+        assert "--log-file" in args_with_log
+        log_idx = args_with_log.index("--log-file")
+        assert "log.log" in args_with_log[log_idx + 1]
 
     def test_mcp_filesystem_server_minimal_config(self) -> None:
         """Test minimal configuration for MCP Filesystem Server."""
