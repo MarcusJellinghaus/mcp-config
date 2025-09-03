@@ -350,7 +350,3 @@ class TestRemoveCommandWithWildcards:
 
         # Should succeed without actually removing anything
         assert result == 0
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
