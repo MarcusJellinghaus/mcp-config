@@ -239,7 +239,11 @@ class TestDryRunOutput:
         # Mock client handler
         with patch("src.mcp_config.main.get_client_handler") as mock_get_client:
             mock_client = MagicMock()
-            mock_client.get_config_path.return_value = Path("/tmp/config.json")
+            mock_path = MagicMock()
+            mock_path.exists.return_value = True
+            mock_path.parent = Path("/tmp")
+            mock_path.__str__.return_value = "/tmp/config.json"  # type: ignore[attr-defined]
+            mock_client.get_config_path.return_value = mock_path
             mock_client.list_managed_servers.return_value = [
                 {
                     "name": "test-checker",

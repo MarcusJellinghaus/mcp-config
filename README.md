@@ -18,8 +18,15 @@ mcp-config setup mcp-code-checker "My Project" --client vscode --project-dir .
 # List servers
 mcp-config list
 
-# Remove server
+# Remove a single server
 mcp-config remove my-server
+
+# Remove servers with wildcards (requires --client)
+mcp-config remove "checker*" --client claude-desktop
+mcp-config remove "*-dev" --client claude-desktop
+
+# Skip confirmation for multiple removals
+mcp-config remove "test-*" --client claude-desktop --force
 ```
 
 ## Supported MCP Servers

@@ -94,10 +94,21 @@ Remove a configured server.
 mcp-config remove <server-name> [options]
 ```
 
+**Arguments:**
+- `server-name`: Name of server to remove (supports wildcards: `*`, `?`, `[...]`)
+
 **Options:**
 - `--client <type>`: Client type (claude/vscode/vscode-workspace/vscode-user)
+- `--force`: Skip confirmation prompt when removing multiple servers
 - `--dry-run`: Preview changes
 - `--backup/--no-backup`: Create backup
+
+**Wildcard Support:**
+- `*` - Matches any number of characters (e.g., `checker*` matches `checker-main`, `checker-dev`)
+- `?` - Matches a single character (e.g., `test-?` matches `test-1`, `test-a`)
+- `[...]` - Matches any character in the set (e.g., `server[123]` matches `server1`, `server2`, `server3`)
+
+**Important:** When using wildcards, `--client` must be explicitly specified.
 
 **Examples:**
 
@@ -107,6 +118,14 @@ mcp-config remove "old-project"
 
 # Remove from VSCode workspace
 mcp-config remove "old-project" --client vscode
+
+# Remove with wildcards (requires explicit --client)
+mcp-config remove "checker*" --client claude-desktop
+mcp-config remove "*-dev" --client claude-desktop
+mcp-config remove "test-?" --client claude-desktop
+
+# Remove multiple servers without confirmation
+mcp-config remove "test-*" --client claude-desktop --force
 
 # Preview removal from VSCode user profile
 mcp-config remove "global" --client vscode-user --dry-run
