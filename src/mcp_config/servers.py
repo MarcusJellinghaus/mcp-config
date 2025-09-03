@@ -154,12 +154,9 @@ class ServerConfig:
                     if detected:
                         processed_params[param_key] = str(detected)
                 elif param.name == "log-file":
-                    # Auto-detect log file for any server type
-                    from .validation import auto_detect_log_file
-
-                    detected = auto_detect_log_file(project_dir, self.name)
-                    if detected:
-                        processed_params[param_key] = str(detected)
+                    # Don't auto-detect log file - let servers handle this internally
+                    # Only include if explicitly provided by user
+                    pass
 
         # Generate arguments
         for param in self.parameters:
@@ -531,7 +528,7 @@ MCP_FILESYSTEM_SERVER = ServerConfig(
             required=True,
             help="Directory to serve files from (required)",
         ),
-        # Python execution parameters (for consistency with code checker)
+        # Python execution parameters (for consistency with tests)
         ParameterDef(
             name="python-executable",
             arg_name="--python-executable",

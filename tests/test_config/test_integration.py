@@ -185,8 +185,9 @@ class TestGenerateClientConfig:
 
         assert "env" in config
         assert "PYTHONPATH" in config["env"]
-        # On Windows, PYTHONPATH should have a trailing backslash
-        expected_pythonpath = str(tmp_path)
+        # PYTHONPATH should now be the mcp-config directory (current working directory)
+        # Not the project directory
+        expected_pythonpath = str(Path.cwd())
         if sys.platform == "win32" and not expected_pythonpath.endswith("\\"):
             expected_pythonpath += "\\"
         assert config["env"]["PYTHONPATH"] == expected_pythonpath
@@ -396,8 +397,8 @@ class TestMCPCodeCheckerIntegration:
 
         # Check environment
         assert "PYTHONPATH" in config["env"]
-        # On Windows, PYTHONPATH should have a trailing backslash
-        expected_pythonpath = str(project_dir)
+        # PYTHONPATH should now be mcp-config directory (cwd), not project directory
+        expected_pythonpath = str(Path.cwd())
         if sys.platform == "win32" and not expected_pythonpath.endswith("\\"):
             expected_pythonpath += "\\"
         assert config["env"]["PYTHONPATH"] == expected_pythonpath
@@ -487,8 +488,8 @@ class TestMCPFilesystemServerIntegration:
 
         # Check environment
         assert "PYTHONPATH" in config["env"]
-        # On Windows, PYTHONPATH should have a trailing backslash
-        expected_pythonpath = str(project_dir)
+        # PYTHONPATH should be mcp-config directory (cwd), not project directory
+        expected_pythonpath = str(Path.cwd())
         if sys.platform == "win32" and not expected_pythonpath.endswith("\\"):
             expected_pythonpath += "\\"
         assert config["env"]["PYTHONPATH"] == expected_pythonpath
@@ -512,13 +513,8 @@ class TestMCPFilesystemServerIntegration:
         assert "--log-level" in args
         assert "INFO" in args
 
-        # log-file will be auto-detected and included due to unified auto-detection
-        assert "--log-file" in args  # Now automatically included
-        # Should contain auto-generated log file path
-        log_file_index = args.index("--log-file")
-        log_file_path = args[log_file_index + 1]
-        assert "mcp_filesystem_server_" in log_file_path
-        assert log_file_path.endswith(".log")
+        # log-file should NOT be auto-detected anymore - let servers handle it internally
+        assert "--log-file" not in args  # No longer automatically included
 
         # Command could be CLI or Python module mode
         is_cli_mode = config["command"].lower().endswith(

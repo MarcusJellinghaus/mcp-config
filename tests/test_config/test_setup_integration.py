@@ -362,16 +362,9 @@ class TestMCPSetupIntegration:
                 # Should have default log level
                 assert "--log-level" in config_minimal["args"]
                 assert "INFO" in config_minimal["args"]
-                # log-file will be auto-detected and included due to unified auto-detection
-                assert (
-                    "--log-file" in config_minimal["args"]
-                )  # Now automatically included
-                # Should contain auto-generated log file path
-                args = config_minimal["args"]
-                log_file_index = args.index("--log-file")
-                log_file_path = args[log_file_index + 1]
-                assert "mcp_filesystem_server_" in log_file_path
-                assert log_file_path.endswith(".log")
+                # log-file should NOT be auto-detected (only included when explicitly provided)
+                # The design is that servers handle log file generation internally
+                assert "--log-file" not in config_minimal["args"]
 
                 # Test full config
                 config_full = generate_client_config(
