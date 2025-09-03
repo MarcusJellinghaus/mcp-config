@@ -51,7 +51,7 @@ class TestMCPSetupIntegration:
                 # Generate the client configuration (safely mocked)
                 config = generate_client_config(
                     server_config=server_config,
-                    server_name=server_name,
+                    _server_name=server_name,
                     user_params=user_params,
                     python_executable=sys.executable,
                 )
@@ -124,7 +124,7 @@ class TestMCPSetupIntegration:
 
             config = generate_client_config(
                 server_config=server_config,
-                server_name=server_name,
+                _server_name=server_name,
                 user_params=user_params,
                 python_executable=python_exe,
             )
@@ -191,7 +191,7 @@ class TestMCPSetupIntegration:
                 # Generate the client configuration (safely mocked)
                 config = generate_client_config(
                     server_config=server_config,
-                    server_name=server_name,
+                    _server_name=server_name,
                     user_params=user_params,
                     python_executable=sys.executable,
                 )
@@ -266,7 +266,7 @@ class TestMCPSetupIntegration:
             # Function will automatically detect CLI mode when mocked
             config = generate_client_config(
                 server_config=server_config,
-                server_name=server_name,
+                _server_name=server_name,
                 user_params=user_params,
             )
 
@@ -355,7 +355,7 @@ class TestMCPSetupIntegration:
                 # Test minimal config
                 config_minimal = generate_client_config(
                     server_config=server_config,
-                    server_name=f"{server_name}-minimal",
+                    _server_name=f"{server_name}-minimal",
                     user_params=user_params_minimal,
                 )
 
@@ -376,7 +376,7 @@ class TestMCPSetupIntegration:
                 # Test full config
                 config_full = generate_client_config(
                     server_config=server_config,
-                    server_name=f"{server_name}-full",
+                    _server_name=f"{server_name}-full",
                     user_params=user_params_full,
                 )
 
@@ -403,7 +403,7 @@ class TestMCPSetupIntegration:
         with pytest.raises(ValueError) as exc_info:
             generate_client_config(
                 server_config=server_config,
-                server_name="invalid-test",
+                _server_name="invalid-test",
                 user_params=user_params_missing,
             )
         assert "project-dir is required" in str(exc_info.value)
@@ -417,7 +417,7 @@ class TestMCPSetupIntegration:
         with pytest.raises(ValueError) as exc_info:
             generate_client_config(
                 server_config=server_config,
-                server_name="invalid-test",
+                _server_name="invalid-test",
                 user_params=user_params_invalid,
             )
         assert "not in valid choices" in str(exc_info.value)

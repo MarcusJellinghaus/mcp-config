@@ -734,11 +734,11 @@ def validate_remove_args(args: argparse.Namespace) -> list[str]:
     return errors
 
 
-def validate_list_args(args: argparse.Namespace) -> list[str]:
+def validate_list_args(_args: argparse.Namespace) -> list[str]:
     """Validate list command arguments.
 
     Args:
-        args: Parsed arguments
+        _args: Parsed arguments (unused, kept for consistency)
 
     Returns:
         List of validation errors

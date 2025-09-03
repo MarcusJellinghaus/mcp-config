@@ -114,7 +114,7 @@ class InvalidServerError(ConfigError):
         super().__init__(message, suggestions=suggestions)
 
 
-class PermissionError(ConfigError):
+class MCPPermissionError(ConfigError):
     """Error for file/directory permission issues."""
 
     def __init__(self, path: Path, operation: str = "access"):
@@ -251,7 +251,7 @@ def handle_common_errors(func: Callable[..., int]) -> Callable[..., int]:
             return func(*args, **kwargs)
         except PermissionError as e:
             path = Path(str(e)) if str(e) else Path(".")
-            error = PermissionError(path, "access")
+            error = MCPPermissionError(path, "access")
             error.print_error()
             return 1
         except FileNotFoundError as e:

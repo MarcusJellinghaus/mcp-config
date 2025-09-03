@@ -119,7 +119,7 @@ class TestClaudeDesktopHandler:
             mock_path_class.home.return_value = mock_home
 
             # When Path(str) is called, return a mock that behaves like Windows Path
-            def path_constructor(path_str):
+            def path_constructor(path_str: Any) -> MockWindowsPath:
                 if isinstance(path_str, MockWindowsPath):
                     return path_str
                 return MockWindowsPath(path_str)

@@ -65,7 +65,7 @@ class TestOutputFormatter:
                     "python_executable": "/usr/bin/python3",
                     "log_level": "INFO",
                 },
-                tree_format=True,
+                _tree_format=True,
             )
             output = mock_stdout.getvalue()
 

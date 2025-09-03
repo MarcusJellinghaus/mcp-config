@@ -155,7 +155,9 @@ class TestDryRunFunctionality:
         # Should raise ValueError for missing required parameter
         with pytest.raises(ValueError, match="Parameter validation failed"):
             generate_client_config(
-                server_config=server_config, server_name="test", user_params=user_params
+                server_config=server_config,
+                _server_name="test",
+                user_params=user_params,
             )
 
 

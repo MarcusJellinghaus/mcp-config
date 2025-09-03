@@ -460,7 +460,7 @@ def build_server_config(
 
 def generate_client_config(
     server_config: ServerConfig,
-    server_name: str,
+    _server_name: str,
     user_params: dict[str, Any],
     python_executable: str | None = None,
     client_handler: ClientHandler | None = None,
@@ -469,7 +469,7 @@ def generate_client_config(
 
     Args:
         server_config: Server configuration definition
-        server_name: User-provided server instance name
+        _server_name: User-provided server instance name (for future use)
         user_params: User-provided parameter values (with underscores)
         python_executable: Path to Python executable to use (auto-detect if None)
         client_handler: Client handler instance for client-specific formatting

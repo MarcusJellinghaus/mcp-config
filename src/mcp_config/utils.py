@@ -133,7 +133,7 @@ def detect_mcp_installation(project_dir: Path) -> dict[str, Any]:
 
             # Try to get version
             try:
-                import mcp_code_checker  # type: ignore[import-untyped]
+                import mcp_code_checker  # type: ignore[import-untyped,import-not-found]
 
                 if hasattr(mcp_code_checker, "__version__"):
                     info["version"] = mcp_code_checker.__version__
@@ -160,13 +160,13 @@ def detect_mcp_installation(project_dir: Path) -> dict[str, Any]:
 
 
 def recommend_command_format(
-    client: str, server_type: str, installation_info: dict[str, Any]
+    client: str, _server_type: str, installation_info: dict[str, Any]
 ) -> str:
     """Recommend the best command format for the given client and server.
 
     Args:
         client: Client type (vscode, claude-desktop, etc.)
-        server_type: Server type
+        _server_type: Server type (reserved for future use)
         installation_info: Installation detection results
 
     Returns:
