@@ -503,20 +503,18 @@ class TestServerConfig:
             if not MCP_CODE_CHECKER.validate_project(project_dir):
                 # Create development structure
                 src_dir = project_dir / "src"
-                src_dir.mkdir()
+                src_dir.mkdir(exist_ok=True)
                 main_file = src_dir / "main.py"
                 main_file.write_text("# Main module")
+            else:
+                # If validation already passes, ensure src directory exists for the next check
+                src_dir = project_dir / "src"
+                if not src_dir.exists():
+                    src_dir.mkdir(exist_ok=True)
+                    main_file = src_dir / "main.py"
+                    main_file.write_text("# Main module")
 
             # Now it should validate
-            assert MCP_CODE_CHECKER.validate_project(project_dir)
-
-            # Create some project structure to ensure it still validates
-            src_dir = project_dir / "src"
-            src_dir.mkdir()
-            main_file = src_dir / "main.py"
-            main_file.write_text("# Main module")
-
-            # Still valid with development structure
             assert MCP_CODE_CHECKER.validate_project(project_dir)
 
     def test_validate_project_mcp_filesystem_server(self) -> None:

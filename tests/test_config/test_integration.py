@@ -575,6 +575,7 @@ class TestMCPFilesystemServerIntegration:
                 assert "-m" in config["args"]
                 assert "mcp_server_filesystem" in config["args"]
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific path test")
     def test_mcp_filesystem_server_realistic_windows_config(
         self, tmp_path: Path
     ) -> None:

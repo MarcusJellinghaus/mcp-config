@@ -229,6 +229,7 @@ class TestMCPSetupIntegration:
                 print(f"Generated filesystem server configuration (safely tested):")
                 print(json_str)
 
+    @pytest.mark.skipif(sys.platform != "win32", reason="Windows-specific path test")
     def test_filesystem_server_with_realistic_windows_paths(self) -> None:
         """Test filesystem server with realistic Windows paths matching the example."""
 
