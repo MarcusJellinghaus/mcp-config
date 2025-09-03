@@ -563,13 +563,13 @@ def get_remove_examples() -> str:
   # Remove from VSCode user profile (explicit)
   mcp-config remove global --client vscode-user
   
-  # Remove all servers starting with 'checker' (client required)
+  # Remove all servers starting with "checker" (client required)
   mcp-config remove "checker*" --client claude-desktop
   
   # Remove all test servers from VSCode workspace
   mcp-config remove "test-*" --client vscode-workspace --force
   
-  # Remove servers ending with '-dev' from all VSCode configs
+  # Remove servers ending with "-dev" from all VSCode configs
   mcp-config remove "*-dev" --client vscode
   
   # Dry run to preview removal

@@ -358,7 +358,7 @@ def handle_remove_command(args: argparse.Namespace) -> int:
         if not all_matched_servers:
             if is_wildcard:
                 OutputFormatter.print_error(
-                    f"No managed servers found matching pattern '{args.server_name}'"
+                    f'No managed servers found matching pattern "{args.server_name}"'
                 )
                 print("\nTip: Use 'mcp-config list' to see available servers")
             else:
@@ -371,7 +371,7 @@ def handle_remove_command(args: argparse.Namespace) -> int:
             OutputFormatter.print_dry_run_header()
 
             if is_wildcard:
-                print(f"\nPattern: '{args.server_name}'")
+                print(f'\nPattern: "{args.server_name}"')
                 print(f"Matched {len(all_matched_servers)} server(s):")
                 for server in all_matched_servers:
                     print(
@@ -428,7 +428,7 @@ def handle_remove_command(args: argparse.Namespace) -> int:
         elif args.verbose:
             if is_wildcard:
                 print(
-                    f"Will remove {len(all_matched_servers)} server(s) matching '{args.server_name}'"
+                    f'Will remove {len(all_matched_servers)} server(s) matching "{args.server_name}"'
                 )
             else:
                 server_info = all_matched_servers[0]
