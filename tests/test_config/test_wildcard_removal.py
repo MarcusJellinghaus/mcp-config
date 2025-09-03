@@ -99,8 +99,11 @@ class TestRemoveCommandWithWildcards:
 
         # Setup mocks
         mock_handler = MagicMock()
-        mock_path = MagicMock()
+        # Create a mock path that properly simulates existence
+        mock_path = MagicMock(spec=Path)
         mock_path.exists.return_value = True
+        mock_path.parent = Path("/tmp")
+        mock_path.configure_mock(**{"__str__.return_value": "/tmp/config.json"})
         mock_handler.get_config_path.return_value = mock_path
         mock_handler.list_managed_servers.return_value = [
             {
@@ -145,8 +148,11 @@ class TestRemoveCommandWithWildcards:
 
         # Setup mocks
         mock_handler = MagicMock()
-        mock_path = MagicMock()
+        # Create a mock path that properly simulates existence
+        mock_path = MagicMock(spec=Path)
         mock_path.exists.return_value = True
+        mock_path.parent = Path("/tmp")
+        mock_path.configure_mock(**{"__str__.return_value": "/tmp/config.json"})
         mock_handler.get_config_path.return_value = mock_path
         mock_handler.list_managed_servers.return_value = [
             {
@@ -217,8 +223,11 @@ class TestRemoveCommandWithWildcards:
 
         # Setup mocks
         mock_handler = MagicMock()
-        mock_path = MagicMock()
+        # Create a mock path that properly simulates existence
+        mock_path = MagicMock(spec=Path)
         mock_path.exists.return_value = True
+        mock_path.parent = Path("/tmp")
+        mock_path.configure_mock(**{"__str__.return_value": "/tmp/config.json"})
         mock_handler.get_config_path.return_value = mock_path
         mock_handler.list_managed_servers.return_value = [
             {"name": "test-1", "type": "test", "command": "python", "managed": True},
@@ -298,8 +307,11 @@ class TestRemoveCommandWithWildcards:
 
         # Setup mocks
         mock_handler = MagicMock()
-        mock_path = MagicMock()
+        # Create a mock path that properly simulates existence
+        mock_path = MagicMock(spec=Path)
         mock_path.exists.return_value = True
+        mock_path.parent = Path("/tmp")
+        mock_path.configure_mock(**{"__str__.return_value": "/tmp/config.json"})
         mock_handler.get_config_path.return_value = mock_path
         mock_handler.list_managed_servers.return_value = [
             {"name": "dev-1", "type": "test", "command": "python", "managed": True},

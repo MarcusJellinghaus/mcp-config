@@ -235,39 +235,45 @@ class TestDryRunOutput:
         mock_args.dry_run = True
         mock_args.verbose = False
         mock_args.backup = True
+        mock_args.force = False  # Added missing attribute
 
         # Mock client handler
         with patch("src.mcp_config.main.get_client_handler") as mock_get_client:
             mock_client = MagicMock()
-            mock_path = MagicMock()
-            mock_path.exists.return_value = True
-            mock_path.parent = Path("/tmp")
-            mock_path.__str__.return_value = "/tmp/config.json"  # type: ignore[attr-defined]
-            mock_client.get_config_path.return_value = mock_path
-            mock_client.list_managed_servers.return_value = [
-                {
-                    "name": "test-checker",
-                    "type": "mcp-code-checker",
-                    "command": "python",
-                }
-            ]
-            mock_client.list_all_servers.return_value = [
-                {"name": "test-checker", "type": "mcp-code-checker", "managed": True},
-                {"name": "other", "type": "external", "managed": False},
-            ]
-            mock_get_client.return_value = mock_client
+            # Create a Path object and patch its exists method
+            mock_config_path = Path("/tmp/config.json")
+            mock_client.get_config_path.return_value = mock_config_path
 
-            # Run the command
-            result = handle_remove_command(mock_args)
+            # Patch the exists method for the Path object
+            with patch.object(Path, "exists", return_value=True):
+                mock_client.list_managed_servers.return_value = [
+                    {
+                        "name": "test-checker",
+                        "type": "mcp-code-checker",
+                        "command": "python",
+                    }
+                ]
+                mock_client.list_all_servers.return_value = [
+                    {
+                        "name": "test-checker",
+                        "type": "mcp-code-checker",
+                        "managed": True,
+                    },
+                    {"name": "other", "type": "external", "managed": False},
+                ]
+                mock_get_client.return_value = mock_client
 
-            # Verify dry-run output was called
-            mock_header.assert_called_once()
-            mock_preview.assert_called_once()
+                # Run the command
+                result = handle_remove_command(mock_args)
 
-            # Verify preview was called with correct arguments
-            call_args = mock_preview.call_args[0]
-            assert call_args[0] == "test-checker"  # server_name
-            assert call_args[1]["name"] == "test-checker"  # server_info
+                # Verify dry-run output was called
+                mock_header.assert_called_once()
+                mock_preview.assert_called_once()
 
-            # Should return success
-            assert result == 0
+                # Verify preview was called with correct arguments
+                call_args = mock_preview.call_args[0]
+                assert call_args[0] == "test-checker"  # server_name
+                assert call_args[1]["name"] == "test-checker"  # server_info
+
+                # Should return success
+                assert result == 0
