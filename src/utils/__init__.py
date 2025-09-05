@@ -7,9 +7,7 @@ This package provides common utilities used across the codebase:
 """
 
 # Import from file_utils module
-from .file_utils import (
-    read_file,
-)
+from .file_utils import read_file
 
 # Import from subprocess_runner module
 from .subprocess_runner import (

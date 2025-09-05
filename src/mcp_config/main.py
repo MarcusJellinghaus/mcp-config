@@ -9,18 +9,10 @@ from . import initialize_all_servers
 from .cli_utils import create_full_parser, validate_setup_args
 from .clients import get_client_handler
 from .detection import detect_python_environment
-from .integration import (
-    build_server_config,
-    remove_mcp_server,
-    setup_mcp_server,
-)
+from .integration import build_server_config, remove_mcp_server, setup_mcp_server
 from .output import OutputFormatter
 from .servers import registry
-from .utils import (
-    find_matching_servers,
-    has_wildcard,
-    validate_required_parameters,
-)
+from .utils import find_matching_servers, has_wildcard, validate_required_parameters
 from .validation import (
     validate_client_installation,
     validate_parameter_combination,
