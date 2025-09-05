@@ -1,6 +1,5 @@
 """Test that mcp-server-filesystem doesn't include venv-path in CLI mode."""
 
-from pathlib import Path
 from unittest.mock import patch
 
 from mcp_config.integration import (
