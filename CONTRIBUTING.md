@@ -7,6 +7,11 @@ cd mcp-config
 python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
+
+pip uninstall mcp-code-checker mcp-server-filesystem
+pip install "mcp-code-checker @ git+https://github.com/MarcusJellinghaus/mcp-code-checker.git"
+pip install "mcp-server-filesystem @ git+https://github.com/MarcusJellinghaus/mcp_server_filesystem.git"
+
 ```
 
 ## Development Tools
