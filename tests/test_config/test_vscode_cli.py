@@ -321,7 +321,13 @@ class TestVSCodeCLI:
 
             with patch(
                 "sys.argv",
-                ["mcp-config", "remove", "nonexistent-server", "--client", "vscode-workspace"],
+                [
+                    "mcp-config",
+                    "remove",
+                    "nonexistent-server",
+                    "--client",
+                    "vscode-workspace",
+                ],
             ):
                 with patch("sys.stdout", new=StringIO()) as fake_out:
                     exit_code = main()
@@ -368,7 +374,13 @@ class TestVSCodeCLI:
 
             with patch(
                 "sys.argv",
-                ["mcp-config", "validate", "test-server", "--client", "vscode-workspace"],
+                [
+                    "mcp-config",
+                    "validate",
+                    "test-server",
+                    "--client",
+                    "vscode-workspace",
+                ],
             ):
                 with patch("sys.stdout", new=StringIO()) as fake_out:
                     exit_code = main()
@@ -414,7 +426,13 @@ class TestVSCodeCLI:
 
             with patch(
                 "sys.argv",
-                ["mcp-config", "validate", "test-server", "--client", "vscode-workspace"],
+                [
+                    "mcp-config",
+                    "validate",
+                    "test-server",
+                    "--client",
+                    "vscode-workspace",
+                ],
             ):
                 with patch("sys.stdout", new=StringIO()) as fake_out:
                     exit_code = main()

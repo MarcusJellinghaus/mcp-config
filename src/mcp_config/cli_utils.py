@@ -94,7 +94,6 @@ def add_global_options(parser: argparse.ArgumentParser) -> None:
     )
 
 
-
 def add_deduplicated_server_parameters(parser: argparse.ArgumentParser) -> None:
     """Add server parameters to parser, deduplicating by parameter name.
 
