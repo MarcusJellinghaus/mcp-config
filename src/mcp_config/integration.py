@@ -293,13 +293,8 @@ def generate_vscode_command(
     if "_server_type" in server_config:
         config["_server_type"] = server_config["_server_type"]
 
-    # Normalize paths based on workspace vs user config
-    if workspace:
-        # For workspace configs, prefer relative paths where possible
-        config = make_paths_relative(config, Path.cwd())
-    else:
-        # For user configs, ensure absolute paths
-        config = make_paths_absolute(config)
+    # Always use absolute paths for consistency with Claude Desktop
+    config = make_paths_absolute(config)
 
     return config
 
