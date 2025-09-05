@@ -7,7 +7,7 @@ from pathlib import Path
 
 def test_all_documentation_files_exist() -> None:
     """Test that all required documentation files exist."""
-    docs_dir = Path("docs/config")
+    docs_dir = Path("docs")
     required_files = ["USER_GUIDE.md", "TROUBLESHOOTING.md", "README.md"]
 
     for file in required_files:
@@ -16,7 +16,7 @@ def test_all_documentation_files_exist() -> None:
 
 def test_documentation_structure() -> None:
     """Test that documentation files have proper structure."""
-    docs_dir = Path("docs/config")
+    docs_dir = Path("docs")
 
     # Check USER_GUIDE.md structure
     user_guide_content = (docs_dir / "USER_GUIDE.md").read_text()
@@ -47,7 +47,7 @@ def extract_code_blocks(markdown_text: str, language: str = "python") -> list[st
 
 def test_python_code_blocks_valid() -> None:
     """Test that Python code blocks in documentation are syntactically valid."""
-    docs_dir = Path("docs/config")
+    docs_dir = Path("docs")
 
     files_with_python = ["USER_GUIDE.md"]
 
@@ -99,7 +99,7 @@ def test_python_code_blocks_valid() -> None:
 
 def test_cli_examples_format() -> None:
     """Test that CLI examples in docs follow correct format."""
-    docs_dir = Path("docs/config")
+    docs_dir = Path("docs")
     usage_content = (docs_dir / "USER_GUIDE.md").read_text()
 
     # Extract bash code blocks
@@ -133,7 +133,7 @@ def test_cli_examples_format() -> None:
 
 def test_documentation_links() -> None:
     """Test that internal documentation links are valid."""
-    docs_dir = Path("docs/config")
+    docs_dir = Path("docs")
 
     for file in ["USER_GUIDE.md", "TROUBLESHOOTING.md", "README.md"]:
         filepath = docs_dir / file
@@ -161,7 +161,7 @@ def test_documentation_links() -> None:
 
 def test_code_example_consistency() -> None:
     """Test that code examples are consistent across documentation."""
-    docs_dir = Path("docs/config")
+    docs_dir = Path("docs")
 
     # Check that import paths are consistent
     import_patterns = set()
@@ -186,7 +186,7 @@ def test_code_example_consistency() -> None:
 
 def test_bash_examples_validity() -> None:
     """Test that bash examples follow proper conventions."""
-    docs_dir = Path("docs/config")
+    docs_dir = Path("docs")
 
     for file in ["USER_GUIDE.md", "TROUBLESHOOTING.md"]:
         filepath = docs_dir / file
