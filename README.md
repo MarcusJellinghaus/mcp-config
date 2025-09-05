@@ -2,65 +2,61 @@
 
 Configure MCP servers for Claude Desktop and VSCode with one command.
 
-## Install
-```bash
-pip install git+https://github.com/MarcusJellinghaus/mcp-config.git
-```
+## Quick Start
 
-## Usage
 ```bash
+# Install
+pip install git+https://github.com/MarcusJellinghaus/mcp-config.git
+
 # Setup for Claude Desktop
 mcp-config setup mcp-code-checker "My Project" --project-dir .
 
-# Setup for VSCode
-mcp-config setup mcp-code-checker "My Project" --client vscode --project-dir .
+# Setup for VSCode (team projects)
+mcp-config setup mcp-code-checker "My Project" --client vscode-workspace --project-dir .
+```
 
-# List servers
-mcp-config list
+## Built-in Help System
 
-# Remove a single server
-mcp-config remove my-server
+Get comprehensive help directly from the CLI:
 
-# Remove servers with wildcards (requires --client)
-mcp-config remove "checker*" --client claude-desktop
-mcp-config remove "*-dev" --client claude-desktop
+```bash
+# Tool overview and commands
+mcp-config help
 
-# Skip confirmation for multiple removals
-mcp-config remove "test-*" --client claude-desktop --force
+# Help for specific commands
+mcp-config help setup
+mcp-config help remove
+mcp-config help list
+mcp-config help validate
+
+# Help for server parameters
+mcp-config help mcp-code-checker
+mcp-config help mcp-server-filesystem
+
+# Quick reference
+mcp-config help mcp-code-checker --quick
 ```
 
 ## Supported MCP Servers
 
-**MCP Code Checker** (`mcp-code-checker`)
-- **Repository**: https://github.com/MarcusJellinghaus/mcp-code-checker
-- **Purpose**: Code analysis and testing server using pylint, pytest, and mypy
-- **Documentation**: [MCP Code Checker README](https://github.com/MarcusJellinghaus/mcp-code-checker/blob/main/README.md)
+- **mcp-code-checker** - Code analysis using pylint, pytest, and mypy
+- **mcp-server-filesystem** - File system operations
+- External servers via Python entry points
 
-### Supported Parameters:
-- `--project-dir` (required): Base directory for code checking operations
-- `--python-executable`: Path to Python interpreter (auto-detected)
-- `--venv-path`: Path to virtual environment (auto-detected)
-- `--test-folder`: Path to test folder (defaults to "tests")
-- `--keep-temp-files`: Keep temporary files after execution
-- `--log-level`: Logging level (DEBUG/INFO/WARNING/ERROR/CRITICAL)
-- `--log-file`: Path for structured JSON logs
+## Documentation
 
-External servers can be added via Python entry points (see `mcp-config validate`).
+- **[USER_GUIDE.md](USER_GUIDE.md)** - Complete user documentation
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** - For developers enhancing mcp-config
+- **[INTEGRATION.md](INTEGRATION.md)** - For MCP server developers
 
 ## Features
-- Auto-detects Python environments
-- Backs up configurations
-- Validates server setup
-- Supports multiple clients
 
-## Help
-```bash
-mcp-config --help
-mcp-config help setup
-```
-
-## Links
-[Install](INSTALL.md) • [Usage](USAGE.md) • [Contributing](CONTRIBUTING.md) • [Issues](https://github.com/MarcusJellinghaus/mcp-config/issues)
+- Auto-detects Python environments and virtual environments
+- Supports Claude Desktop and VSCode (workspace + user profile)
+- Backs up configurations before changes
+- Validates server setup with comprehensive checks
+- Extensive CLI help system
 
 ## License
+
 MIT - see [LICENSE](LICENSE) file.

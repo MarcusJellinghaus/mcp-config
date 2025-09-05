@@ -1,6 +1,9 @@
-# Contributing
+# Contributing to MCP Config
+
+Guide for developers enhancing mcp-config itself.
 
 ## Development Setup
+
 ```bash
 git clone https://github.com/MarcusJellinghaus/mcp-config.git
 cd mcp-config
@@ -8,51 +11,142 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
-pip uninstall mcp-code-checker mcp-server-filesystem
+# Install test servers
+pip uninstall mcp-code-checker mcp-server-filesystem  
 pip install "mcp-code-checker @ git+https://github.com/MarcusJellinghaus/mcp-code-checker.git"
 pip install "mcp-server-filesystem @ git+https://github.com/MarcusJellinghaus/mcp_server_filesystem.git"
-
 ```
 
 ## Development Tools
+
 ```bash
-# Format code (runs ruff, black, isort)
-./tools/format_all.bat          # Windows
-
-# Run all checks and copy errors to clipboard for LLM analysis
-./tools/checks2clipboard.bat    # Windows - runs pylint, pytest, mypy
-                                # Copies detailed error output to clipboard
-                                # for pasting into Claude/ChatGPT/etc.
-
-# Individual tools
-./tools/black.bat               # Code formatting
-./tools/mypy.bat                # Type checking  
-./tools/pylint_check_for_errors.bat  # Error checking
-
-# Test installation
-./tools/test_cli_installation.bat    # Windows
-./tools/test_cli_installation.sh     # Unix/Linux/macOS
-
-# Reinstall package
-./tools/reinstall.bat           # Windows
+./tools/format_all.bat              # Format code (Windows)
+./tools/checks2clipboard.bat        # All checks → clipboard for LLM analysis
+./tools/test_cli_installation.bat   # Test installation
+pytest                              # Run tests
 ```
 
-## Manual Testing
-```bash
-# Run tests
-pytest
+## Architecture
 
-# Test CLI directly
-mcp-config --help
-mcp-config validate
+```
+src/mcp_config/
+├── main.py              # CLI entry point, command handlers
+├── servers.py           # Server configs, registry, parameters
+├── clients.py           # Client handlers (Claude Desktop, VSCode)
+├── help_system.py       # CLI help text formatting
+├── cli_utils.py         # Argument parser generation
+├── integration.py       # Setup/removal logic
+├── validation.py        # Configuration validation
+├── detection.py         # Auto-detection (Python, venv)
+└── output.py           # Output formatting
 ```
 
-## Submit Changes
-1. Fork repository
-2. Create feature branch  
-3. Run `./tools/format_all.bat` to fix formatting
-4. Run `./tools/checks2clipboard.bat` to check for errors
-5. If errors found, paste clipboard content to LLM for analysis
-6. Make changes and add tests
-7. Repeat steps 4-5 until all checks pass
-8. Submit pull request
+**Key Patterns:**
+- **Server Registry:** All servers registered in `servers.py` with `ServerConfig`
+- **Client Handlers:** Each client implements config management interface
+- **CLI Help:** Generated from server configurations, not static files
+
+## Adding New Server Types
+
+**Step 1:** Add to `src/mcp_config/servers.py`:
+
+```python
+NEW_SERVER = ServerConfig(
+    name="my-server",
+    display_name="My Server", 
+    main_module="src/main.py",
+    parameters=[
+        ParameterDef(
+            name="project-dir",
+            arg_name="--project-dir", 
+            param_type="path",
+            required=True,
+            help="Base directory for operations",
+        ),
+        ParameterDef(
+            name="log-level",
+            arg_name="--log-level",
+            param_type="choice", 
+            default="INFO",
+            choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+            help="Logging level",
+        ),
+        # More parameters...
+    ],
+)
+
+registry.register(NEW_SERVER)
+```
+
+**Step 2:** Add CLI command detection (if applicable):
+
+```python
+def supports_cli_command(self) -> bool:
+    if self.name == "my-server":
+        import shutil
+        return shutil.which("my-server") is not None
+    # existing code...
+```
+
+**Step 3:** Test integration:
+
+```bash
+mcp-config validate                    # Shows server in available types
+mcp-config help my-server              # Parameter help
+mcp-config setup my-server "test" --project-dir . --dry-run
+```
+
+## Adding New Client Types
+
+**Step 1:** Create client handler in `src/mcp_config/clients.py`:
+
+```python
+class NewClientHandler(ClientHandler):
+    def get_config_path(self) -> Path:
+        # Platform-specific config path logic
+        pass
+    
+    def load_config(self) -> dict[str, Any]:
+        # Load configuration from file
+        pass
+    
+    def save_config(self, config: dict[str, Any]) -> None:
+        # Save configuration to file  
+        pass
+    
+    def normalize_path(self, path: str, project_dir: Path) -> str:
+        # Client-specific path normalization
+        pass
+    
+    def list_all_servers(self) -> list[dict[str, Any]]:
+        # List configured servers
+        pass
+```
+
+**Step 2:** Register in `get_client_handler()` function:
+
+```python
+def get_client_handler(client: str) -> ClientHandler:
+    if client == "new-client":
+        return NewClientHandler()
+    # existing code...
+```
+
+**Step 3:** Add to `SUPPORTED_CLIENTS` in `cli_utils.py`
+
+**Step 4:** Test with all commands:
+
+```bash
+mcp-config setup mcp-code-checker "test" --client new-client --project-dir . --dry-run
+mcp-config list --client new-client
+```
+
+## Testing & Submission
+
+**Before submitting:**
+1. Run `./tools/format_all.bat` and `./tools/checks2clipboard.bat`
+2. Test all commands with new functionality  
+3. Add unit tests for new components
+4. Follow existing code patterns
+
+**Submit:** Fork → feature branch → test → pull request with clear description
