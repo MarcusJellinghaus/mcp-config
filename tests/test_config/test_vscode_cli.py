@@ -77,9 +77,9 @@ class TestVSCodeCLI:
                     "mcp-code-checker",
                     "test-project",
                     "--client",
-                    "vscode",
+                    "vscode-workspace",
                     "--project-dir",
-                    ".",  # Default is workspace, no flag needed
+                    ".",
                 ],
             ):
                 exit_code = main()
@@ -137,10 +137,9 @@ class TestVSCodeCLI:
                     "mcp-code-checker",
                     "global-project",
                     "--client",
-                    "vscode",
+                    "vscode-user",
                     "--project-dir",
                     ".",
-                    "--user",  # User profile flag
                 ],
             ):
                 exit_code = main()
@@ -198,10 +197,9 @@ class TestVSCodeCLI:
                     "mcp-code-checker",
                     "test-project",
                     "--client",
-                    "vscode",
+                    "vscode-workspace",
                     "--project-dir",
                     ".",
-                    # No --user flag, should default to workspace
                 ],
             ):
                 exit_code = main()
@@ -305,7 +303,7 @@ class TestVSCodeCLI:
 
             with patch(
                 "sys.argv",
-                ["mcp-config", "remove", "test-server", "--client", "vscode"],
+                ["mcp-config", "remove", "test-server", "--client", "vscode-workspace"],
             ):
                 exit_code = main()
 
@@ -323,7 +321,7 @@ class TestVSCodeCLI:
 
             with patch(
                 "sys.argv",
-                ["mcp-config", "remove", "nonexistent-server", "--client", "vscode"],
+                ["mcp-config", "remove", "nonexistent-server", "--client", "vscode-workspace"],
             ):
                 with patch("sys.stdout", new=StringIO()) as fake_out:
                     exit_code = main()
@@ -370,7 +368,7 @@ class TestVSCodeCLI:
 
             with patch(
                 "sys.argv",
-                ["mcp-config", "validate", "test-server", "--client", "vscode"],
+                ["mcp-config", "validate", "test-server", "--client", "vscode-workspace"],
             ):
                 with patch("sys.stdout", new=StringIO()) as fake_out:
                     exit_code = main()
@@ -416,7 +414,7 @@ class TestVSCodeCLI:
 
             with patch(
                 "sys.argv",
-                ["mcp-config", "validate", "test-server", "--client", "vscode"],
+                ["mcp-config", "validate", "test-server", "--client", "vscode-workspace"],
             ):
                 with patch("sys.stdout", new=StringIO()) as fake_out:
                     exit_code = main()
@@ -427,7 +425,7 @@ class TestVSCodeCLI:
                     mock_validate.assert_called_once()
 
     def test_client_aliases(self) -> None:
-        """Test that various VSCode client aliases work."""
+        """Test that VSCode client options work."""
         mock_handler = Mock()
         mock_handler.list_all_servers.return_value = []
         mock_handler.get_config_path.return_value = Path(".vscode/mcp.json")
@@ -438,13 +436,7 @@ class TestVSCodeCLI:
         ):
             mock_get_handler.return_value = mock_handler
 
-            # Test 'vscode' alias
-            with patch("sys.argv", ["mcp-config", "list", "--client", "vscode"]):
-                with patch("sys.stdout", new=StringIO()):
-                    exit_code = main()
-                    assert exit_code == 0
-
-            # Test 'vscode-workspace' alias
+            # Test 'vscode-workspace' option
             with patch(
                 "sys.argv", ["mcp-config", "list", "--client", "vscode-workspace"]
             ):
@@ -452,7 +444,7 @@ class TestVSCodeCLI:
                     exit_code = main()
                     assert exit_code == 0
 
-            # Test 'vscode-user' alias
+            # Test 'vscode-user' option
             with patch("sys.argv", ["mcp-config", "list", "--client", "vscode-user"]):
                 with patch("sys.stdout", new=StringIO()):
                     exit_code = main()
@@ -506,7 +498,7 @@ class TestVSCodeCLI:
                     "mcp-code-checker",
                     "full-test",
                     "--client",
-                    "vscode",
+                    "vscode-workspace",
                     "--project-dir",
                     ".",
                     "--venv-path",
@@ -514,7 +506,7 @@ class TestVSCodeCLI:
                     "--log-file",
                     "test.log",
                     "--log-level",
-                    "DEBUG",  # Default is workspace, no flag needed
+                    "DEBUG",
                 ],
             ):
                 exit_code = main()
@@ -580,7 +572,7 @@ class TestVSCodeCLI:
                     "mcp-code-checker",
                     "dry-run-test",
                     "--client",
-                    "vscode",
+                    "vscode-workspace",
                     "--project-dir",
                     ".",
                     "--dry-run",

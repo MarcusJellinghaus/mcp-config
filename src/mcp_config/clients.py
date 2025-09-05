@@ -740,7 +740,6 @@ HandlerFactory = Union[type[ClientHandler], Callable[[], ClientHandler]]
 
 CLIENT_HANDLERS: dict[str, HandlerFactory] = {
     "claude-desktop": ClaudeDesktopHandler,
-    "vscode": lambda: VSCodeHandler(workspace=True),  # Default to workspace
     "vscode-workspace": lambda: VSCodeHandler(workspace=True),
     "vscode-user": lambda: VSCodeHandler(workspace=False),
 }

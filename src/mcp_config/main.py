@@ -69,18 +69,8 @@ def handle_setup_command(args: argparse.Namespace) -> int:
             print(f"Available types: {', '.join(registry.list_servers())}")
             return 1
 
-        # Handle VSCode client selection with workspace flag
+        # Get client name directly (no more generic 'vscode' option)
         client = args.client
-        if client == "vscode":
-            # Use the workspace flag to determine config location
-            # The --user flag sets use_workspace to False
-            client = "vscode-workspace" if args.use_workspace else "vscode-user"
-        elif client == "vscode-workspace":
-            # Explicit workspace selection
-            pass
-        elif client == "vscode-user":
-            # Explicit user profile selection
-            pass
 
         # Get client handler
         client_handler = get_client_handler(client)
@@ -277,24 +267,9 @@ def handle_remove_command(args: argparse.Namespace) -> int:
             print("Example: mcp-config remove 'checker*' --client claude-desktop")
             return 1
 
-        # Handle VSCode client selection
+        # Get client name directly (no more generic 'vscode' option)
         client = args.client
-        if client == "vscode":
-            # When using wildcards with vscode, we'll process both workspace and user
-            if is_wildcard:
-                clients_to_process = ["vscode-workspace", "vscode-user"]
-            else:
-                # Default to workspace for single remove when just "vscode" is specified
-                client = "vscode-workspace"
-                clients_to_process = [client]
-        elif client == "vscode-workspace":
-            # Explicit workspace selection
-            clients_to_process = ["vscode-workspace"]
-        elif client == "vscode-user":
-            # Explicit user profile selection
-            clients_to_process = ["vscode-user"]
-        else:
-            clients_to_process = [client]
+        clients_to_process = [client]
 
         # Process all relevant clients
         total_removed = 0
@@ -525,13 +500,8 @@ def handle_list_command(args: argparse.Namespace) -> int:
     try:
         # Get client handler(s)
         if args.client:
-            # Handle VSCode client selection
-            client = args.client
-            if client == "vscode":
-                # When just "vscode" is specified for list, show both VSCode configs
-                clients = ["vscode-workspace", "vscode-user"]
-            else:
-                clients = [client]
+            # Get client name directly
+            clients = [args.client]
         else:
             # List all clients when no specific client is specified
             clients = ["claude-desktop", "vscode-workspace", "vscode-user"]
@@ -655,17 +625,8 @@ def handle_help_command(args: argparse.Namespace) -> int:
 def handle_validate_command(args: argparse.Namespace) -> int:
     """Handle the validate command with comprehensive checks."""
     try:
-        # Handle VSCode client selection
+        # Get client name directly (no more generic 'vscode' option)
         client = args.client
-        if client == "vscode":
-            # Default to workspace for validate command when just "vscode" is specified
-            client = "vscode-workspace"
-        elif client == "vscode-workspace":
-            # Explicit workspace selection
-            pass
-        elif client == "vscode-user":
-            # Explicit user profile selection
-            pass
 
         # Get client handler
         client_handler = get_client_handler(client)
