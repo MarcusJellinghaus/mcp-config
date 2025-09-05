@@ -2,8 +2,8 @@
 
 from unittest.mock import patch
 
-from mcp_config.integration import (
-    generate_client_config,  # type: ignore[import-untyped]
+from mcp_config.integration import (  # type: ignore[import-untyped]
+    generate_client_config,
 )
 from mcp_config.servers import (  # type: ignore[import-untyped]
     MCP_CODE_CHECKER,
