@@ -6,11 +6,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
-from src.mcp_config.utils import (
-    find_matching_servers,
-    has_wildcard,
-    match_pattern,
-)
+from src.mcp_config.utils import find_matching_servers, has_wildcard, match_pattern
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
