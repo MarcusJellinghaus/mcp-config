@@ -185,8 +185,10 @@ def _build_server_config_with_cli_detection(
                 ):
                     normalized_params["python_executable"] = effective_python
             elif server_config.name == "mcp-server-filesystem":
-                # Remove python_executable for filesystem server if present
+                # Remove python_executable and venv_path for filesystem server if present
+                # The filesystem server doesn't support these parameters in CLI mode
                 normalized_params.pop("python_executable", None)
+                normalized_params.pop("venv_path", None)
 
             args = server_config.generate_args(normalized_params, use_cli_command=True)
             return {
@@ -207,8 +209,10 @@ def _build_server_config_with_cli_detection(
         ):
             normalized_params["python_executable"] = effective_python
     elif server_config.name == "mcp-server-filesystem":
-        # Remove python_executable for filesystem server
+        # Remove python_executable and venv_path for filesystem server
+        # The filesystem server doesn't support these parameters
         normalized_params.pop("python_executable", None)
+        normalized_params.pop("venv_path", None)
 
     # Generate args without the main script path (CLI mode)
     args = server_config.generate_args(normalized_params, use_cli_command=True)

@@ -169,6 +169,24 @@ class ServerConfig:
             if value is None:
                 continue
 
+            # Skip venv-path for mcp-server-filesystem in CLI command mode
+            # The filesystem server doesn't support this parameter
+            if (
+                self.name == "mcp-server-filesystem"
+                and param.name == "venv-path"
+                and use_cli_command
+            ):
+                continue
+
+            # Skip python-executable for mcp-server-filesystem in CLI command mode
+            # The filesystem server doesn't support this parameter
+            if (
+                self.name == "mcp-server-filesystem"
+                and param.name == "python-executable"
+                and use_cli_command
+            ):
+                continue
+
             # Always include python-executable parameter for reliable execution
             # (Previously skipped in CLI command mode, but now we always want it)
 
