@@ -3,8 +3,13 @@
 from pathlib import Path
 from unittest.mock import patch
 
-from mcp_config.integration import generate_client_config  # type: ignore[import-untyped]
-from mcp_config.servers import MCP_FILESYSTEM_SERVER, MCP_CODE_CHECKER  # type: ignore[import-untyped]
+from mcp_config.integration import (
+    generate_client_config,  # type: ignore[import-untyped]
+)
+from mcp_config.servers import (  # type: ignore[import-untyped]
+    MCP_CODE_CHECKER,
+    MCP_FILESYSTEM_SERVER,
+)
 
 
 def test_filesystem_server_no_venv_path() -> None:
@@ -13,15 +18,11 @@ def test_filesystem_server_no_venv_path() -> None:
         params = {
             "project_dir": "/test/project",
             "venv_path": "/test/project/.venv",
-            "log_level": "INFO"
+            "log_level": "INFO",
         }
-        
-        config = generate_client_config(
-            MCP_FILESYSTEM_SERVER,
-            "test-fs",
-            params
-        )
-        
+
+        config = generate_client_config(MCP_FILESYSTEM_SERVER, "test-fs", params)
+
         # The fix: venv-path should NOT be in arguments
         assert "--venv-path" not in config["args"]
 
@@ -33,14 +34,10 @@ def test_code_checker_keeps_venv_path() -> None:
             "project_dir": "/test/project",
             "venv_path": "/test/project/.venv",
             "python_executable": "/usr/bin/python3",
-            "log_level": "INFO"
+            "log_level": "INFO",
         }
-        
-        config = generate_client_config(
-            MCP_CODE_CHECKER,
-            "test-checker",
-            params
-        )
-        
+
+        config = generate_client_config(MCP_CODE_CHECKER, "test-checker", params)
+
         # Code-checker should still get venv-path
         assert "--venv-path" in config["args"]
