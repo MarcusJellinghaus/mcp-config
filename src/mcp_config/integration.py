@@ -19,6 +19,29 @@ from .utils import (
 )
 
 
+def _detect_mcp_config_directory(venv_path: str | None = None) -> Path:
+    """Detect the mcp-config installation directory.
+    
+    Args:
+        venv_path: Optional path to virtual environment
+        
+    Returns:
+        Path to the mcp-config directory
+    """
+    # Method 1: If venv_path is provided, use its parent as the mcp-config directory
+    if venv_path:
+        venv_path_obj = Path(venv_path)
+        if venv_path_obj.exists():
+            return venv_path_obj.parent
+    
+    # Method 2: Use the directory where this module is installed
+    # Go up from src/mcp_config/integration.py to project root
+    current_file = Path(__file__)
+    mcp_config_dir = current_file.parent.parent.parent  # Go up: integration.py -> mcp_config -> src -> project root
+    
+    return mcp_config_dir
+
+
 def is_command_available(command: str) -> bool:
     """Check if a command is available in the system PATH.
 
@@ -458,13 +481,9 @@ def build_server_config(
 
     # Add environment if needed
     # Use mcp-config directory for PYTHONPATH, not project directory
-    mcp_config_dir = Path.cwd()
-
-    # If we have a venv_path, use its parent as the mcp-config directory
-    if "venv_path" in normalized_params and normalized_params["venv_path"]:
-        venv_path = Path(normalized_params["venv_path"])
-        if venv_path.exists():
-            mcp_config_dir = venv_path.parent
+    # Capture venv_path before server config might modify it
+    original_venv_path = normalized_params.get("venv_path")
+    mcp_config_dir = _detect_mcp_config_directory(original_venv_path)
 
     pythonpath = str(mcp_config_dir)
     # Ensure trailing separator on Windows
@@ -573,15 +592,9 @@ def generate_client_config(
 
     # Add PYTHONPATH to include the mcp-config directory (where this tool is installed)
     # This ensures the virtual environment and dependencies are accessible
-    # Use the current working directory as the base for mcp-config
-    mcp_config_dir = Path.cwd()
-
-    # If we have a venv_path, use its parent as the mcp-config directory
-    if "venv_path" in normalized_params and normalized_params["venv_path"]:
-        venv_path = Path(normalized_params["venv_path"])
-        if venv_path.exists():
-            # Use the parent of the venv as the mcp-config directory
-            mcp_config_dir = venv_path.parent
+    # We need to capture venv_path BEFORE it might be stripped out by server config
+    original_venv_path = normalized_params.get("venv_path")
+    mcp_config_dir = _detect_mcp_config_directory(original_venv_path)
 
     pythonpath = str(mcp_config_dir)
     # Ensure trailing separator on Windows
