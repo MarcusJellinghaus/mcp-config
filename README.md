@@ -47,7 +47,6 @@ mcp-config help mcp-code-checker --quick
 
 - **[USER_GUIDE.md](USER_GUIDE.md)** - Complete user documentation
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - For developers enhancing mcp-config
-- **[INTEGRATION.md](INTEGRATION.md)** - For MCP server developers
 
 ## Features
 
