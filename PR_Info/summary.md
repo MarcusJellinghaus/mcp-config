@@ -21,6 +21,7 @@ Add IntelliJ/PyCharm GitHub Copilot MCP client support with **universal JSON com
 - **One JSON Handler**: Universal comment-preserving utilities for all clients  
 - **Pattern Consistency**: All handlers use same load/save comment logic
 - **Minimal Changes**: Update existing handlers with 5-line changes
+- **Simple Error Handling**: Fail with clear messages when GitHub Copilot not installed
 
 ## Research Findings
 - **IntelliJ**: GitHub Copilot stores MCP config in `github-copilot/intellij/mcp.json`

@@ -13,7 +13,7 @@ Following TDD approach, complete CLI integration for IntelliJ client and update 
   - `src/mcp_config/help_system.py` (update with universal comment support after tests)
   - `README.md` (universal comment support + IntelliJ)
   - `USER_GUIDE.md` (comprehensive universal comments guide)
-  - `pyproject.toml` (confirm json-five dependency added)
+  - `pyproject.toml` (add json-five dependency during implementation)
 
 ## TDD APPROACH (Tests Drive CLI Integration!)
 ### 1. Write CLI Integration Tests First (Red)

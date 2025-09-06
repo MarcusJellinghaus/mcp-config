@@ -1,14 +1,14 @@
-# Step 2: IntelliJ GitHub Copilot Path Detection (TDD)
+# Step 2: IntelliJ GitHub Copilot Handler Implementation (TDD)
 
 ## LLM Prompt
 ```
-Following TDD approach, implement IntelliJ GitHub Copilot path detection using verified Windows path and projected cross-platform paths. Write comprehensive tests FIRST, then implement. Follow existing ClientHandler pattern exactly - copy the approach from ClaudeDesktopHandler.get_config_path().
+Following TDD approach, implement complete IntelliJ GitHub Copilot handler with cross-platform path detection. Write comprehensive tests FIRST, then implement. Follow existing ClientHandler pattern exactly - copy the approach from VSCodeHandler since IntelliJ uses same 'servers' config format.
 ```
 
 ## WHERE
 - **Files**:
   - `tests/test_config/test_intellij_handler.py` (new - **WRITE FIRST**)
-  - `src/mcp_config/clients.py` (update - add IntelliJHandler skeleton after tests)
+  - `src/mcp_config/clients.py` (update - add complete IntelliJHandler after tests)
 
 ## TDD APPROACH (Tests First!)
 ### 1. Write Path Tests First (Red)
@@ -21,6 +21,7 @@ def test_cross_platform_consistency()
 def test_github_copilot_directory_structure()
 def test_metadata_path_follows_pattern()
 def test_integration_with_client_handler_interface()
+def test_error_handling_missing_github_copilot()
 ```
 
 ### 2. Run Tests (Should Fail)
@@ -33,7 +34,7 @@ pytest tests/test_config/test_intellij_handler.py -v  # Should fail - no handler
 # src/mcp_config/clients.py - Add minimal IntelliJHandler to pass tests
 class IntelliJHandler(ClientHandler):
     def get_config_path(self) -> Path:
-        # Minimal implementation to pass path tests
+        # Full implementation following VSCode pattern
 ```
 
 ## WHAT (TDD-Driven Paths)
@@ -84,19 +85,33 @@ class IntelliJHandler(ClientHandler):
    - macOS path follows Apple app support conventions
    - Linux path follows XDG Base Directory specification
 
+5. **Error handling tests**:
+   - Clear error when GitHub Copilot directory missing
+   - Error message includes expected path location
+
 ## HOW (Test-Driven Implementation)
-### Implementation Pattern (Copy ClaudeDesktopHandler)
+### Implementation Pattern (Follow VSCodeHandler for 'servers' format)
 ```python
 def get_config_path(self) -> Path:
-    """Get GitHub Copilot MCP config path - follows ClaudeDesktopHandler pattern."""
+    """Get GitHub Copilot MCP config path - follows existing handler pattern."""
     home_str = str(Path.home())  # Same pattern as existing handlers
     
+    config_path = None
     if os.name == "nt":  # Windows - VERIFIED PATH
-        return Path(home_str) / "AppData" / "Local" / "github-copilot" / "intellij" / "mcp.json"
+        config_path = Path(home_str) / "AppData" / "Local" / "github-copilot" / "intellij" / "mcp.json"
     elif platform.system() == "Darwin":  # macOS - PROJECTED
-        return Path(home_str) / "Library" / "Application Support" / "github-copilot" / "intellij" / "mcp.json"
+        config_path = Path(home_str) / "Library" / "Application Support" / "github-copilot" / "intellij" / "mcp.json"
     else:  # Linux - PROJECTED (XDG Base Directory)
-        return Path(home_str) / ".local" / "share" / "github-copilot" / "intellij" / "mcp.json"
+        config_path = Path(home_str) / ".local" / "share" / "github-copilot" / "intellij" / "mcp.json"
+    
+    # Error handling: Check if GitHub Copilot directory exists
+    if not config_path.parent.exists():
+        raise FileNotFoundError(
+            f"GitHub Copilot for IntelliJ not found. Expected config directory: "
+            f"{config_path.parent} does not exist. Please install GitHub Copilot for IntelliJ first."
+        )
+    
+    return config_path
 ```
 
 ### Additional TDD Tests
@@ -153,3 +168,5 @@ EXPECTED_PATHS = {
 - **Why mock platforms**: Tests work on any development OS
 - **Why verify Windows**: Confirmed real-world path must be preserved
 - **Why test integration**: Handler must work with existing ClientHandler interface
+- **Why error handling**: Clear user guidance when GitHub Copilot not installed
+- **Why follow VSCode pattern**: IntelliJ uses same 'servers' config format
