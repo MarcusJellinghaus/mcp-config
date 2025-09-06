@@ -1,105 +1,229 @@
-# Step 4: CLI Integration, Testing & Documentation
+# Step 4: CLI Integration + Universal Comments Documentation (TDD)
 
 ## LLM Prompt
 ```
-Referring to the Summary: IntelliJ MCP Client Support with JSON Comments, implement Step 4: Integrate IntelliJ client into the CLI system, create comprehensive tests, and update documentation. Update client validation, help text, ensure all commands work with the new client, and document JetBrains IDE support. Follow TDD approach.
+Following TDD approach, complete CLI integration for IntelliJ client and update all documentation to reflect universal JSON comment support across ALL clients. Write integration tests FIRST, then update CLI and documentation. Test that all CLI commands work with all clients and preserve comments.
 ```
 
 ## WHERE
 - **Files**:
-  - `src/mcp_config/cli_utils.py` (update SUPPORTED_CLIENTS)
-  - `src/mcp_config/help_system.py` (update help text)
-  - `tests/test_config/test_intellij_integration.py` (new - comprehensive testing)
-  - `README.md` (update supported clients)
-  - `USER_GUIDE.md` (update with JetBrains documentation)
-  - `pyproject.toml` (add json-five dependency)
+  - `tests/test_config/test_universal_integration.py` (new - **WRITE TESTS FIRST**)
+  - `tests/test_config/test_cli_intellij.py` (new - **WRITE TESTS FIRST**)
+  - `src/mcp_config/cli_utils.py` (add "intellij" to SUPPORTED_CLIENTS after tests)
+  - `src/mcp_config/help_system.py` (update with universal comment support after tests)
+  - `README.md` (universal comment support + IntelliJ)
+  - `USER_GUIDE.md` (comprehensive universal comments guide)
+  - `pyproject.toml` (confirm json-five dependency added)
 
-## WHAT
-### CLI Updates
+## TDD APPROACH (Tests Drive CLI Integration!)
+### 1. Write CLI Integration Tests First (Red)
 ```python
-# In cli_utils.py
+# tests/test_config/test_universal_integration.py - WRITE FIRST
+def test_all_cli_commands_work_with_all_clients()
+def test_universal_comment_preservation_end_to_end()
+def test_setup_command_preserves_comments_all_clients()
+def test_remove_command_preserves_comments_all_clients()
+def test_list_command_works_with_comments()
+def test_validate_command_handles_comments()
+
+# tests/test_config/test_cli_intellij.py - WRITE FIRST  
+def test_intellij_client_registration()
+def test_intellij_setup_command()
+def test_intellij_remove_command()
+def test_intellij_list_command()
+def test_intellij_validate_command()
+def test_intellij_cli_help_text()
+```
+
+### 2. Run Tests (Should Fail)
+```bash
+pytest tests/test_config/test_cli_intellij.py -v      # RED - "intellij" not in CLI yet
+pytest tests/test_config/test_universal_integration.py -v  # RED - no universal comment CLI support
+```
+
+### 3. Implement CLI Changes (Green)
+- Add "intellij" to SUPPORTED_CLIENTS
+- Update help text with universal comment support
+- Make all CLI integration tests pass
+
+## TDD Test Plan (Write These FIRST!)
+### Critical CLI Integration Tests
+1. **Client registration tests**:
+   ```python
+   def test_intellij_in_supported_clients():
+       from mcp_config.cli_utils import SUPPORTED_CLIENTS
+       assert "intellij" in SUPPORTED_CLIENTS
+   
+   def test_intellij_handler_in_registry():
+       from mcp_config.clients import CLIENT_HANDLERS
+       assert "intellij" in CLIENT_HANDLERS
+       assert CLIENT_HANDLERS["intellij"] == IntelliJHandler
+   ```
+
+2. **End-to-end CLI workflow tests**:
+   ```python
+   @pytest.mark.parametrize("client", ["claude-desktop", "vscode-workspace", "intellij"])
+   def test_setup_workflow_preserves_comments(client):
+       # Test: mcp-config setup server "desc" --client {client}
+       # Verify: Comments in existing config are preserved
+   
+   def test_intellij_specific_workflow():
+       # Test complete IntelliJ workflow from CLI
+       # setup → list → remove → validate
+   ```
+
+3. **Universal comment CLI tests**:
+   ```python
+   def test_all_commands_preserve_comments():
+       # Test every CLI command preserves comments for every client
+       commands = ["setup", "remove", "list", "validate", "backup"]
+       clients = ["claude-desktop", "vscode-workspace", "vscode-user", "intellij"]
+       
+       for command in commands:
+           for client in clients:
+               # Test command preserves comments
+   ```
+
+4. **Help and documentation tests**:
+   ```python
+   def test_help_mentions_universal_comments():
+       # Test CLI help mentions comment support for all clients
+       
+   def test_intellij_help_text_accurate():
+       # Test IntelliJ-specific help is accurate
+   ```
+
+### Integration Test Examples
+```python
+def test_real_world_intellij_workflow():
+    """Test realistic IntelliJ GitHub Copilot workflow."""
+    # Create IntelliJ config with comments
+    config_content = '''
+    {
+        // IntelliJ GitHub Copilot MCP Configuration
+        "servers": {
+            "existing-server": {
+                "command": "existing-command",
+                "args": ["arg1"]
+                /* This server was configured manually */
+            }
+        }
+    }
+    '''
+    
+    # Run CLI setup command
+    result = run_cli_command([
+        "setup", "mcp-code-checker", "My Project",
+        "--client", "intellij",
+        "--project-dir", "."
+    ])
+    
+    # Verify:
+    # 1. Command succeeded
+    # 2. New server added
+    # 3. Existing comments preserved
+    # 4. New server has correct IntelliJ format
+
+def test_cross_client_consistency():
+    """Test that same server setup works consistently across all clients."""
+    clients = ["claude-desktop", "vscode-workspace", "intellij"]
+    
+    for client in clients:
+        # Setup same server on each client
+        # Verify consistent behavior
+        # Verify comments preserved where supported
+```
+
+## WHAT (Test-Driven CLI Updates)
+### CLI Updates (Simple - After Tests Pass)
+```python
+# cli_utils.py - One line change (after tests)
 SUPPORTED_CLIENTS = [
     "claude-desktop", 
     "vscode-workspace", 
     "vscode-user",
-    "intellij"  # Add this
+    "intellij"  # Add this to make tests pass
 ]
 ```
 
-### Integration Testing
+### Help Text (Test-Driven Universal Comments)
 ```python
-# Comprehensive end-to-end tests
-def test_intellij_setup_workflow()
-def test_intellij_comment_preservation()
-def test_intellij_cli_integration()
-def test_cross_platform_paths()
-```
+UNIVERSAL_COMMENTS_HELP = """
+✨ Universal JSON Comment Support ✨
+All MCP configuration files now preserve comments automatically!
 
-### Documentation Updates
-```python
-# Help text for IntelliJ support
-INTELLIJ_HELP = """
-IntelliJ/PyCharm MCP Client (intellij)
-Config: github-copilot/intellij/mcp.json
-Features: JSON comments support, JetBrains IDEs
-Supports: IntelliJ IDEA, PyCharm, WebStorm, GoLand, etc.
+Supported Clients:
+  claude-desktop     - Comments preserved in claude_desktop_config.json
+  vscode-workspace   - Comments preserved in .vscode/mcp.json  
+  vscode-user        - Comments preserved in user profile mcp.json
+  intellij           - Comments preserved in GitHub Copilot mcp.json
+
+Example with comments:
+  {
+      // Your helpful comments are preserved!
+      "mcpServers": {
+          "my-server": {
+              "command": "python", 
+              "args": ["-m", "my_server"]
+              /* Block comments work too */
+          }
+      }
+  }
 """
 ```
 
-## HOW
-### Integration Points
-- **Client Registry**: Add "intellij" to SUPPORTED_CLIENTS list
-- **Help System**: Add IntelliJ-specific help text and examples
-- **Testing**: Mock-based integration testing (no real IntelliJ needed)
-- **Documentation**: Update README and USER_GUIDE with JetBrains info
-
-### Testing Strategy
-- **Mock Configs**: Create realistic JSONC test scenarios
-- **Cross-Platform**: Mock os.name and platform.system() for path testing
-- **Integration**: End-to-end CLI workflow testing
-- **Comment Preservation**: Verify round-trip integrity
-
-## ALGORITHM
-```
-1. Add "intellij" to SUPPORTED_CLIENTS list in cli_utils.py
-2. Update CLIENT_HANDLERS registry in clients.py
-3. Add comprehensive integration tests with mock scenarios
-4. Update help text and documentation
-5. Test all CLI commands with IntelliJ client
-6. Verify comment preservation in end-to-end tests
-```
-
-## DATA
-### Client Information
-```python
-CLIENT_INFO = {
-    "intellij": {
-        "name": "IntelliJ/PyCharm",
-        "config_file": "mcp.json",
-        "config_section": "servers", 
-        "features": ["comments", "cross-platform"],
-        "description": "JetBrains IDEs with GitHub Copilot"
-    }
-}
-```
-
-### CLI Examples
+## TDD Workflow
 ```bash
-# Examples for IntelliJ client
-mcp-config setup mcp-code-checker "My Project" --client intellij --project-dir .
-mcp-config list --client intellij --detailed
-mcp-config remove "server-name" --client intellij
-mcp-config validate --client intellij
+# 1. Write comprehensive CLI integration tests
+pytest tests/test_config/test_cli_intellij.py::test_intellij_client_registration -v  # RED
+
+# 2. Add "intellij" to SUPPORTED_CLIENTS to make test pass
+# Edit src/mcp_config/cli_utils.py
+
+# 3. Test CLI commands work
+pytest tests/test_config/test_cli_intellij.py::test_intellij_setup_command -v
+
+# 4. Write universal comment integration tests  
+pytest tests/test_config/test_universal_integration.py -v  # Should be GREEN if Step 3 worked
+
+# 5. Update help text to make help tests pass
+pytest tests/test_config/test_cli_intellij.py::test_intellij_cli_help_text -v
+
+# 6. Verify all integration tests pass
+pytest tests/test_config/test_universal_integration.py -v  # ALL GREEN
 ```
 
-## Tests to Write First
-1. **Test CLI integration** - all commands work with "intellij" client
-2. **Test comment preservation** - end-to-end JSONC round-trip
-3. **Test cross-platform paths** - mock different OS environments
-4. **Test setup workflow** - create realistic IntelliJ configs
-5. **Test remove workflow** - verify metadata handling
-6. **Test list functionality** - managed vs all servers
-7. **Test validation** - JSONC format validation
-8. **Test help text** - includes JetBrains documentation
-9. **Test error handling** - malformed JSONC scenarios
-10. **Test backup functionality** - existing backup system works
+## CLI Examples (Test-Validated)
+```bash
+# These commands tested to preserve comments for ALL clients!
+mcp-config setup myserver "Description" --client claude-desktop
+mcp-config setup myserver "Description" --client vscode-workspace  
+mcp-config setup myserver "Description" --client intellij
+
+# Validation works with comments for all clients (tested)
+mcp-config validate --client claude-desktop
+mcp-config validate --client intellij
+
+# List shows servers from commented configs (tested)
+mcp-config list --client intellij --detailed
+```
+
+## Documentation Updates (Test-Driven)
+### README Enhancement (After Tests Pass)
+```markdown
+## Universal JSON Comment Support ✨
+
+**Key Feature**: All MCP configuration files preserve comments automatically!
+
+- **Claude Desktop**: claude_desktop_config.json with comments
+- **VSCode**: .vscode/mcp.json with comments  
+- **IntelliJ/PyCharm**: GitHub Copilot mcp.json with comments
+
+Same comment syntax, universal preservation - all tested!
+```
+
+## Comments (TDD Benefits)
+- **Why test CLI integration**: Ensures universal comment support works end-to-end
+- **Why test all clients**: CLI changes must work consistently across all handlers
+- **Why test help accuracy**: Documentation must match actual functionality
+- **Why comprehensive integration tests**: Universal changes affect entire CLI surface
