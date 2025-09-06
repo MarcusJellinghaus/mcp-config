@@ -2,7 +2,7 @@
 
 ## LLM Prompt
 ```
-Referring to the Summary: IntelliJ MCP Client Support with JSON Comments, implement Step 3: Create the IntelliJHandler class following the existing ClientHandler pattern. Use the JSON comments utility from Step 1 and path detection from Step 2. Follow TDD approach with comprehensive tests.
+Referring to the Summary: IntelliJ MCP Client Support with JSON Comments, implement Step 3: Complete the IntelliJHandler class implementation following the existing ClientHandler pattern. Use the JSON comments utility from Step 1 and implement all required methods. Follow TDD approach with comprehensive tests.
 ```
 
 ## WHERE
@@ -34,8 +34,8 @@ CLIENT_HANDLERS["intellij"] = IntelliJHandler
 ## HOW
 ### Integration Points
 - **Inheritance**: Extend `ClientHandler` abstract base class
-- **JSON Handling**: Use `load_json_with_comments()` and `save_json_with_comments()`
-- **Path Detection**: Use `get_intellij_config_path()` from paths module
+- **JSON Handling**: Use `load_json_with_comments()` and `save_json_with_comments()` from Step 1
+- **Path Detection**: Implement `get_config_path()` method (from Step 2)
 - **Metadata**: Follow same `.mcp-config-metadata.json` pattern as VSCode
 
 ### Config Structure
@@ -54,11 +54,12 @@ CLIENT_HANDLERS["intellij"] = IntelliJHandler
 
 ## ALGORITHM
 ```
-1. Initialize handler with IntelliJ config path
-2. For load: Use JSON comments utility with fallback
-3. For save: Preserve existing comments when possible
+1. Initialize handler (no special config needed)
+2. For load: Use JSON comments utility from Step 1
+3. For save: Preserve existing comments using json-five
 4. For setup: Clean config (no metadata) + separate metadata file
 5. For remove: Check metadata ownership before deletion
+6. Use existing backup pattern from other handlers
 ```
 
 ## DATA

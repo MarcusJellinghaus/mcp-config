@@ -17,9 +17,9 @@ Add support for IntelliJ/PyCharm as an MCP client with JSON comments (JSONC) sup
 - **Metadata Separation**: Use same `.mcp-config-metadata.json` pattern
 
 ## Technical Approach
-- **Library Choice**: `json-five` for comment-preserving JSON parsing (NOT `json5`)
-- **Abstraction**: Create `JsonWithComments` utility class to abstract comment handling
-- **Graceful Fallback**: Fall back to standard `json` if `json-five` unavailable
+- **Library Choice**: `json-five` as required dependency for comment-preserving JSON parsing
+- **Simple Implementation**: Direct usage of `json-five` without fallbacks or complexity
+- **Handler Pattern**: Follow existing `ClientHandler` pattern with `get_config_path()` method
 - **Test-Driven**: Write tests first for comment preservation and IntelliJ handler
 
 ## Success Criteria
@@ -33,3 +33,4 @@ Add support for IntelliJ/PyCharm as an MCP client with JSON comments (JSONC) sup
 - Changing existing Claude Desktop or VSCode behavior
 - Adding comment support to other clients (optional future enhancement)
 - Complex comment formatting or validation
+- Optional dependencies or fallback mechanisms

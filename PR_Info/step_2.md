@@ -2,65 +2,60 @@
 
 ## LLM Prompt
 ```
-Referring to the Summary: IntelliJ MCP Client Support with JSON Comments, implement Step 2: Add IntelliJ-specific path detection to the paths.py module. Support cross-platform detection of IntelliJ MCP config locations following the existing pattern. Write tests first following TDD approach.
+Referring to the Summary: IntelliJ MCP Client Support with JSON Comments, implement Step 2: Implement IntelliJ path detection directly in the IntelliJHandler class using the get_config_path() method, following the same pattern as existing client handlers. Write tests first following TDD approach.
 ```
 
 ## WHERE
 - **Files**:
-  - `src/mcp_config/paths.py` (update)
-  - `tests/test_config/test_paths.py` (update)
+  - `src/mcp_config/clients.py` (update - add IntelliJHandler class)
+  - `tests/test_config/test_intellij_handler.py` (new - path testing)
 
 ## WHAT
-### Main Functions
+### Main Class Method
 ```python
-def get_intellij_config_path() -> Path
-def get_intellij_config_dir() -> Path
-def validate_intellij_path(path: Path) -> tuple[bool, Optional[str]]
+class IntelliJHandler(ClientHandler):
+    def get_config_path(self) -> Path:
+        """Get IntelliJ MCP config path using existing platform detection pattern."""
+        # Follow same pattern as ClaudeDesktopHandler and VSCodeHandler
 ```
 
-### Constants to Add
+### Path Structure
 ```python
-class PathConstants:
-    # Add to existing class
-    INTELLIJ_CONFIG_PATHS = {
-        "win32": "AppData/Local/github-copilot/intellij",
-        "darwin": "Library/Application Support/github-copilot/intellij", 
-        "linux": ".local/share/github-copilot/intellij"
-    }
+# Windows: %LOCALAPPDATA%\github-copilot\intellij\mcp.json
+# macOS: ~/Library/Application Support/github-copilot/intellij/mcp.json  
+# Linux: ~/.local/share/github-copilot/intellij/mcp.json
 ```
 
 ## HOW
 ### Integration Points
-- **Import Pattern**: Follow existing `get_platform_info()` usage
-- **Path Construction**: Use `normalize_path()` for consistency
-- **Validation**: Leverage existing `validate_path()` function
+- **Follow Existing Pattern**: Use same approach as ClaudeDesktopHandler.get_config_path()
+- **Platform Detection**: Use `os.name` and `platform.system()` directly
+- **Path Construction**: Use `Path.home()` and path concatenation
 
-### Platform Detection
+### Implementation Pattern
 ```python
-# Follow existing pattern in paths.py
-platform_info = get_platform_info()
-if platform_info["is_windows"]:
-    # Windows logic
-elif platform_info["is_macos"]:
-    # macOS logic  
-else:
-    # Linux logic
+def get_config_path(self) -> Path:
+    home_str = str(Path.home())
+    if os.name == "nt":  # Windows
+        return Path(home_str) / "AppData" / "Local" / "github-copilot" / "intellij" / "mcp.json"
+    elif platform.system() == "Darwin":  # macOS
+        return Path(home_str) / "Library" / "Application Support" / "github-copilot" / "intellij" / "mcp.json"
+    else:  # Linux
+        return Path(home_str) / ".local" / "share" / "github-copilot" / "intellij" / "mcp.json"
 ```
 
 ## ALGORITHM
 ```
-1. Get platform information using existing utilities
-2. Construct base path from INTELLIJ_CONFIG_PATHS
-3. Resolve relative to user home directory
+1. Get user home directory using Path.home()
+2. Detect platform using os.name and platform.system()
+3. Construct platform-specific path to github-copilot/intellij/
 4. Append "mcp.json" for full config path
-5. Apply path normalization and validation
+5. Return complete Path object
 ```
 
 ## DATA
 ### Return Values
-- `get_intellij_config_path()`: `Path` - Full path to mcp.json
-- `get_intellij_config_dir()`: `Path` - Directory containing config
-- `validate_intellij_path()`: `tuple[bool, Optional[str]]` - Validation result
+- `get_config_path()`: `Path` - Full path to IntelliJ mcp.json
 
 ### Path Patterns
 ```python
@@ -70,9 +65,9 @@ else:
 ```
 
 ## Tests to Write First
-1. **Test Windows path detection** with mocked environment
-2. **Test macOS path detection** with mocked platform
-3. **Test Linux path detection** with mocked system
-4. **Test path validation** for valid/invalid paths
-5. **Test error handling** for unsupported platforms
-6. **Test path normalization** edge cases
+1. **Test Windows path detection** with mocked os.name
+2. **Test macOS path detection** with mocked platform.system()
+3. **Test Linux path detection** with mocked platform  
+4. **Test path construction** with various home directories
+5. **Test integration** with existing ClientHandler pattern
+6. **Test metadata path** (get_metadata_path method)
