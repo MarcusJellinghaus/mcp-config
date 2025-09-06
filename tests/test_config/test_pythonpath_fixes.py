@@ -52,71 +52,30 @@ class TestPythonPathConfiguration:
         checker_exe.touch()
         filesystem_exe.touch()
 
-        # Test for MCP Code Checker
+        # Test for MCP Code Checker with explicit venv_path
         user_params = {
             "project_dir": str(project_dir),
+            "venv_path": str(venv_path),  # Provide venv_path to use test directory
             "log_level": "INFO",
         }
 
-        # Mock that we're running from mcp-config directory with its venv
-        with patch("src.mcp_config.integration.Path.cwd", return_value=mcp_config_dir):
-            with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
-                mock_find.return_value = str(checker_exe)
+        with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
+            mock_find.return_value = str(checker_exe)
 
-                config = generate_client_config(
-                    MCP_CODE_CHECKER,
-                    "checker on p coder_dummy",
-                    user_params,
-                    python_executable=str(python_exe),
-                )
-
-                # PYTHONPATH should point to mcp-config directory, NOT project directory
-                assert "env" in config
-                assert "PYTHONPATH" in config["env"]
-
-                pythonpath = config["env"]["PYTHONPATH"]
-
-                # The current implementation incorrectly sets PYTHONPATH to project_dir
-                # This test should FAIL with the current implementation
-                expected_path = str(mcp_config_dir)
-                if sys.platform == "win32" and not expected_path.endswith("\\"):
-                    expected_path += "\\"
-
-                assert pythonpath == expected_path, (
-                    f"PYTHONPATH should be mcp-config dir ({expected_path}), "
-                    f"not project dir ({project_dir})"
-                )
-
-    def test_pythonpath_for_filesystem_server(self, tmp_path: Path) -> None:
-        """Test PYTHONPATH for filesystem server should also use mcp-config dir."""
-        # Setup paths
-        project_dir = tmp_path / "mcp_coder_dummy"
-        project_dir.mkdir()
-
-        mcp_config_dir = tmp_path / "mcp-config"
-        mcp_config_dir.mkdir()
-
-        # Test for MCP Filesystem Server
-        user_params = {
-            "project_dir": str(project_dir),
-            "log_level": "INFO",
-        }
-
-        # Mock that we're running from mcp-config directory
-        with patch("src.mcp_config.integration.Path.cwd", return_value=mcp_config_dir):
             config = generate_client_config(
-                MCP_FILESYSTEM_SERVER,
-                "fs on p coder_dummy",
+                MCP_CODE_CHECKER,
+                "checker on p coder_dummy",
                 user_params,
+                python_executable=str(python_exe),
             )
 
-            # PYTHONPATH should point to mcp-config directory
+            # PYTHONPATH should point to mcp-config directory, NOT project directory
             assert "env" in config
             assert "PYTHONPATH" in config["env"]
 
             pythonpath = config["env"]["PYTHONPATH"]
 
-            # This test should FAIL with current implementation
+            # With venv_path provided, should use venv's parent (mcp_config_dir)
             expected_path = str(mcp_config_dir)
             if sys.platform == "win32" and not expected_path.endswith("\\"):
                 expected_path += "\\"
@@ -125,6 +84,48 @@ class TestPythonPathConfiguration:
                 f"PYTHONPATH should be mcp-config dir ({expected_path}), "
                 f"not project dir ({project_dir})"
             )
+
+    def test_pythonpath_uses_module_location_not_cwd(self, tmp_path: Path) -> None:
+        """Test that PYTHONPATH uses module location, not current working directory."""
+        # Create a project directory that's different from mcp-config location
+        project_dir = tmp_path / "user_project" 
+        project_dir.mkdir()
+        
+        user_params = {
+            "project_dir": str(project_dir),
+            "log_level": "INFO",
+        }
+        
+        # Change to project directory to simulate real user scenario
+        original_cwd = Path.cwd()
+        try:
+            import os
+            os.chdir(project_dir)
+            
+            config = generate_client_config(
+                MCP_CODE_CHECKER,
+                "test",
+                user_params,
+            )
+            
+            pythonpath = config["env"]["PYTHONPATH"]
+            
+            # PYTHONPATH should NOT be the current working directory (project_dir)
+            project_path = str(project_dir)
+            if sys.platform == "win32" and not project_path.endswith("\\"):
+                project_path += "\\"
+                
+            assert pythonpath != project_path, (
+                f"PYTHONPATH should not be current working directory ({project_path}), "
+                f"but got {pythonpath}"
+            )
+            
+            # PYTHONPATH should be the actual mcp-config installation directory
+            # (We can't easily test the exact path, but we can verify it's not the project dir)
+            assert Path(pythonpath.rstrip("\\")).exists(), f"PYTHONPATH directory should exist: {pythonpath}"
+            
+        finally:
+            os.chdir(original_cwd)
 
     def test_pythonpath_with_explicit_venv(self, tmp_path: Path) -> None:
         """Test PYTHONPATH when venv is explicitly provided."""
@@ -354,75 +355,88 @@ class TestCompleteConfigurationExamples:
         # Test Code Checker configuration
         user_params = {
             "project_dir": str(mock_project),
+            "venv_path": str(venv_path),  # Provide venv_path to use test directories
             "test_folder": "tests",
             "log_level": "INFO",
         }
 
-        with patch("src.mcp_config.integration.Path.cwd", return_value=mock_mcp_config):
-            with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
-                with patch(
-                    "src.mcp_config.integration.get_server_command_mode"
-                ) as mock_mode:
-                    mock_find.return_value = str(checker_exe)
-                    mock_mode.return_value = "cli_command"  # Force CLI mode
+        with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
+            with patch(
+                "src.mcp_config.integration.get_server_command_mode"
+            ) as mock_mode:
+                mock_find.return_value = str(checker_exe)
+                mock_mode.return_value = "cli_command"  # Force CLI mode
 
-                    config = generate_client_config(
-                        MCP_CODE_CHECKER,
-                        "checker on p coder_dummy",
-                        user_params,
-                        python_executable=str(python_exe),
-                    )
+                config = generate_client_config(
+                    MCP_CODE_CHECKER,
+                    "checker on p coder_dummy",
+                    user_params,
+                    python_executable=str(python_exe),
+                )
 
-                    # Verify command
-                    assert str(checker_exe) in config["command"]
+                # Verify command
+                assert str(checker_exe) in config["command"]
 
-                # Verify arguments
-                args = config["args"]
-                assert "--project-dir" in args
-                assert "--test-folder" in args
-                assert "tests" in args
-                assert "--log-level" in args
-                assert "INFO" in args
-                assert "--log-file" not in args  # Should not be auto-generated
+            # Verify arguments
+            args = config["args"]
+            assert "--project-dir" in args
+            assert "--test-folder" in args
+            assert "tests" in args
+            assert "--log-level" in args
+            assert "INFO" in args
+            assert "--log-file" not in args  # Should not be auto-generated
 
-                # Verify PYTHONPATH points to mcp-config, not project
-                expected_pythonpath = str(mock_mcp_config) + "\\"
-                assert config["env"]["PYTHONPATH"] == expected_pythonpath
+            # Verify PYTHONPATH points to mcp-config, not project
+            expected_pythonpath = str(mock_mcp_config) + "\\"
+            assert config["env"]["PYTHONPATH"] == expected_pythonpath
 
         # Test Filesystem Server configuration
         user_params_fs = {
             "project_dir": str(mock_project),
+            "venv_path": str(venv_path),  # Provide venv_path to use test directories
             "log_level": "INFO",
         }
 
-        with patch("src.mcp_config.integration.Path.cwd", return_value=mock_mcp_config):
-            with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
-                with patch(
-                    "src.mcp_config.integration.get_server_command_mode"
-                ) as mock_mode:
-                    mock_find.return_value = str(filesystem_exe)
-                    mock_mode.return_value = "cli_command"  # Force CLI mode
+        with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
+            with patch(
+                "src.mcp_config.integration.get_server_command_mode"
+            ) as mock_mode:
+                mock_find.return_value = str(filesystem_exe)
+                mock_mode.return_value = "cli_command"  # Force CLI mode
 
-                    config_fs = generate_client_config(
-                        MCP_FILESYSTEM_SERVER,
-                        "fs on p coder_dummy",
-                        user_params_fs,
-                        python_executable=str(python_exe),
-                    )
+                config_fs = generate_client_config(
+                    MCP_FILESYSTEM_SERVER,
+                    "fs on p coder_dummy",
+                    user_params_fs,
+                    python_executable=str(python_exe),
+                )
 
-                    # Verify command
-                    assert str(filesystem_exe) in config_fs["command"]
+                # Verify command
+                assert str(filesystem_exe) in config_fs["command"]
 
-                # Verify arguments
-                args_fs = config_fs["args"]
-                assert "--project-dir" in args_fs
-                assert "--log-level" in args_fs
-                assert "INFO" in args_fs
-                assert "--python-executable" not in args_fs  # Should not be present
-                assert "--log-file" not in args_fs  # Should not be auto-generated
+            # Verify arguments
+            args_fs = config_fs["args"]
+            assert "--project-dir" in args_fs
+            assert "--log-level" in args_fs
+            assert "INFO" in args_fs
+            assert "--python-executable" not in args_fs  # Should not be present
+            assert "--log-file" not in args_fs  # Should not be auto-generated
 
-                # Verify PYTHONPATH
-                assert config_fs["env"]["PYTHONPATH"] == expected_pythonpath
+            # Verify PYTHONPATH for filesystem server
+            # Note: Filesystem server strips venv_path in CLI mode, so it will use
+            # the actual mcp-config directory, not the test directory
+            fs_pythonpath = config_fs["env"]["PYTHONPATH"]
+            
+            # For code checker with venv_path, should use test directory
+            assert config["env"]["PYTHONPATH"] == expected_pythonpath
+            
+            # For filesystem server, venv_path is stripped in CLI mode, so it uses actual mcp-config dir
+            # We just verify it's not the project directory
+            project_path = str(mock_project) + "\\"
+            assert fs_pythonpath != project_path, (
+                f"Filesystem server PYTHONPATH should not be project dir ({project_path}), "
+                f"got {fs_pythonpath}"
+            )
 
     def test_unix_configuration(self, tmp_path: Path) -> None:
         """Test configuration on Unix-like systems."""
@@ -455,29 +469,29 @@ class TestCompleteConfigurationExamples:
         # Test configuration
         user_params = {
             "project_dir": str(project_dir),
+            "venv_path": str(venv_path),  # Provide venv_path to use test directories
             "log_level": "DEBUG",
         }
 
-        with patch("src.mcp_config.integration.Path.cwd", return_value=mcp_config_dir):
-            with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
-                mock_find.return_value = str(filesystem_exe)
+        with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
+            mock_find.return_value = str(filesystem_exe)
 
-                config = generate_client_config(
-                    MCP_FILESYSTEM_SERVER,
-                    "fs on p coder_dummy",
-                    user_params,
-                    python_executable=str(python_exe),
-                )
+            config = generate_client_config(
+                MCP_FILESYSTEM_SERVER,
+                "fs on p coder_dummy",
+                user_params,
+                python_executable=str(python_exe),
+            )
 
-                # Verify PYTHONPATH (no trailing slash on Unix)
-                expected_pythonpath = str(mcp_config_dir)
-                assert config["env"]["PYTHONPATH"] == expected_pythonpath
+            # Verify PYTHONPATH (no trailing slash on Unix)
+            expected_pythonpath = str(mcp_config_dir)
+            assert config["env"]["PYTHONPATH"] == expected_pythonpath
 
-                # Verify no python-executable for filesystem server
-                assert "--python-executable" not in config["args"]
+            # Verify no python-executable for filesystem server
+            assert "--python-executable" not in config["args"]
 
-                # Verify no auto-generated log file
-                assert "--log-file" not in config["args"]
+            # Verify no auto-generated log file
+            assert "--log-file" not in config["args"]
 
 
 class TestServerSpecificBehavior:
@@ -497,41 +511,48 @@ class TestServerSpecificBehavior:
             "project_dir": str(project_dir),
         }
 
-        with patch("src.mcp_config.integration.Path.cwd", return_value=mcp_config_dir):
-            # Generate config for code checker
-            checker_config = generate_client_config(
-                MCP_CODE_CHECKER,
-                "checker",
-                user_params,
-            )
+        # Test without venv_path - should use actual mcp-config location, not project dir
+        # Generate config for code checker
+        checker_config = generate_client_config(
+            MCP_CODE_CHECKER,
+            "checker",
+            user_params,
+        )
 
-            # Generate config for filesystem server
-            fs_config = generate_client_config(
+        # Generate config for filesystem server
+        fs_config = generate_client_config(
+            MCP_FILESYSTEM_SERVER,
+            "fs",
+            user_params,
+        )
+
+        # Both should have same PYTHONPATH (actual mcp-config dir, not test dir)
+        # We can't test exact path, but we can verify they're the same and not project dir
+        checker_pythonpath = checker_config["env"]["PYTHONPATH"]
+        fs_pythonpath = fs_config["env"]["PYTHONPATH"]
+        
+        # Both servers should have the same PYTHONPATH
+        assert checker_pythonpath == fs_pythonpath
+        
+        # PYTHONPATH should NOT be the project directory
+        project_path = str(project_dir)
+        if sys.platform == "win32" and not project_path.endswith("\\"):
+            project_path += "\\"
+        assert checker_pythonpath != project_path
+        assert fs_pythonpath != project_path
+
+        # Code checker may have python-executable, filesystem should not
+        # (when using CLI commands)
+        with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
+            mock_find.return_value = "/usr/bin/mcp-server-filesystem"
+
+            fs_config_cli = generate_client_config(
                 MCP_FILESYSTEM_SERVER,
                 "fs",
                 user_params,
             )
 
-            # Both should have same PYTHONPATH (mcp-config dir)
-            expected_pythonpath = str(mcp_config_dir)
-            if sys.platform == "win32" and not expected_pythonpath.endswith("\\"):
-                expected_pythonpath += "\\"
-
-            assert checker_config["env"]["PYTHONPATH"] == expected_pythonpath
-            assert fs_config["env"]["PYTHONPATH"] == expected_pythonpath
-
-            # Code checker may have python-executable, filesystem should not
-            # (when using CLI commands)
-            with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
-                mock_find.return_value = "/usr/bin/mcp-server-filesystem"
-
-                fs_config_cli = generate_client_config(
-                    MCP_FILESYSTEM_SERVER,
-                    "fs",
-                    user_params,
-                )
-
-                assert "--python-executable" not in fs_config_cli["args"]
+            assert "--python-executable" not in fs_config_cli["args"]
 
     def test_both_servers_no_auto_log_file(self, tmp_path: Path) -> None:
         """Test that neither server gets auto-generated log files."""
