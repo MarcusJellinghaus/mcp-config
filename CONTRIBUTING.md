@@ -22,7 +22,6 @@ pip install "mcp-server-filesystem @ git+https://github.com/MarcusJellinghaus/mc
 ```bash
 ./tools/format_all.bat              # Format code (Windows)
 ./tools/checks2clipboard.bat        # All checks → clipboard for LLM analysis
-./tools/test_cli_installation.bat   # Test installation
 pytest                              # Run tests
 ```
 

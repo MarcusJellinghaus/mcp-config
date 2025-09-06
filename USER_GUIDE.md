@@ -18,8 +18,14 @@ pip install git+https://github.com/MarcusJellinghaus/mcp-config.git
 # Setup (Claude Desktop default)
 mcp-config setup <server-type> <n> --project-dir <path>
 
-# Setup for VSCode workspace (team sharing)  
+# Setup for VSCode workspace (shared project configuration)  
 mcp-config setup <server-type> <n> --client vscode-workspace --project-dir <path>
+
+# This creates .vscode/mcp.json in your project directory that can be:
+# - Committed to Git for team collaboration
+# - Shared across all developers working on the project
+# - Version controlled alongside your code
+# Alternative: Use vscode-user for personal-only configurations
 
 # Setup for VSCode user (personal global)
 mcp-config setup <server-type> <n> --client vscode-user --project-dir <path>
@@ -106,7 +112,8 @@ mcp-config help <server> --quick   # Quick reference
 ### Client Integration
 - **Claude Desktop:** Restart application after config changes
 - **VSCode:** Requires version 1.102+, restart after changes
-- **Paths:** VSCode workspace uses relative, user profile uses absolute
+- **Path handling:** All clients use absolute paths internally for reliability across different working directories
+
 
 ### Server Installation Modes
 1. **CLI Command** (best): `mcp-code-checker` command available
