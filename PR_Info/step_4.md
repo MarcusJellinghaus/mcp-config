@@ -35,11 +35,11 @@ def test_intellij_in_supported_clients():
 
 ---
 
-## Step 4B: Update Help System for Universal Comments
+## Step 4B: Update Help System for IntelliJ Support
 
 ### LLM Prompt
 ```
-Update the help system to document universal JSON comment support across all clients. Add clear examples showing comment preservation works for Claude Desktop, VSCode, and IntelliJ.
+Update the help system to document IntelliJ client support. Add clear examples showing IntelliJ configuration works alongside Claude Desktop and VSCode.
 ```
 
 ### WHERE
@@ -48,17 +48,16 @@ Update the help system to document universal JSON comment support across all cli
 
 ### WHAT (Help Text Updates)
 ```python
-UNIVERSAL_COMMENTS_HELP = """
-🎉 JSON Comments Supported!
-All MCP configuration files now preserve comments:
+INTELLIJ_SUPPORT_HELP = """
+🚀 IntelliJ/PyCharm Support!
+MCP Config Tool now supports multiple clients:
 
-  claude-desktop  → claude_desktop_config.json (with comments!)
-  vscode-*        → .vscode/mcp.json (with comments!)  
-  intellij        → mcp.json (with comments!)
+  claude-desktop  → claude_desktop_config.json
+  vscode-*        → .vscode/mcp.json  
+  intellij        → mcp.json (GitHub Copilot)
 
 Example:
   {
-      // Your comments are preserved
       "servers": {
           "my-server": { "command": "python" }
       }
@@ -108,13 +107,12 @@ Update README.md to mention IntelliJ support and universal comment preservation.
 - **Claude Desktop** - claude_desktop_config.json
 - **VSCode** - .vscode/mcp.json  
 - **IntelliJ/PyCharm** - GitHub Copilot mcp.json
-- **All with JSON comment support!** ✨
 
 ## Features
 
-- 🎉 **JSON Comments**: All config files preserve comments automatically
 - 🔧 **Multi-Client**: Works with Claude Desktop, VSCode, and IntelliJ
-- 📝 **Documentation**: Keep your config files readable with comments
+- 🚀 **Cross-Platform**: Windows, macOS, and Linux support
+- 📝 **Simple**: Standard JSON configuration
 ```
 
 ---
@@ -143,18 +141,16 @@ mcp-config setup myserver "Description" --client intellij
 mcp-config list --client intellij
 ```
 
-### Comment Support
+### Configuration Format
 
-All configuration files preserve JSON comments:
+All clients use standard JSON configuration:
 
 ```json
 {
-    // This comment will be preserved!
     "servers": {
         "my-server": {
             "command": "python",
             "args": ["-m", "my_server"]
-            /* Block comments work too */
         }
     }
 }

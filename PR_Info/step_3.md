@@ -1,113 +1,100 @@
-# Step 3: IntelliJ Handler + Universal Comment Support (TDD + KISS)
+# Step 3: Complete IntelliJ Handler (TDD)
 
 ## LLM Prompt
 ```
-Following TDD approach, implement complete IntelliJ GitHub Copilot handler AND update all existing handlers (ClaudeDesktopHandler, VSCodeHandler) to use universal JSON comment utilities from Step 1. Write comprehensive tests FIRST, then implement. Keep it simple - same pattern for all handlers, minimal changes to existing code.
+Following TDD approach, implement complete IntelliJ GitHub Copilot handler with all CRUD operations (setup, list, remove). Write comprehensive tests FIRST, then implement. Follow VSCodeHandler pattern exactly since both use 'servers' config format and standard JSON.
 ```
 
 ## WHERE
 - **Files**:
   - `tests/test_config/test_intellij_handler.py` (expand - **WRITE TESTS FIRST**)
-  - `tests/test_config/test_universal_comments.py` (new - **WRITE TESTS FIRST**)
-  - `src/mcp_config/clients.py` (update existing + add IntelliJHandler after tests)
+  - `src/mcp_config/clients.py` (complete IntelliJHandler implementation after tests)
 
 ## TDD APPROACH (Tests Drive Design!)
 ### 1. Write Comprehensive Tests First (Red)
 ```python
-# tests/test_config/test_universal_comments.py - WRITE FIRST
-def test_claude_desktop_preserves_comments()
-def test_vscode_preserves_comments()  
-def test_intellij_preserves_comments()
-def test_cross_client_comment_consistency()
-def test_round_trip_comment_integrity_all_clients()
-
 # tests/test_config/test_intellij_handler.py - EXPAND
 def test_intellij_config_format_uses_servers_section()
 def test_intellij_setup_server_workflow()
 def test_intellij_remove_server_workflow()
+def test_intellij_list_servers_workflow()
 def test_intellij_metadata_separation()
 def test_intellij_follows_vscode_pattern()
+def test_intellij_standard_json_handling()
 ```
 
 ### 2. Run Tests (Should Fail)
 ```bash
-pytest tests/test_config/test_universal_comments.py -v  # RED - no universal support yet
 pytest tests/test_config/test_intellij_handler.py -v    # RED - incomplete handler
 ```
 
-### 3. Implement Universal Changes (Green)
-- Update all existing handlers to use universal JSON utils
+### 3. Implement Complete Handler (Green)
 - Complete IntelliJ handler implementation
 - Make all tests pass
 
-## WHAT (TDD-Driven Universal Pattern)
-### Universal Handler Pattern (Test-Driven)
+## WHAT (TDD-Driven Handler Pattern)
+### Complete Handler Pattern (Test-Driven)
 ```python
-# Same pattern for ClaudeDesktopHandler, VSCodeHandler, IntelliJHandler
-class SomeHandler(ClientHandler):
+# IntelliJHandler following VSCodeHandler pattern exactly
+class IntelliJHandler(ClientHandler):
+    CONFIG_SECTION = "servers"  # Same as VSCode
+    
     def load_config(self) -> dict[str, Any]:
-        """Load with universal comment preservation - TESTED FIRST."""
-        from mcp_config.json_utils import load_json_with_comments
+        """Load config with standard JSON handling."""
         config_path = self.get_config_path()
-        data, model = load_json_with_comments(config_path)
-        self._comment_model = model  # Store for later preservation
+        if not config_path.exists():
+            return {"servers": {}}
         
-        # Existing logic for default structure (unchanged)
-        if "servers" not in data:  # or "mcpServers" for Claude Desktop
-            data["servers"] = {}  # or "mcpServers"
+        with open(config_path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        
+        # Ensure servers section exists
+        if "servers" not in data:
+            data["servers"] = {}
         return data
     
     def save_config(self, config: dict[str, Any]) -> None:
-        """Save with universal comment preservation - TESTED FIRST."""
-        from mcp_config.json_utils import save_json_with_comments
+        """Save config with standard JSON formatting."""
         config_path = self.get_config_path()
-        model = getattr(self, '_comment_model', None)
-        save_json_with_comments(config_path, config, model)
+        config_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        with open(config_path, 'w', encoding='utf-8') as f:
+            json.dump(config, f, indent=2)
+            f.write('\n')
 ```
 
 ## TDD Test Plan (Write These FIRST!)
-### Universal Comment Tests
-1. **Cross-client comment preservation**:
-   ```python
-   @pytest.mark.parametrize("client_type", ["claude-desktop", "vscode-workspace", "intellij"])
-   def test_universal_comment_preservation(client_type):
-       # Test that ALL handlers preserve comments
-       
-   def test_round_trip_integrity_all_clients():
-       # Load config → modify → save → reload → verify comments preserved
-       # Test with Claude Desktop, VSCode, and IntelliJ formats
-   ```
-
-2. **IntelliJ-specific tests**:
+### IntelliJ Handler Tests
+1. **Core functionality tests**:
    ```python
    def test_intellij_uses_servers_section():
        handler = IntelliJHandler()
        config = handler.load_config()
-       assert "servers" in config  # NOT "mcpServers"
+       assert "servers" in config  # Same as VSCode
    
-   def test_intellij_server_setup_with_comments():
-       # Test setting up server preserves existing comments
+   def test_intellij_server_setup_workflow():
+       # Test complete setup workflow
        
    def test_intellij_metadata_separation():
        # Test metadata stored separately, not in main config
    ```
 
-3. **Backward compatibility tests**:
+2. **JSON handling tests**:
    ```python
-   def test_existing_claude_desktop_configs_still_work():
-       # Ensure no breaking changes to existing functionality
+   def test_intellij_standard_json_handling():
+       # Test standard JSON load/save without comments
        
-   def test_existing_vscode_configs_enhanced():
-       # VSCode configs get automatic comment support
+   def test_intellij_config_validation():
+       # Test config validation works correctly
    ```
 
-4. **Integration tests**:
+3. **Integration tests**:
    ```python
-   def test_all_handlers_use_same_json_utilities():
-       # Verify all handlers use load_json_with_comments/save_json_with_comments
+   def test_intellij_follows_vscode_pattern():
+       # Verify IntelliJ handler behaves like VSCode handler
        
-   def test_comment_model_stored_consistently():
-       # All handlers store _comment_model for preservation
+   def test_intellij_handler_interface():
+       # Test handler implements ClientHandler interface correctly
    ```
 
 ### IntelliJ Handler Tests (Comprehensive)
@@ -162,41 +149,33 @@ def test_intellij_config_validation():
 ## TDD Workflow
 ```bash
 # 1. Write comprehensive failing tests
-pytest tests/test_config/test_universal_comments.py -v  # RED
 pytest tests/test_config/test_intellij_handler.py -v    # RED
 
-# 2. Update ClaudeDesktopHandler to use universal JSON
+# 2. Implement complete IntelliJHandler
 # Edit src/mcp_config/clients.py
-pytest tests/test_config/test_universal_comments.py::test_claude_desktop_preserves_comments -v
-
-# 3. Update VSCodeHandler to use universal JSON  
-pytest tests/test_config/test_universal_comments.py::test_vscode_preserves_comments -v
-
-# 4. Implement complete IntelliJHandler
 pytest tests/test_config/test_intellij_handler.py -v  # GREEN
 
-# 5. Verify all tests pass
-pytest tests/test_config/test_universal_comments.py -v  # ALL GREEN
+# 3. Add to client registry
+# Update CLIENT_HANDLERS mapping
+
+# 4. Verify all tests pass
+pytest tests/test_config/test_intellij_handler.py -v  # ALL GREEN
 ```
 
 ## Config Format (Test-Driven)
-```javascript
-// IntelliJ GitHub Copilot mcp.json - TEST VALIDATES THIS FORMAT
+```json
 {
-    // Comments preserved automatically - TESTED!
     "servers": {
         "mcp-code-checker": {
             "command": "python",
             "args": ["-m", "mcp_code_checker"],
             "env": {"PROJECT_ROOT": "/path/to/project"}
         }
-        /* Block comments work too - TESTED! */
     }
 }
 ```
 
 ## Comments (TDD Benefits)
-- **Why test universal first**: Ensures all handlers get consistent enhancement
 - **Why test IntelliJ = VSCode**: Validates same behavior, easier maintenance
-- **Why test backward compatibility**: Existing users must not be broken
-- **Why comprehensive test coverage**: Universal change affects all clients
+- **Why standard JSON**: Simpler implementation, no additional dependencies
+- **Why comprehensive tests**: Ensures handler works correctly with all operations

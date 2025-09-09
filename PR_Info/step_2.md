@@ -1,8 +1,8 @@
-# Step 2: IntelliJ GitHub Copilot Handler Implementation (TDD)
+# Step 2: IntelliJ Handler Implementation (TDD)
 
 ## LLM Prompt
 ```
-Following TDD approach, implement complete IntelliJ GitHub Copilot handler with cross-platform path detection. Write comprehensive tests FIRST, then implement. Follow existing ClientHandler pattern exactly - copy the approach from VSCodeHandler since IntelliJ uses same 'servers' config format.
+Following TDD approach, implement complete IntelliJ GitHub Copilot handler following VSCodeHandler pattern. Write comprehensive tests FIRST, then implement. Focus on servers config format compatibility and standard JSON handling.
 ```
 
 ## WHERE
