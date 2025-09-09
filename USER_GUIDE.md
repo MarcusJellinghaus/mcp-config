@@ -30,6 +30,9 @@ mcp-config setup <server-type> <n> --client vscode-workspace --project-dir <path
 # Setup for VSCode user (personal global)
 mcp-config setup <server-type> <n> --client vscode-user --project-dir <path>
 
+# Setup for IntelliJ/PyCharm (GitHub Copilot)
+mcp-config setup <server-type> <n> --client intellij --project-dir <path>
+
 # Management
 mcp-config list [--client <client>] [--detailed]
 mcp-config remove <n> [--client <client>]
@@ -58,6 +61,13 @@ mcp-config help [<topic>]
 - **Paths:** Absolute
 - **Shareable:** No
 
+### IntelliJ/PyCharm (`intellij`)
+- **Config:** `%LOCALAPPDATA%\github-copilot\intellij\mcp.json` (Windows), `~/Library/Application Support/github-copilot/intellij/mcp.json` (macOS), `~/.config/github-copilot/intellij/mcp.json` (Linux)
+- **Use for:** GitHub Copilot integration in IntelliJ IDEA and PyCharm
+- **Paths:** Absolute
+- **Shareable:** No
+- **Requires:** GitHub Copilot plugin installed
+
 ## Supported Servers
 
 ### MCP Code Checker (`mcp-code-checker`)
@@ -80,6 +90,36 @@ File system operations server.
 - `--log-level` (default: "INFO") - Logging level
 
 **Parameter Help:** Use `mcp-config help <server-type>` for complete parameter documentation.
+
+## IntelliJ/PyCharm Support
+
+MCP Config Tool supports IntelliJ IDEA and PyCharm through GitHub Copilot:
+
+```bash
+# Setup server for IntelliJ
+mcp-config setup mcp-code-checker "Description" --client intellij --project-dir .
+
+# List IntelliJ servers  
+mcp-config list --client intellij
+
+# Remove IntelliJ server
+mcp-config remove "server-name" --client intellij
+```
+
+### Configuration Format
+
+All clients use standard JSON configuration:
+
+```json
+{
+    "servers": {
+        "my-server": {
+            "command": "python",
+            "args": ["-m", "my_server"]
+        }
+    }
+}
+```
 
 ## Auto-Detection & Safety
 

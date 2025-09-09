@@ -1,6 +1,6 @@
 # MCP Config
 
-Configure MCP servers for Claude Desktop and VSCode with one command.
+Configure MCP servers for Claude Desktop, VSCode, and IntelliJ with one command.
 
 ## Quick Start
 
@@ -13,6 +13,9 @@ mcp-config setup mcp-code-checker "My Project" --project-dir .
 
 # Setup for VSCode (team projects)
 mcp-config setup mcp-code-checker "My Project" --client vscode-workspace --project-dir .
+
+# Setup for IntelliJ/PyCharm (GitHub Copilot)
+mcp-config setup mcp-code-checker "My Project" --client intellij --project-dir .
 ```
 
 ## Built-in Help System
@@ -48,10 +51,18 @@ mcp-config help mcp-code-checker --quick
 - **[USER_GUIDE.md](USER_GUIDE.md)** - Complete user documentation
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - For developers enhancing mcp-config
 
+## Supported Clients
+
+- **Claude Desktop** - claude_desktop_config.json
+- **VSCode** - .vscode/mcp.json  
+- **IntelliJ/PyCharm** - GitHub Copilot mcp.json
+
 ## Features
 
+- 🔧 **Multi-Client**: Works with Claude Desktop, VSCode, and IntelliJ
+- 🚀 **Cross-Platform**: Windows, macOS, and Linux support
+- 📝 **Simple**: Standard JSON configuration
 - Auto-detects Python environments and virtual environments
-- Supports Claude Desktop and VSCode (workspace + user profile)
 - Backs up configurations before changes
 - Validates server setup with comprehensive checks
 - Extensive CLI help system
