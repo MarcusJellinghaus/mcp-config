@@ -112,7 +112,7 @@ class TestClaudeDesktopHandler:
         with (
             patch("os.name", "nt"),
             patch("pathlib.Path.home", return_value=mock_home),
-            patch("src.mcp_config.clients.Path") as mock_path_class,
+            patch("src.mcp_config.clients.claude_desktop.Path") as mock_path_class,
         ):
             # Configure the mock to return our MockWindowsPath
             mock_path_class.return_value = mock_home
@@ -144,7 +144,7 @@ class TestClaudeDesktopHandler:
             patch("os.name", "posix"),
             patch("platform.system", return_value="Darwin"),
             patch("pathlib.Path.home", return_value=mock_home),
-            patch("src.mcp_config.clients.Path", MockPath),
+            patch("src.mcp_config.clients.claude_desktop.Path", MockPath),
         ):
             path = handler.get_config_path()
             path_str = str(path)
@@ -164,7 +164,7 @@ class TestClaudeDesktopHandler:
             patch("os.name", "posix"),
             patch("platform.system", return_value="Linux"),
             patch("pathlib.Path.home", return_value=mock_home),
-            patch("src.mcp_config.clients.Path", MockPath),
+            patch("src.mcp_config.clients.claude_desktop.Path", MockPath),
         ):
             path = handler.get_config_path()
             path_str = str(path)
@@ -262,7 +262,9 @@ class TestClaudeDesktopHandler:
         assert "_server_type" not in checker_config
 
         # Check metadata is stored separately
-        metadata = handler.load_metadata()
+        from src.mcp_config.clients.utils import load_metadata
+        config_path = handler.get_config_path()
+        metadata = load_metadata(config_path)
         assert "my-checker" in metadata
         assert metadata["my-checker"]["_managed_by"] == "mcp-config-managed"
         assert metadata["my-checker"]["_server_type"] == "mcp-code-checker"
@@ -504,7 +506,9 @@ class TestMetadataSeparation:
         assert "_server_type" not in test_server_config
 
         # Verify metadata is in separate file
-        metadata_path = handler.get_metadata_path()
+        from src.mcp_config.clients.constants import METADATA_FILE
+        config_path = handler.get_config_path()
+        metadata_path = config_path.parent / METADATA_FILE
         assert metadata_path.exists()
 
         with open(metadata_path, "r") as f:
@@ -553,7 +557,9 @@ class TestMetadataSeparation:
         assert "_managed_by" not in cleaned_config["mcpServers"]["external-server"]
 
         # Verify metadata was moved
-        metadata = handler.load_metadata()
+        from src.mcp_config.clients.utils import load_metadata
+        config_path = handler.get_config_path()
+        metadata = load_metadata(config_path)
         assert "old-server" in metadata
         assert metadata["old-server"]["_managed_by"] == "mcp-config-managed"
         assert metadata["old-server"]["_server_type"] == "old-type"
