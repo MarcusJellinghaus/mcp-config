@@ -447,6 +447,62 @@ class ClaudeDesktopHandler(ClientHandler):
             return False
 
 
+class IntelliJHandler(ClientHandler):
+    """Handler for IntelliJ GitHub Copilot MCP configuration."""
+
+    MANAGED_SERVER_MARKER = "mcp-config-managed"
+    METADATA_FILE = ".mcp-config-metadata.json"
+
+    def get_config_path(self) -> Path:
+        """Get IntelliJ GitHub Copilot MCP config path."""
+        # Get home directory as string first to avoid Path type issues
+        home_str = str(Path.home())
+        
+        # Build path as string first to avoid cross-platform Path issues in tests
+        if os.name == "nt":  # Windows - VERIFIED PATH
+            config_path_str = f"{home_str}/AppData/Local/github-copilot/intellij/mcp.json"
+        elif os.name == "posix":
+            if platform.system() == "Darwin":  # macOS - PROJECTED
+                config_path_str = f"{home_str}/Library/Application Support/github-copilot/intellij/mcp.json"
+            else:  # Linux - PROJECTED (XDG Base Directory)
+                config_path_str = f"{home_str}/.local/share/github-copilot/intellij/mcp.json"
+        else:
+            raise OSError(f"Unsupported operating system: {os.name}")
+        
+        # Convert to Path object
+        config_path = Path(config_path_str)
+        
+        # Error handling: Check if GitHub Copilot directory exists
+        if not config_path.parent.exists():
+            raise FileNotFoundError(
+                f"GitHub Copilot for IntelliJ not found. Expected config directory: "
+                f"{config_path.parent} does not exist. Please install GitHub Copilot for IntelliJ first."
+            )
+        
+        return config_path
+
+    def get_metadata_path(self) -> Path:
+        """Get path to the metadata file for tracking managed servers."""
+        config_path = self.get_config_path()
+        return config_path.parent / self.METADATA_FILE
+
+    def setup_server(self, server_name: str, server_config: dict[str, Any]) -> bool:
+        """Add server to IntelliJ config - placeholder for TDD."""
+        raise NotImplementedError("IntelliJHandler implementation pending")
+
+    def remove_server(self, server_name: str) -> bool:
+        """Remove server from IntelliJ config - placeholder for TDD."""
+        raise NotImplementedError("IntelliJHandler implementation pending")
+
+    def list_managed_servers(self) -> list[dict[str, Any]]:
+        """List only servers managed by this tool - placeholder for TDD."""
+        raise NotImplementedError("IntelliJHandler implementation pending")
+
+    def list_all_servers(self) -> list[dict[str, Any]]:
+        """List all servers in config - placeholder for TDD."""
+        raise NotImplementedError("IntelliJHandler implementation pending")
+
+
 class VSCodeHandler(ClientHandler):
     """Handler for VSCode native MCP configuration (VSCode 1.102+)."""
 
@@ -742,6 +798,7 @@ CLIENT_HANDLERS: dict[str, HandlerFactory] = {
     "claude-desktop": ClaudeDesktopHandler,
     "vscode-workspace": lambda: VSCodeHandler(workspace=True),
     "vscode-user": lambda: VSCodeHandler(workspace=False),
+    "intellij": IntelliJHandler,
 }
 
 
