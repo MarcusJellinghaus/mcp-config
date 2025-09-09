@@ -11,10 +11,10 @@ from .constants import METADATA_FILE
 
 def load_metadata(config_path: Path) -> dict[str, Any]:
     """Load metadata about managed servers.
-    
+
     Args:
         config_path: Path to the client's configuration file
-        
+
     Returns:
         Dictionary mapping server names to their metadata
     """
@@ -34,7 +34,7 @@ def load_metadata(config_path: Path) -> dict[str, Any]:
 
 def save_metadata(config_path: Path, metadata: dict[str, Any]) -> None:
     """Save metadata about managed servers.
-    
+
     Args:
         config_path: Path to the client's configuration file
         metadata: Dictionary mapping server names to their metadata
@@ -50,13 +50,15 @@ def save_metadata(config_path: Path, metadata: dict[str, Any]) -> None:
         f.write("\n")
 
 
-def load_json_config(config_path: Path, default_config: dict[str, Any]) -> dict[str, Any]:
+def load_json_config(
+    config_path: Path, default_config: dict[str, Any]
+) -> dict[str, Any]:
     """Load JSON configuration file with error handling.
-    
+
     Args:
         config_path: Path to the configuration file
         default_config: Default configuration to return if file doesn't exist or has errors
-        
+
     Returns:
         Configuration dictionary
     """
@@ -76,7 +78,7 @@ def load_json_config(config_path: Path, default_config: dict[str, Any]) -> dict[
 
 def save_json_config(config_path: Path, config: dict[str, Any]) -> None:
     """Save JSON configuration with atomic write and proper formatting.
-    
+
     Args:
         config_path: Path to save the configuration file
         config: Configuration dictionary to save
@@ -104,11 +106,11 @@ def save_json_config(config_path: Path, config: dict[str, Any]) -> None:
 
 def backup_config(config_path: Path, backup_prefix: str = "backup") -> Path:
     """Create a backup of the current configuration.
-    
+
     Args:
         config_path: Path to the configuration file to backup
         backup_prefix: Prefix for the backup filename
-        
+
     Returns:
         Path to the backup file
     """
@@ -129,11 +131,11 @@ def backup_config(config_path: Path, backup_prefix: str = "backup") -> Path:
 
 def validate_server_config(name: str, server_config: dict[str, Any]) -> list[str]:
     """Validate a single server configuration.
-    
+
     Args:
         name: Server name
         server_config: Server configuration dictionary
-        
+
     Returns:
         List of validation errors (empty if valid)
     """

@@ -263,6 +263,7 @@ class TestClaudeDesktopHandler:
 
         # Check metadata is stored separately
         from src.mcp_config.clients.utils import load_metadata
+
         config_path = handler.get_config_path()
         metadata = load_metadata(config_path)
         assert "my-checker" in metadata
@@ -507,6 +508,7 @@ class TestMetadataSeparation:
 
         # Verify metadata is in separate file
         from src.mcp_config.clients.constants import METADATA_FILE
+
         config_path = handler.get_config_path()
         metadata_path = config_path.parent / METADATA_FILE
         assert metadata_path.exists()
@@ -558,6 +560,7 @@ class TestMetadataSeparation:
 
         # Verify metadata was moved
         from src.mcp_config.clients.utils import load_metadata
+
         config_path = handler.get_config_path()
         metadata = load_metadata(config_path)
         assert "old-server" in metadata

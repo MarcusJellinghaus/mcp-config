@@ -114,18 +114,26 @@ class TestVSCodeHandler:
         # Create a completely isolated temporary directory
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Setup server
                 server_config = {
                     "command": "python",
-                    "args": ["-m", "mcp_code_checker", "--project-dir", "/path/to/project"],
+                    "args": [
+                        "-m",
+                        "mcp_code_checker",
+                        "--project-dir",
+                        "/path/to/project",
+                    ],
                     "env": {"PYTHONPATH": "/path/to/project"},
                     "_server_type": "mcp-code-checker",
                 }
@@ -158,14 +166,17 @@ class TestVSCodeHandler:
         """Test removing a managed server."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Setup initial config
                 config = {
                     "servers": {
@@ -204,7 +215,9 @@ class TestVSCodeHandler:
                     updated_config = json.load(f)
 
                 assert "managed-server" not in updated_config["servers"]
-                assert "external-server" in updated_config["servers"]  # External preserved
+                assert (
+                    "external-server" in updated_config["servers"]
+                )  # External preserved
 
                 # Try to remove external server (should fail)
                 result = handler.remove_server("external-server")
@@ -214,14 +227,17 @@ class TestVSCodeHandler:
         """Test listing all servers."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Setup config with mixed servers
                 config = {
                     "servers": {
@@ -261,20 +277,25 @@ class TestVSCodeHandler:
                 # List managed only
                 managed_servers = handler.list_managed_servers()
                 assert len(managed_servers) == 2
-                assert all(s["name"] in ["managed1", "managed2"] for s in managed_servers)
+                assert all(
+                    s["name"] in ["managed1", "managed2"] for s in managed_servers
+                )
 
     def test_validate_config(self, tmp_path: Path) -> None:
         """Test configuration validation."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Test with invalid config
                 config: dict[str, dict[str, dict[str, list[str]]]] = {
                     "servers": {
@@ -303,14 +324,17 @@ class TestVSCodeHandler:
         """Test configuration backup."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Create initial config
                 config = {"servers": {"test": {"command": "python", "args": []}}}
                 config_dir = temp_path / ".vscode"
@@ -335,27 +359,29 @@ class TestVSCodeHandler:
     def test_empty_config_handling(self, tmp_path: Path) -> None:
         """Test handling of empty configuration."""
         # Use completely isolated test with custom patching
-        import uuid
         import tempfile
-        
-        with tempfile.TemporaryDirectory(suffix=f"_empty_{uuid.uuid4().hex[:8]}") as temp_dir:
+        import uuid
+
+        with tempfile.TemporaryDirectory(
+            suffix=f"_empty_{uuid.uuid4().hex[:8]}"
+        ) as temp_dir:
             temp_path = Path(temp_dir)
-            
+
             # Create a handler and patch its config path directly
             handler = VSCodeHandler(workspace=True)
-            config_file_path = temp_path / ".vscode" / "mcp.json" 
+            config_file_path = temp_path / ".vscode" / "mcp.json"
             metadata_path = temp_path / ".vscode" / ".mcp-config-metadata.json"
-            
+
             # Create a completely isolated config directory structure
             config_dir = temp_path / ".vscode"
             config_dir.mkdir(parents=True, exist_ok=True)
-            
+
             # Ensure the files don't exist initially
             if config_file_path.exists():
                 config_file_path.unlink()
             if metadata_path.exists():
                 metadata_path.unlink()
-            
+
             # Create isolated load functions that are completely independent
             def isolated_load_config() -> dict[str, Any]:
                 """Load config with guaranteed isolation."""
@@ -369,7 +395,7 @@ class TestVSCodeHandler:
                         return config
                 except (json.JSONDecodeError, IOError):
                     return {"servers": {}}
-            
+
             def isolated_load_metadata() -> dict[str, Any]:
                 """Load metadata with guaranteed isolation."""
                 if not metadata_path.exists():
@@ -380,15 +406,24 @@ class TestVSCodeHandler:
                         return result
                 except (json.JSONDecodeError, IOError):
                     return {}
-            
+
             # Patch all relevant methods to ensure complete isolation
-            with patch.object(handler, 'get_config_path', return_value=config_file_path), \
-                 patch.object(handler, 'load_config', side_effect=isolated_load_config), \
-                 patch('src.mcp_config.clients.utils.load_metadata', side_effect=isolated_load_metadata):
-                
+            with (
+                patch.object(handler, "get_config_path", return_value=config_file_path),
+                patch.object(handler, "load_config", side_effect=isolated_load_config),
+                patch(
+                    "src.mcp_config.clients.utils.load_metadata",
+                    side_effect=isolated_load_metadata,
+                ),
+            ):
+
                 # Double-check clean slate - no config files should exist
-                assert not config_file_path.exists(), f"Config file unexpectedly exists: {config_file_path}"
-                assert not metadata_path.exists(), f"Metadata file unexpectedly exists: {metadata_path}"
+                assert (
+                    not config_file_path.exists()
+                ), f"Config file unexpectedly exists: {config_file_path}"
+                assert (
+                    not metadata_path.exists()
+                ), f"Metadata file unexpectedly exists: {metadata_path}"
 
                 # List servers when no config exists
                 servers = handler.list_all_servers()
@@ -410,21 +445,22 @@ class TestVSCodeHandler:
     def test_malformed_json_handling(self, tmp_path: Path) -> None:
         """Test handling of malformed JSON configuration."""
         # Use direct method patching for better test isolation
-        import uuid
         import tempfile
+        import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
-            
+
             # Create a handler and patch its config path directly
             handler = VSCodeHandler(workspace=True)
             config_file_path = temp_path / ".vscode" / "mcp.json"
             metadata_path = temp_path / ".vscode" / ".mcp-config-metadata.json"
-            
+
             # Create isolated load functions
             def isolated_load_metadata() -> dict[str, Any]:
                 """Load metadata with guaranteed isolation - always empty for this test."""
                 return {}
-            
+
             def isolated_load_config() -> dict[str, Any]:
                 """Load config with guaranteed isolation for malformed JSON test."""
                 if not config_file_path.exists():
@@ -438,18 +474,23 @@ class TestVSCodeHandler:
                 except (json.JSONDecodeError, IOError):
                     # This is what should happen with malformed JSON
                     return {"servers": {}}
-            
+
             # Patch all relevant methods for complete isolation
-            with patch.object(handler, 'get_config_path', return_value=config_file_path), \
-                 patch.object(handler, 'load_config', side_effect=isolated_load_config), \
-                 patch('src.mcp_config.clients.utils.load_metadata', side_effect=isolated_load_metadata):
+            with (
+                patch.object(handler, "get_config_path", return_value=config_file_path),
+                patch.object(handler, "load_config", side_effect=isolated_load_config),
+                patch(
+                    "src.mcp_config.clients.utils.load_metadata",
+                    side_effect=isolated_load_metadata,
+                ),
+            ):
                 # Create malformed JSON in our controlled directory
                 config_dir = temp_path / ".vscode"
                 config_dir.mkdir()
-                
+
                 with open(config_file_path, "w") as f:
                     f.write("{ invalid json }")
-                
+
                 # Verify the file was created where we expect
                 assert config_file_path.exists()
 

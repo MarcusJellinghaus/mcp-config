@@ -21,10 +21,10 @@ from .utils import (
 
 def _detect_mcp_config_directory(venv_path: str | None = None) -> Path:
     """Detect the mcp-config installation directory.
-    
+
     Args:
         venv_path: Optional path to virtual environment
-        
+
     Returns:
         Path to the mcp-config directory
     """
@@ -33,12 +33,14 @@ def _detect_mcp_config_directory(venv_path: str | None = None) -> Path:
         venv_path_obj = Path(venv_path)
         if venv_path_obj.exists():
             return venv_path_obj.parent
-    
+
     # Method 2: Use the directory where this module is installed
     # Go up from src/mcp_config/integration.py to project root
     current_file = Path(__file__)
-    mcp_config_dir = current_file.parent.parent.parent  # Go up: integration.py -> mcp_config -> src -> project root
-    
+    mcp_config_dir = (
+        current_file.parent.parent.parent
+    )  # Go up: integration.py -> mcp_config -> src -> project root
+
     return mcp_config_dir
 
 

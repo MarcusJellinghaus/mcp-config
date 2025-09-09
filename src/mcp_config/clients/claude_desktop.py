@@ -57,7 +57,7 @@ class ClaudeDesktopHandler(ClientHandler):
         """
         config_path = self.get_config_path()
         config = load_json_config(config_path, DEFAULT_CLAUDE_CONFIG.copy())
-        
+
         # Ensure mcpServers section exists
         if "mcpServers" not in config:
             config["mcpServers"] = {}
@@ -298,7 +298,9 @@ class ClaudeDesktopHandler(ClientHandler):
                         modified = True
 
                     if "_server_type" in server_config:
-                        metadata[name]["_server_type"] = server_config.pop("_server_type")
+                        metadata[name]["_server_type"] = server_config.pop(
+                            "_server_type"
+                        )
                         modified = True
 
             if modified:

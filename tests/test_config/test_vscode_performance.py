@@ -17,14 +17,17 @@ class TestVSCodeFunctionality:
         """Test handling of large configuration files."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Create a large config with many servers
                 large_config = {
                     "servers": {
@@ -63,7 +66,7 @@ class TestVSCodeFunctionality:
                 # Test that managed servers are filtered correctly
                 managed = handler.list_managed_servers()
                 assert len(managed) == 50
-                
+
                 # Verify that all managed servers have the correct metadata
                 for server in managed:
                     server_name = server["name"]  # Extract name from server dict
@@ -75,14 +78,17 @@ class TestVSCodeFunctionality:
         """Test that repeated operations work correctly."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Perform multiple setup operations
                 for i in range(10):
                     server_config = {
@@ -96,16 +102,20 @@ class TestVSCodeFunctionality:
                 # Verify all servers were set up correctly
                 servers = handler.list_all_servers()
                 # Filter to only the servers we just added with exact pattern
-                our_servers = [s for s in servers if s["name"].startswith("test-") and 
-                              any(f"--iteration" in str(arg) for arg in s.get("args", []))]
+                our_servers = [
+                    s
+                    for s in servers
+                    if s["name"].startswith("test-")
+                    and any(f"--iteration" in str(arg) for arg in s.get("args", []))
+                ]
                 assert len(our_servers) == 10
-                
+
                 # Check that each server has the correct configuration
                 for i in range(10):
                     server_name = f"test-{i}"
                     server_names = [s["name"] for s in our_servers]
                     assert server_name in server_names
-                    
+
                     # Verify the server was actually configured
                     config = handler.load_config()
                     server_config = config["servers"][server_name]
@@ -117,14 +127,17 @@ class TestVSCodeFunctionality:
         """Test that validation works correctly with complex configs."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Create a complex config with nested structures
                 complex_config = {
                     "servers": {
@@ -153,23 +166,23 @@ class TestVSCodeFunctionality:
                 # Test validation functionality
                 errors = handler.validate_config()
                 assert len(errors) == 0  # Config should be valid
-                
+
                 # Verify all servers are recognized
                 servers = handler.list_all_servers()
                 assert len(servers) == 20
-                
+
                 # Verify complex args are preserved correctly
                 config = handler.load_config()
                 for i in range(20):
                     server_name = f"complex-{i}"
                     server_config = config["servers"][server_name]
-                    
+
                     # Check that JSON args are properly formatted
                     config_arg_index = server_config["args"].index("--config")
                     json_arg = server_config["args"][config_arg_index + 1]
                     parsed_json = json.loads(json_arg)
                     assert parsed_json["nested"]["data"] == i
-                    
+
                     # Check environment variables
                     assert len(server_config["env"]) == 20
                     assert f"VAR_0" in server_config["env"]
@@ -179,14 +192,17 @@ class TestVSCodeFunctionality:
         """Test that file operations work correctly."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Setup initial config
                 initial_config = {
                     "command": "python",
@@ -199,7 +215,7 @@ class TestVSCodeFunctionality:
                 # Test backup operation functionality
                 backup_path = handler.backup_config()
                 assert backup_path.exists()
-                
+
                 # Verify backup contains the correct data
                 with open(backup_path) as f:
                     backup_config = json.load(f)
@@ -212,25 +228,30 @@ class TestVSCodeFunctionality:
                     config = json.load(f)
                 assert "servers" in config
                 assert "test-server" in config["servers"]
-                
+
                 # Verify the parsed config matches what we set up
                 server_config = config["servers"]["test-server"]
                 assert server_config["command"] == "python"
                 assert server_config["args"] == ["-m", "initial"]
 
     @pytest.mark.parametrize("num_servers", [10, 50, 100])
-    def test_multiple_servers_functionality(self, tmp_path: Path, num_servers: int) -> None:
+    def test_multiple_servers_functionality(
+        self, tmp_path: Path, num_servers: int
+    ) -> None:
         """Test that operations work correctly with varying numbers of servers."""
         import tempfile
         import uuid
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
-            
+
             handler = VSCodeHandler(workspace=True)
-            
+
             # Patch the get_config_path method directly
-            with patch.object(handler, 'get_config_path', return_value=config_file_path):
+            with patch.object(
+                handler, "get_config_path", return_value=config_file_path
+            ):
                 # Create config with varying number of servers
                 config = {
                     "servers": {
@@ -248,13 +269,15 @@ class TestVSCodeFunctionality:
                 # Test list operation functionality
                 servers = handler.list_all_servers()
                 assert len(servers) == num_servers
-                
+
                 # Verify all expected servers are present
-                server_names = [s["name"] for s in servers]  # Extract names from server dicts
+                server_names = [
+                    s["name"] for s in servers
+                ]  # Extract names from server dicts
                 for i in range(num_servers):
                     expected_name = f"server-{i}"
                     assert expected_name in server_names
-                    
+
                 # Verify server configurations are correct
                 loaded_config = handler.load_config()
                 for i in range(num_servers):
@@ -265,25 +288,26 @@ class TestVSCodeFunctionality:
 
     def test_concurrent_operations_data_integrity(self, tmp_path: Path) -> None:
         """Test that concurrent operations maintain data integrity."""
+        import tempfile
         import threading
-        
+
         # Use a unique directory to avoid test interference
         import uuid
-        import tempfile
+
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
             temp_path = Path(temp_dir)
             config_file_path = temp_path / ".vscode" / "mcp.json"
             metadata_path = temp_path / ".vscode" / ".mcp-config-metadata.json"
-            
+
             # Create and setup initial config
             setup_handler = VSCodeHandler(workspace=True)
-            
+
             # Ensure clean initial state
             if config_file_path.exists():
                 config_file_path.unlink()
             if metadata_path.exists():
                 metadata_path.unlink()
-            
+
             # Create isolated load functions for the setup phase
             def isolated_load_metadata_setup() -> dict[str, Any]:
                 if not metadata_path.exists():
@@ -294,7 +318,7 @@ class TestVSCodeFunctionality:
                         return result
                 except (json.JSONDecodeError, IOError):
                     return {}
-            
+
             def isolated_load_config_setup() -> dict[str, Any]:
                 if not config_file_path.exists():
                     return {"servers": {}}
@@ -306,16 +330,29 @@ class TestVSCodeFunctionality:
                         return config
                 except (json.JSONDecodeError, IOError):
                     return {"servers": {}}
-            
+
             # Patch the handler's methods for complete isolation during setup
-            with patch.object(setup_handler, 'get_config_path', return_value=config_file_path), \
-                 patch.object(setup_handler, 'load_config', side_effect=isolated_load_config_setup), \
-                 patch('src.mcp_config.clients.utils.load_metadata', side_effect=isolated_load_metadata_setup):
+            with (
+                patch.object(
+                    setup_handler, "get_config_path", return_value=config_file_path
+                ),
+                patch.object(
+                    setup_handler, "load_config", side_effect=isolated_load_config_setup
+                ),
+                patch(
+                    "src.mcp_config.clients.utils.load_metadata",
+                    side_effect=isolated_load_metadata_setup,
+                ),
+            ):
                 setup_handler.setup_server(
                     "initial",
-                    {"command": "python", "args": ["-m", "initial"], "_server_type": "test"},
+                    {
+                        "command": "python",
+                        "args": ["-m", "initial"],
+                        "_server_type": "test",
+                    },
                 )
-                
+
                 # Verify the setup worked
                 initial_servers = setup_handler.list_all_servers()
                 assert len(initial_servers) == 1
@@ -325,7 +362,7 @@ class TestVSCodeFunctionality:
 
                 results = []
                 errors = []
-                
+
                 # Use a barrier to synchronize thread start
                 barrier = threading.Barrier(5)
 
@@ -342,13 +379,22 @@ class TestVSCodeFunctionality:
                                     return result
                             except (json.JSONDecodeError, IOError):
                                 return {}
-                        
+
                         # Patch each handler's get_config_path method and metadata loading
-                        with patch.object(handler, 'get_config_path', return_value=config_file_path), \
-                             patch('src.mcp_config.clients.utils.load_metadata', side_effect=isolated_load_metadata):
+                        with (
+                            patch.object(
+                                handler,
+                                "get_config_path",
+                                return_value=config_file_path,
+                            ),
+                            patch(
+                                "src.mcp_config.clients.utils.load_metadata",
+                                side_effect=isolated_load_metadata,
+                            ),
+                        ):
                             # Wait for all threads to be ready
                             barrier.wait()
-                            
+
                             # Read the configuration
                             servers = handler.list_all_servers()
                             results.append((index, len(servers), list(servers)))
@@ -371,21 +417,27 @@ class TestVSCodeFunctionality:
 
                 # Test that operations completed without errors
                 assert len(errors) == 0, f"Errors occurred: {errors}"
-                
+
                 # All threads should complete
                 assert len(results) == 5, f"Expected 5 results, got {len(results)}"
 
                 # Test data integrity - all should see consistent data
                 server_counts = [count for _, count, _ in results]
                 server_lists = [server_list for _, _, server_list in results]
-                
+
                 # All should see the same number of servers
-                assert all(count == 1 for count in server_counts), f"Inconsistent server counts: {server_counts}"
-                
+                assert all(
+                    count == 1 for count in server_counts
+                ), f"Inconsistent server counts: {server_counts}"
+
                 # All should see the same server name
-                server_names_lists = [[s["name"] for s in server_list] for server_list in server_lists]
-                assert all("initial" in names_list for names_list in server_names_lists), "Missing 'initial' server in some results"
-                
+                server_names_lists = [
+                    [s["name"] for s in server_list] for server_list in server_lists
+                ]
+                assert all(
+                    "initial" in names_list for names_list in server_names_lists
+                ), "Missing 'initial' server in some results"
+
                 # Verify the server configuration is still intact after concurrent access
                 final_config = setup_handler.load_config()
                 assert "servers" in final_config

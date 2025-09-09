@@ -14,7 +14,7 @@ from .vscode import VSCodeHandler
 # Re-export the base class and handlers
 __all__ = [
     "ClientHandler",
-    "ClaudeDesktopHandler", 
+    "ClaudeDesktopHandler",
     "IntelliJHandler",
     "VSCodeHandler",
     "get_client_handler",

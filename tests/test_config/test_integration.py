@@ -578,8 +578,9 @@ class TestMCPFilesystemServerIntegration:
         """Test realistic Windows configuration matching the example."""
         # Use current user's username dynamically
         import os
-        current_user = os.environ.get('USERNAME', 'DefaultUser')
-        
+
+        current_user = os.environ.get("USERNAME", "DefaultUser")
+
         # Simulate the example config provided with dynamic user
         project_dir = f"C:\\Users\\{current_user}\\Documents\\GitHub\\mcp-config"
         cli_command = f"C:\\Users\\{current_user}\\Documents\\GitHub\\mcp-config\\.venv\\Scripts\\mcp-server-filesystem.exe"

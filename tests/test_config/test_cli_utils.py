@@ -415,21 +415,25 @@ class TestIntelliJSupport:
     def test_intellij_accepted_in_cli(self) -> None:
         """Test that CLI accepts --client intellij option."""
         parser = create_full_parser()
-        
+
         # Should accept intellij as client option in setup command
         args = parser.parse_args(
-            ["setup", "mcp-code-checker", "test", "--project-dir", ".", "--client", "intellij"]
+            [
+                "setup",
+                "mcp-code-checker",
+                "test",
+                "--project-dir",
+                ".",
+                "--client",
+                "intellij",
+            ]
         )
         assert args.client == "intellij"
-        
+
         # Should accept intellij as client option in remove command
-        args = parser.parse_args(
-            ["remove", "test-server", "--client", "intellij"]
-        )
+        args = parser.parse_args(["remove", "test-server", "--client", "intellij"])
         assert args.client == "intellij"
-        
+
         # Should accept intellij as client option in list command
-        args = parser.parse_args(
-            ["list", "--client", "intellij"]
-        )
+        args = parser.parse_args(["list", "--client", "intellij"])
         assert args.client == "intellij"

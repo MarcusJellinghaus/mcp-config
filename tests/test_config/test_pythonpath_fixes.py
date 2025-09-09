@@ -88,42 +88,45 @@ class TestPythonPathConfiguration:
     def test_pythonpath_uses_module_location_not_cwd(self, tmp_path: Path) -> None:
         """Test that PYTHONPATH uses module location, not current working directory."""
         # Create a project directory that's different from mcp-config location
-        project_dir = tmp_path / "user_project" 
+        project_dir = tmp_path / "user_project"
         project_dir.mkdir()
-        
+
         user_params = {
             "project_dir": str(project_dir),
             "log_level": "INFO",
         }
-        
+
         # Change to project directory to simulate real user scenario
         original_cwd = Path.cwd()
         try:
             import os
+
             os.chdir(project_dir)
-            
+
             config = generate_client_config(
                 MCP_CODE_CHECKER,
                 "test",
                 user_params,
             )
-            
+
             pythonpath = config["env"]["PYTHONPATH"]
-            
+
             # PYTHONPATH should NOT be the current working directory (project_dir)
             project_path = str(project_dir)
             if sys.platform == "win32" and not project_path.endswith("\\"):
                 project_path += "\\"
-                
+
             assert pythonpath != project_path, (
                 f"PYTHONPATH should not be current working directory ({project_path}), "
                 f"but got {pythonpath}"
             )
-            
+
             # PYTHONPATH should be the actual mcp-config installation directory
             # (We can't easily test the exact path, but we can verify it's not the project dir)
-            assert Path(pythonpath.rstrip("\\")).exists(), f"PYTHONPATH directory should exist: {pythonpath}"
-            
+            assert Path(
+                pythonpath.rstrip("\\")
+            ).exists(), f"PYTHONPATH directory should exist: {pythonpath}"
+
         finally:
             os.chdir(original_cwd)
 
@@ -426,10 +429,10 @@ class TestCompleteConfigurationExamples:
             # Note: Filesystem server strips venv_path in CLI mode, so it will use
             # the actual mcp-config directory, not the test directory
             fs_pythonpath = config_fs["env"]["PYTHONPATH"]
-            
+
             # For code checker with venv_path, should use test directory
             assert config["env"]["PYTHONPATH"] == expected_pythonpath
-            
+
             # For filesystem server, venv_path is stripped in CLI mode, so it uses actual mcp-config dir
             # We just verify it's not the project directory
             project_path = str(mock_project) + "\\"
@@ -530,10 +533,10 @@ class TestServerSpecificBehavior:
         # We can't test exact path, but we can verify they're the same and not project dir
         checker_pythonpath = checker_config["env"]["PYTHONPATH"]
         fs_pythonpath = fs_config["env"]["PYTHONPATH"]
-        
+
         # Both servers should have the same PYTHONPATH
         assert checker_pythonpath == fs_pythonpath
-        
+
         # PYTHONPATH should NOT be the project directory
         project_path = str(project_dir)
         if sys.platform == "win32" and not project_path.endswith("\\"):

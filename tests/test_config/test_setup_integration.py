@@ -238,8 +238,9 @@ class TestMCPSetupIntegration:
 
         # Use current user's username dynamically
         import os
-        current_user = os.environ.get('USERNAME', 'DefaultUser')
-        
+
+        current_user = os.environ.get("USERNAME", "DefaultUser")
+
         # Mock realistic Windows paths from the example with dynamic user
         project_dir = f"C:\\Users\\{current_user}\\Documents\\GitHub\\mcp-config"
         cli_exe = f"C:\\Users\\{current_user}\\Documents\\GitHub\\mcp-config\\.venv\\Scripts\\mcp-server-filesystem.exe"

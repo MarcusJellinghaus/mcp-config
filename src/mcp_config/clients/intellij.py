@@ -25,29 +25,45 @@ class IntelliJHandler(ClientHandler):
         """Get IntelliJ GitHub Copilot MCP config path."""
         # Get home directory as string first to avoid Path type issues
         home_str = str(Path.home())
-        
+
         # Build path as string first to avoid cross-platform Path issues in tests
         if os.name == "nt":  # Windows - VERIFIED PATH
-            config_path_str = os.path.join(home_str, "AppData", "Local", "github-copilot", "intellij", "mcp.json")
+            config_path_str = os.path.join(
+                home_str, "AppData", "Local", "github-copilot", "intellij", "mcp.json"
+            )
         elif os.name == "posix":
             if platform.system() == "Darwin":  # macOS - PROJECTED
-                config_path_str = os.path.join(home_str, "Library", "Application Support", "github-copilot", "intellij", "mcp.json")
+                config_path_str = os.path.join(
+                    home_str,
+                    "Library",
+                    "Application Support",
+                    "github-copilot",
+                    "intellij",
+                    "mcp.json",
+                )
             else:  # Linux - PROJECTED (XDG Base Directory)
-                config_path_str = os.path.join(home_str, ".local", "share", "github-copilot", "intellij", "mcp.json")
+                config_path_str = os.path.join(
+                    home_str,
+                    ".local",
+                    "share",
+                    "github-copilot",
+                    "intellij",
+                    "mcp.json",
+                )
         else:
             raise OSError(f"Unsupported operating system: {os.name}")
-        
+
         # Convert to Path object (this will use the correct Path type for the current platform)
         config_path = Path(config_path_str)
-        
+
         # Error handling: Check if GitHub Copilot directory exists
         # Skip existence check during testing to avoid cross-platform Path issues
-        if 'pytest' not in sys.modules and not config_path.parent.exists():
+        if "pytest" not in sys.modules and not config_path.parent.exists():
             raise FileNotFoundError(
                 f"GitHub Copilot for IntelliJ not found. Expected config directory: "
                 f"{config_path.parent} does not exist. Please install GitHub Copilot for IntelliJ first."
             )
-        
+
         return config_path
 
     def load_config(self) -> dict[str, Any]:
