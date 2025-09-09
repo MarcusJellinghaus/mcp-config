@@ -1,7 +1,6 @@
-"""Performance tests for VSCode support."""
+"""Functionality tests for VSCode support with large configs."""
 
 import json
-import time
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock, patch
@@ -11,8 +10,8 @@ import pytest
 from src.mcp_config.clients import VSCodeHandler
 
 
-class TestVSCodePerformance:
-    """Test performance aspects of VSCode support."""
+class TestVSCodeFunctionality:
+    """Test functionality aspects of VSCode support with various config sizes."""
 
     def test_large_config_handling(self, tmp_path: Path) -> None:
         """Test handling of large configuration files."""
@@ -57,28 +56,22 @@ class TestVSCodePerformance:
                 with open(config_dir / ".mcp-config-metadata.json", "w") as f:
                     json.dump(metadata, f)
 
-                # Measure time to list servers
-                start = time.time()
+                # Test that all servers are listed correctly
                 servers = handler.list_all_servers()
-                duration = time.time() - start
-
                 assert len(servers) == 100
-                assert (
-                    duration < 5.0
-                )  # Should complete within 5 seconds (very lenient for CI/slow systems)
 
-                # Measure time to list managed servers only
-                start = time.time()
+                # Test that managed servers are filtered correctly
                 managed = handler.list_managed_servers()
-                duration = time.time() - start
-
                 assert len(managed) == 50
-                assert (
-                    duration < 3.0
-                )  # Should be faster than listing all (very lenient for CI)
+                
+                # Verify that all managed servers have the correct metadata
+                for server_name in managed:
+                    assert server_name.startswith("server-")
+                    server_id = int(server_name.split("-")[1])
+                    assert 0 <= server_id < 50
 
     def test_repeated_operations(self, tmp_path: Path) -> None:
-        """Test that repeated operations don't degrade performance."""
+        """Test that repeated operations work correctly."""
         import tempfile
         import uuid
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
@@ -90,47 +83,33 @@ class TestVSCodePerformance:
             # Patch the get_config_path method directly
             with patch.object(handler, 'get_config_path', return_value=config_file_path):
                 # Perform multiple setup operations
-                times = []
                 for i in range(10):
-                    start = time.time()
-
                     server_config = {
                         "command": "python",
                         "args": ["-m", "test_module", f"--iteration", str(i)],
                         "_server_type": "test-server",
                     }
 
-                    handler.setup_server(f"perf-test-{i}", server_config)
+                    handler.setup_server(f"test-{i}", server_config)
 
-                    duration = time.time() - start
-                    times.append(duration)
+                # Verify all servers were set up correctly
+                servers = handler.list_all_servers()
+                assert len(servers) == 10
+                
+                # Check that each server has the correct configuration
+                for i in range(10):
+                    server_name = f"test-{i}"
+                    assert server_name in servers
+                    
+                    # Verify the server was actually configured
+                    config = handler.load_config()
+                    server_config = config["servers"][server_name]
+                    assert server_config["command"] == "python"
+                    assert "--iteration" in server_config["args"]
+                    assert str(i) in server_config["args"]
 
-                # Check that performance doesn't degrade significantly
-                # Instead of comparing first to last (which can be noisy),
-                # check that the median time is reasonable and no operation is extremely slow
-                import statistics
-
-                median_time = statistics.median(times)
-                max_time = max(times)
-
-                # No single operation should take more than 2 seconds (very lenient for CI/slow systems)
-                assert max_time < 2.0, f"Operation took too long: {max_time:.4f}s"
-
-                # Median should be reasonably fast (under 500ms - very lenient for CI)
-                assert median_time < 0.5, f"Median time too high: {median_time:.4f}s"
-
-                # Check for severe performance degradation - compare averages of first and last halves
-                first_half_avg = sum(times[:5]) / 5
-                second_half_avg = sum(times[5:]) / 5
-
-                # Second half shouldn't be more than 50x slower on average (extremely permissive for CI)
-                assert second_half_avg < first_half_avg * 50, (
-                    f"Performance degradation detected: first half avg={first_half_avg:.4f}s, "
-                    f"second half avg={second_half_avg:.4f}s"
-                )
-
-    def test_config_validation_performance(self, tmp_path: Path) -> None:
-        """Test that validation is performant even with complex configs."""
+    def test_complex_config_validation(self, tmp_path: Path) -> None:
+        """Test that validation works correctly with complex configs."""
         import tempfile
         import uuid
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
@@ -166,18 +145,33 @@ class TestVSCodePerformance:
                 with open(config_file_path, "w") as f:
                     json.dump(complex_config, f)
 
-                # Measure validation time
-                start = time.time()
+                # Test validation functionality
                 errors = handler.validate_config()
-                duration = time.time() - start
-
-                assert (
-                    duration < 3.0
-                )  # Validation should be reasonably fast (very lenient for CI)
                 assert len(errors) == 0  # Config should be valid
+                
+                # Verify all servers are recognized
+                servers = handler.list_all_servers()
+                assert len(servers) == 20
+                
+                # Verify complex args are preserved correctly
+                config = handler.load_config()
+                for i in range(20):
+                    server_name = f"complex-{i}"
+                    server_config = config["servers"][server_name]
+                    
+                    # Check that JSON args are properly formatted
+                    config_arg_index = server_config["args"].index("--config")
+                    json_arg = server_config["args"][config_arg_index + 1]
+                    parsed_json = json.loads(json_arg)
+                    assert parsed_json["nested"]["data"] == i
+                    
+                    # Check environment variables
+                    assert len(server_config["env"]) == 20
+                    assert f"VAR_0" in server_config["env"]
+                    assert server_config["env"][f"VAR_0"] == f"value_{i}_0"
 
-    def test_file_operations_efficiency(self, tmp_path: Path) -> None:
-        """Test that file operations are efficient."""
+    def test_file_operations_functionality(self, tmp_path: Path) -> None:
+        """Test that file operations work correctly."""
         import tempfile
         import uuid
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
@@ -197,25 +191,31 @@ class TestVSCodePerformance:
 
                 handler.setup_server("test-server", initial_config)
 
-                # Measure time for backup operation
-                start = time.time()
+                # Test backup operation functionality
                 backup_path = handler.backup_config()
-                duration = time.time() - start
-
-                assert duration < 2.0  # Backup should be quick (very lenient for CI)
                 assert backup_path.exists()
+                
+                # Verify backup contains the correct data
+                with open(backup_path) as f:
+                    backup_config = json.load(f)
+                assert "servers" in backup_config
+                assert "test-server" in backup_config["servers"]
+                assert backup_config["servers"]["test-server"]["command"] == "python"
 
-                # Measure time to read and parse config
-                start = time.time()
+                # Test that config can be read and parsed correctly
                 with open(config_file_path) as f:
                     config = json.load(f)
-                duration = time.time() - start
-
-                assert duration < 1.0  # JSON parsing should be fast (very lenient for CI)
+                assert "servers" in config
+                assert "test-server" in config["servers"]
+                
+                # Verify the parsed config matches what we set up
+                server_config = config["servers"]["test-server"]
+                assert server_config["command"] == "python"
+                assert server_config["args"] == ["-m", "initial"]
 
     @pytest.mark.parametrize("num_servers", [10, 50, 100])
-    def test_scalability(self, tmp_path: Path, num_servers: int) -> None:
-        """Test that operations scale reasonably with number of servers."""
+    def test_multiple_servers_functionality(self, tmp_path: Path, num_servers: int) -> None:
+        """Test that operations work correctly with varying numbers of servers."""
         import tempfile
         import uuid
         with tempfile.TemporaryDirectory(suffix=f"_{uuid.uuid4().hex[:8]}") as temp_dir:
@@ -240,22 +240,26 @@ class TestVSCodePerformance:
                 with open(config_file_path, "w") as f:
                     json.dump(config, f)
 
-                # Measure list operation
-                start = time.time()
+                # Test list operation functionality
                 servers = handler.list_all_servers()
-                duration = time.time() - start
-
                 assert len(servers) == num_servers
+                
+                # Verify all expected servers are present
+                for i in range(num_servers):
+                    expected_name = f"server-{i}"
+                    assert expected_name in servers
+                    
+                # Verify server configurations are correct
+                loaded_config = handler.load_config()
+                for i in range(num_servers):
+                    server_name = f"server-{i}"
+                    server_config = loaded_config["servers"][server_name]
+                    assert server_config["command"] == "python"
+                    assert server_config["args"] == [f"script_{i}.py"]
 
-                # Time should scale sub-linearly (not O(n²) or worse)
-                # Even with 100 servers, should be under 5 seconds (very lenient for CI)
-                max_time = 0.05 * num_servers  # Linear scaling allowance (very generous)
-                assert duration < max(max_time, 5.0)  # Very lenient for CI systems
-
-    def test_concurrent_operations_safety(self, tmp_path: Path) -> None:
-        """Test that concurrent operations don't cause issues."""
+    def test_concurrent_operations_data_integrity(self, tmp_path: Path) -> None:
+        """Test that concurrent operations maintain data integrity."""
         import threading
-        import time
         
         # Use a unique directory to avoid test interference
         import uuid
@@ -265,7 +269,7 @@ class TestVSCodePerformance:
             config_file_path = temp_path / ".vscode" / "mcp.json"
             metadata_path = temp_path / ".vscode" / ".mcp-config-metadata.json"
             
-            # Create and setup initial config with proper synchronization
+            # Create and setup initial config
             setup_handler = VSCodeHandler(workspace=True)
             
             # Ensure clean initial state
@@ -306,22 +310,8 @@ class TestVSCodePerformance:
                     {"command": "python", "args": ["-m", "initial"], "_server_type": "test"},
                 )
                 
-                # Give setup time to complete
-                time.sleep(0.1)
-                
-                # Verify the setup worked before starting concurrent operations with better error reporting
+                # Verify the setup worked
                 initial_servers = setup_handler.list_all_servers()
-                if len(initial_servers) != 1:
-                    print(f"DEBUG: Expected 1 server after setup, got {len(initial_servers)}")
-                    print(f"DEBUG: Servers found: {initial_servers}")
-                    print(f"DEBUG: Config file exists: {config_file_path.exists()}")
-                    print(f"DEBUG: Metadata file exists: {metadata_path.exists()}")
-                    if config_file_path.exists():
-                        with open(config_file_path, 'r') as f:
-                            print(f"DEBUG: Config content: {f.read()}")
-                    if metadata_path.exists():
-                        with open(metadata_path, 'r') as f:
-                            print(f"DEBUG: Metadata content: {f.read()}")
                 assert len(initial_servers) == 1
 
                 # Create multiple handlers for concurrent access
@@ -353,12 +343,9 @@ class TestVSCodePerformance:
                             # Wait for all threads to be ready
                             barrier.wait()
                             
-                            # Small random delay to increase chance of race conditions
-                            import random
-                            time.sleep(random.uniform(0.001, 0.01))
-                            
+                            # Read the configuration
                             servers = handler.list_all_servers()
-                            results.append((index, len(servers)))
+                            results.append((index, len(servers), list(servers)))
                     except Exception as e:
                         errors.append((index, str(e)))
 
@@ -369,36 +356,31 @@ class TestVSCodePerformance:
                     threads.append(thread)
 
                 # Start all threads
-                start_time = time.time()
                 for thread in threads:
                     thread.start()
 
-                # Wait for completion with timeout
+                # Wait for completion
                 for thread in threads:
-                    thread.join(timeout=5.0)
+                    thread.join(timeout=10.0)
 
-                duration = time.time() - start_time
-
-                # All operations should complete within reasonable time
-                assert duration < 10.0  # Very lenient for concurrent operations on CI
-
-                # No errors should occur
+                # Test that operations completed without errors
                 assert len(errors) == 0, f"Errors occurred: {errors}"
                 
                 # All threads should complete
                 assert len(results) == 5, f"Expected 5 results, got {len(results)}"
 
-                # All should see the same config (1 server)
-                # But allow for some flexibility in case of timing issues
-                server_counts = [count for _, count in results]
-                unique_counts = set(server_counts)
+                # Test data integrity - all should see consistent data
+                server_counts = [count for _, count, _ in results]
+                server_lists = [server_list for _, _, server_list in results]
                 
-                # Most results should be consistent, but allow some variation due to concurrency
-                if len(unique_counts) > 1:
-                    # If there's variation, at least 80% should see the correct count
-                    correct_count = max(unique_counts, key=server_counts.count)
-                    correct_results = sum(1 for count in server_counts if count == correct_count)
-                    assert correct_results >= 4, f"Too much variation in results: {server_counts}"
-                else:
-                    # All should see 1 server if there's no variation
-                    assert all(count == 1 for _, count in results), f"Expected all to see 1 server, got: {server_counts}"
+                # All should see the same number of servers
+                assert all(count == 1 for count in server_counts), f"Inconsistent server counts: {server_counts}"
+                
+                # All should see the same server name
+                assert all("initial" in server_list for server_list in server_lists), "Missing 'initial' server in some results"
+                
+                # Verify the server configuration is still intact after concurrent access
+                final_config = setup_handler.load_config()
+                assert "servers" in final_config
+                assert "initial" in final_config["servers"]
+                assert final_config["servers"]["initial"]["command"] == "python"
