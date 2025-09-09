@@ -24,7 +24,7 @@ class TestIntelliJHelpSupport:
         assert "GitHub Copilot" in INTELLIJ_SUPPORT_HELP
         assert '"servers"' in INTELLIJ_SUPPORT_HELP
 
-    def test_print_intellij_support_help(self, capsys) -> None:
+    def test_print_intellij_support_help(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test that print_intellij_support_help prints the expected content."""
         result = print_intellij_support_help()
         assert result == 0
@@ -96,7 +96,7 @@ class TestIntelliJHelpSupport:
         help_text = CommandHelpFormatter.format_validate_command_help()
         assert "intellij-proj --client intellij" in help_text
 
-    def test_help_command_recognizes_intellij_topic(self, capsys) -> None:
+    def test_help_command_recognizes_intellij_topic(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test that help command recognizes 'intellij' as a valid topic."""
         result = print_command_help("intellij")
         assert result == 0
@@ -104,7 +104,7 @@ class TestIntelliJHelpSupport:
         captured = capsys.readouterr()
         assert "IntelliJ/PyCharm Support" in captured.out
 
-    def test_help_command_topics_include_intellij(self, capsys) -> None:
+    def test_help_command_topics_include_intellij(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test that help command topics list includes IntelliJ."""
         result = print_command_help("help")
         assert result == 0
@@ -112,7 +112,7 @@ class TestIntelliJHelpSupport:
         captured = capsys.readouterr()
         assert "intellij           Show IntelliJ/PyCharm setup information" in captured.out
 
-    def test_help_command_examples_include_intellij(self, capsys) -> None:
+    def test_help_command_examples_include_intellij(self, capsys: pytest.CaptureFixture[str]) -> None:
         """Test that help command examples include IntelliJ."""
         result = print_command_help("help")
         assert result == 0
