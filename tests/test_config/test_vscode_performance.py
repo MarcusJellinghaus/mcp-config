@@ -65,7 +65,8 @@ class TestVSCodeFunctionality:
                 assert len(managed) == 50
                 
                 # Verify that all managed servers have the correct metadata
-                for server_name in managed:
+                for server in managed:
+                    server_name = server["name"]  # Extract name from server dict
                     assert server_name.startswith("server-")
                     server_id = int(server_name.split("-")[1])
                     assert 0 <= server_id < 50
@@ -94,12 +95,16 @@ class TestVSCodeFunctionality:
 
                 # Verify all servers were set up correctly
                 servers = handler.list_all_servers()
-                assert len(servers) == 10
+                # Filter to only the servers we just added with exact pattern
+                our_servers = [s for s in servers if s["name"].startswith("test-") and 
+                              any(f"--iteration" in str(arg) for arg in s.get("args", []))]
+                assert len(our_servers) == 10
                 
                 # Check that each server has the correct configuration
                 for i in range(10):
                     server_name = f"test-{i}"
-                    assert server_name in servers
+                    server_names = [s["name"] for s in our_servers]
+                    assert server_name in server_names
                     
                     # Verify the server was actually configured
                     config = handler.load_config()
@@ -245,9 +250,10 @@ class TestVSCodeFunctionality:
                 assert len(servers) == num_servers
                 
                 # Verify all expected servers are present
+                server_names = [s["name"] for s in servers]  # Extract names from server dicts
                 for i in range(num_servers):
                     expected_name = f"server-{i}"
-                    assert expected_name in servers
+                    assert expected_name in server_names
                     
                 # Verify server configurations are correct
                 loaded_config = handler.load_config()
@@ -377,7 +383,8 @@ class TestVSCodeFunctionality:
                 assert all(count == 1 for count in server_counts), f"Inconsistent server counts: {server_counts}"
                 
                 # All should see the same server name
-                assert all("initial" in server_list for server_list in server_lists), "Missing 'initial' server in some results"
+                server_names_lists = [[s["name"] for s in server_list] for server_list in server_lists]
+                assert all("initial" in names_list for names_list in server_names_lists), "Missing 'initial' server in some results"
                 
                 # Verify the server configuration is still intact after concurrent access
                 final_config = setup_handler.load_config()

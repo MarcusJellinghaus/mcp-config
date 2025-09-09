@@ -158,6 +158,18 @@ class TestIntelliJHandlerPaths:
 class TestIntelliJHandlerIntegration:
     """Test integration with ClientHandler interface."""
 
+    def test_intellij_handler_registration(self) -> None:
+        """Test that IntelliJ handler is properly registered."""
+        from src.mcp_config.clients import CLIENT_HANDLERS, get_client_handler
+        
+        # Check it's in the registry
+        assert "intellij" in CLIENT_HANDLERS
+        
+        # Check we can get an instance
+        handler = get_client_handler("intellij")
+        assert isinstance(handler, IntelliJHandler)
+        assert isinstance(handler, ClientHandler)
+
     def test_integration_with_client_handler_interface(self, tmp_path: Path) -> None:
         """Test IntelliJHandler implements ClientHandler interface correctly."""
         mock_home = tmp_path / "home" / "testuser"
@@ -285,3 +297,285 @@ class TestPathValidation:
                 
                 # Verify path matches research data
                 assert expected_path_suffix.replace('\\', '/') in str(path).replace('\\', '/')
+
+
+# TDD Tests for Step 3 - Complete IntelliJ Handler Functionality
+class TestIntelliJTDDComplete:
+    """TDD tests for complete IntelliJ handler functionality (Step 3)."""
+
+    def test_intellij_uses_servers_section(self, tmp_path: Path) -> None:
+        """Test IntelliJ handler uses 'servers' config section like VSCode."""
+        config_dir = tmp_path / "github-copilot" / "intellij" / "servers_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path):
+            handler = IntelliJHandler()
+            config = handler.load_config()
+            
+            # Should have servers section like VSCode
+            assert "servers" in config
+            assert isinstance(config["servers"], dict)
+
+    def test_intellij_server_setup_workflow(self, tmp_path: Path) -> None:
+        """Test complete server setup workflow."""
+        config_dir = tmp_path / "github-copilot" / "intellij" / "setup_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path):
+            handler = IntelliJHandler()
+            
+            # Setup a test server
+            server_config = {
+                "command": "python",
+                "args": ["-m", "mcp_code_checker"],
+                "env": {"PROJECT_ROOT": "/test/path"},
+                "_server_type": "mcp-code-checker"
+            }
+            
+            success = handler.setup_server("test-server", server_config)
+            assert success
+            
+            # Verify server was added to config
+            config = handler.load_config()
+            assert "test-server" in config["servers"]
+            
+            server = config["servers"]["test-server"]
+            assert server["command"] == "python"
+            assert server["args"] == ["-m", "mcp_code_checker"]
+            assert server["env"] == {"PROJECT_ROOT": "/test/path"}
+            
+            # Metadata should not be in main config
+            assert "_managed_by" not in server
+            assert "_server_type" not in server
+
+    def test_intellij_remove_server_workflow(self, tmp_path: Path) -> None:
+        """Test complete server removal workflow."""
+        config_dir = tmp_path / "github-copilot" / "intellij" / "remove_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path):
+            handler = IntelliJHandler()
+            
+            # Setup a server first
+            server_config = {
+                "command": "python",
+                "args": ["-m", "test_server"],
+                "_server_type": "test-server"
+            }
+            
+            handler.setup_server("test-server", server_config)
+            
+            # Verify it was added
+            config = handler.load_config()
+            assert "test-server" in config["servers"]
+            
+            # Remove the server
+            success = handler.remove_server("test-server")
+            assert success
+            
+            # Verify it was removed
+            config = handler.load_config()
+            assert "test-server" not in config["servers"]
+
+    def test_intellij_list_servers_workflow(self, tmp_path: Path) -> None:
+        """Test complete server listing workflow."""
+        # Use unique directory to avoid test isolation issues
+        config_dir = tmp_path / "github-copilot" / "intellij" / "list_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path):
+            handler = IntelliJHandler()
+            
+            # Setup multiple servers
+            server1_config = {
+                "command": "python",
+                "args": ["-m", "server1"],
+                "_server_type": "test-server-1"
+            }
+            server2_config = {
+                "command": "node",
+                "args": ["server2.js"],
+                "env": {"PORT": "3000"},
+                "_server_type": "test-server-2"
+            }
+            
+            handler.setup_server("server1", server1_config)
+            handler.setup_server("server2", server2_config)
+            
+            # Test list_managed_servers
+            managed_servers = handler.list_managed_servers()
+            assert len(managed_servers) == 2
+            
+            server_names = [s["name"] for s in managed_servers]
+            assert "server1" in server_names
+            assert "server2" in server_names
+            
+            # Test list_all_servers
+            all_servers = handler.list_all_servers()
+            
+            # Filter to only the servers we just added (in case of test isolation issues)
+            our_servers = [s for s in all_servers if s["name"] in ["server1", "server2"]]
+            assert len(our_servers) == 2
+            
+            for server in our_servers:
+                assert server["managed"] is True  # Both are managed by us
+
+    def test_intellij_metadata_separation(self, tmp_path: Path) -> None:
+        """Test metadata is stored separately from main config."""
+        config_dir = tmp_path / "github-copilot" / "intellij" / "metadata_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path):
+            handler = IntelliJHandler()
+            
+            # Setup a server
+            server_config = {
+                "command": "python",
+                "args": ["-m", "test_server"],
+                "_server_type": "test-server"
+            }
+            
+            handler.setup_server("test-server", server_config)
+            
+            # Check main config doesn't contain metadata
+            config = handler.load_config()
+            server = config["servers"]["test-server"]
+            assert "_managed_by" not in server
+            assert "_server_type" not in server
+            
+            # Check metadata file exists and contains metadata
+            from src.mcp_config.clients.utils import load_metadata
+            metadata = load_metadata(config_path)
+            assert "test-server" in metadata
+            assert metadata["test-server"]["_managed_by"] == "mcp-config-managed"
+            assert metadata["test-server"]["_server_type"] == "test-server"
+
+    def test_intellij_follows_vscode_pattern(self, tmp_path: Path) -> None:
+        """Test IntelliJ handler behaves exactly like VSCode handler."""
+        from src.mcp_config.clients.vscode import VSCodeHandler
+        
+        config_dir = tmp_path / "github-copilot" / "intellij" / "pattern_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        vscode_config_dir = tmp_path / "vscode" / "pattern_test"
+        vscode_config_dir.mkdir(parents=True)
+        vscode_config_path = vscode_config_dir / "settings.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path), \
+             patch.object(VSCodeHandler, 'get_config_path', return_value=vscode_config_path):
+            
+            intellij_handler = IntelliJHandler()
+            vscode_handler = VSCodeHandler()
+            
+            # Both should use servers section
+            intellij_config = intellij_handler.load_config()
+            vscode_config = vscode_handler.load_config()
+            
+            assert "servers" in intellij_config
+            assert "servers" in vscode_config
+            
+            # Both should handle server setup the same way
+            server_config = {
+                "command": "python",
+                "args": ["-m", "test_server"],
+                "_server_type": "test-server"
+            }
+            
+            intellij_success = intellij_handler.setup_server("test-server", server_config)
+            vscode_success = vscode_handler.setup_server("test-server", server_config)
+            
+            assert intellij_success == vscode_success == True
+            
+            # Both should produce similar config structure
+            intellij_config_after = intellij_handler.load_config()
+            vscode_config_after = vscode_handler.load_config()
+            
+            intellij_server = intellij_config_after["servers"]["test-server"]
+            vscode_server = vscode_config_after["servers"]["test-server"]
+            
+            # Both should have same clean config (no metadata)
+            assert "_managed_by" not in intellij_server
+            assert "_managed_by" not in vscode_server
+            assert intellij_server["command"] == vscode_server["command"]
+            assert intellij_server["args"] == vscode_server["args"]
+
+    def test_intellij_standard_json_handling(self, tmp_path: Path) -> None:
+        """Test handler uses standard JSON without comments."""
+        config_dir = tmp_path / "github-copilot" / "intellij" / "json_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path):
+            handler = IntelliJHandler()
+            
+            # Setup a server
+            server_config = {
+                "command": "python",
+                "args": ["-m", "test_server"],
+                "_server_type": "test-server"
+            }
+            
+            handler.setup_server("test-server", server_config)
+            
+            # Read the raw file content
+            with open(config_path, 'r') as f:
+                content = f.read()
+            
+            # Should be valid standard JSON
+            import json
+            parsed = json.loads(content)
+            assert "servers" in parsed
+            assert "test-server" in parsed["servers"]
+            
+            # Should not contain any comments (// or /* */)
+            assert "//" not in content
+            assert "/*" not in content
+            assert "*/" not in content
+
+    def test_intellij_config_validation(self, tmp_path: Path) -> None:
+        """Test IntelliJ config validation works correctly."""
+        config_dir = tmp_path / "github-copilot" / "intellij" / "validation_test"
+        config_dir.mkdir(parents=True)
+        config_path = config_dir / "mcp.json"
+        
+        with patch.object(IntelliJHandler, 'get_config_path', return_value=config_path):
+            handler = IntelliJHandler()
+            
+            # Test validation on empty config
+            errors = handler.validate_config()
+            assert len(errors) == 0  # Empty config should be valid
+            
+            # Setup a valid server
+            server_config = {
+                "command": "python",
+                "args": ["-m", "test_server"],
+                "_server_type": "test-server"
+            }
+            
+            handler.setup_server("test-server", server_config)
+            
+            # Test validation on valid config
+            errors = handler.validate_config()
+            assert len(errors) == 0
+            
+            # Test validation catches invalid config
+            # Write invalid config directly
+            invalid_config = {
+                "servers": {
+                    "invalid-server": {
+                        # Missing required 'command' field
+                        "args": ["test"]
+                    }
+                }
+            }
+            
+            handler.save_config(invalid_config)
+            errors = handler.validate_config()
+            assert len(errors) > 0
+            assert any("command" in error for error in errors)
