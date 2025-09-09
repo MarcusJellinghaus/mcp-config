@@ -11,7 +11,6 @@ from .claude_desktop import ClaudeDesktopHandler
 from .intellij import IntelliJHandler
 from .vscode import VSCodeHandler
 
-# Re-export the base class and handlers
 __all__ = [
     "ClientHandler",
     "ClaudeDesktopHandler",
@@ -19,6 +18,7 @@ __all__ = [
     "VSCodeHandler",
     "get_client_handler",
     "CLIENT_HANDLERS",
+    "HandlerFactory",
 ]
 
 # Type alias for handler factories
