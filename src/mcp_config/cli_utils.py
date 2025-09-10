@@ -11,7 +11,7 @@ from typing import Any
 from .servers import ServerConfig, registry
 
 # Supported MCP clients
-SUPPORTED_CLIENTS = ["claude-desktop", "vscode-workspace", "vscode-user"]
+SUPPORTED_CLIENTS = ["claude-desktop", "vscode-workspace", "vscode-user", "intellij"]
 
 
 def build_setup_parser(server_type: str | None = None) -> argparse.ArgumentParser:
@@ -68,7 +68,7 @@ def add_global_options(parser: argparse.ArgumentParser) -> None:
         "--client",
         default="claude-desktop",
         choices=SUPPORTED_CLIENTS,
-        help="MCP client to configure. Options: claude-desktop, vscode-workspace (workspace config), vscode-user (user profile config)",
+        help="MCP client to configure. Options: claude-desktop, vscode-workspace (workspace config), vscode-user (user profile config), intellij (GitHub Copilot)",
     )
     parser.add_argument(
         "--dry-run",
@@ -389,7 +389,7 @@ def add_validate_subcommand(subparsers: Any) -> None:
         "--client",
         default="claude-desktop",
         choices=SUPPORTED_CLIENTS,
-        help="MCP client to validate (claude-desktop, vscode-workspace, vscode-user)",
+        help="MCP client to validate (claude-desktop, vscode-workspace, vscode-user, intellij)",
     )
     validate_parser.add_argument(
         "--verbose",
@@ -477,6 +477,9 @@ def get_usage_examples() -> str:
   # Setup for VSCode user profile (personal, all projects) 
   mcp-config setup mcp-code-checker global --project-dir ~/projects --client vscode-user
   
+  # Setup for IntelliJ/PyCharm GitHub Copilot
+  mcp-config setup mcp-code-checker my-intellij --project-dir . --client intellij
+  
   # Setup with custom parameters
   mcp-config setup mcp-code-checker debug --project-dir . --log-level DEBUG --keep-temp-files
   
@@ -515,6 +518,9 @@ def get_setup_examples() -> str:
   # Setup for VSCode user profile (personal, all projects)
   mcp-config setup mcp-code-checker global --project-dir ~/projects --client vscode-user
   
+  # Setup for IntelliJ/PyCharm GitHub Copilot
+  mcp-config setup mcp-code-checker my-intellij --project-dir . --client intellij
+  
   # Debug configuration
   mcp-config setup mcp-code-checker debug --project-dir . --log-level DEBUG --keep-temp-files
   
@@ -547,6 +553,9 @@ def get_remove_examples() -> str:
   # Remove from VSCode user profile
   mcp-config remove global --client vscode-user
   
+  # Remove from IntelliJ
+  mcp-config remove my-intellij --client intellij
+  
   # Remove all servers starting with "checker" (client required)
   mcp-config remove "checker*" --client claude-desktop
   
@@ -577,6 +586,7 @@ def get_list_examples() -> str:
   mcp-config list --client claude-desktop
   mcp-config list --client vscode-workspace
   mcp-config list --client vscode-user
+  mcp-config list --client intellij
   
   # Show detailed information
   mcp-config list --detailed
@@ -604,7 +614,8 @@ def get_validate_examples() -> str:
   # Validate for specific clients
   mcp-config validate my-checker --client claude-desktop
   mcp-config validate my-project --client vscode-workspace
-  mcp-config validate global --client vscode-user"""
+  mcp-config validate global --client vscode-user
+  mcp-config validate my-intellij --client intellij"""
 
 
 def get_help_examples() -> str:

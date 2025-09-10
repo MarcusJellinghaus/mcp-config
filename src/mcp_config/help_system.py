@@ -8,6 +8,23 @@ from typing import Any, Optional
 
 from .servers import ServerConfig, registry
 
+# IntelliJ support help text
+INTELLIJ_SUPPORT_HELP = """
+🚀 IntelliJ/PyCharm Support!
+MCP Config Tool now supports multiple clients:
+
+  claude-desktop  → claude_desktop_config.json
+  vscode-*        → .vscode/mcp.json  
+  intellij        → mcp.json (GitHub Copilot)
+
+Example:
+  {
+      "servers": {
+          "my-server": { "command": "python" }
+      }
+  }
+"""
+
 
 class CommandHelpFormatter:
     """Formats help documentation for mcp-config commands."""
@@ -23,7 +40,12 @@ class CommandHelpFormatter:
             "MCP Configuration Helper",
             "=" * 24,
             "",
-            "A tool to automate MCP server setup for Claude Desktop and other clients.",
+            "A tool to automate MCP server setup for Claude Desktop, VSCode, and IntelliJ/PyCharm.",
+            "",
+            "🚀 Multi-Client Support:",
+            "  claude-desktop  → claude_desktop_config.json",
+            "  vscode-*        → .vscode/mcp.json",
+            "  intellij        → GitHub Copilot mcp.json",
             "",
             "USAGE:",
             "  mcp-config <command> [options]",
@@ -58,7 +80,7 @@ class CommandHelpFormatter:
             "SETUP COMMAND",
             "=============",
             "",
-            "Setup an MCP server configuration in Claude Desktop.",
+            "Setup an MCP server configuration for any supported MCP client.",
             "",
             "USAGE:",
             "  mcp-config setup <server-type> <server-name> [options]",
@@ -69,7 +91,7 @@ class CommandHelpFormatter:
             "",
             "COMMAND OPTIONS:",
             "  --client CHOICE    MCP client to configure [default: claude-desktop]",
-            "                     Choices: claude-desktop",
+            "                     Choices: claude-desktop, vscode-workspace, vscode-user, intellij",
             "  --dry-run          Preview changes without applying them",
             "  --verbose          Show detailed output during setup",
             "  --backup           Create backup before changes [default: true]",
@@ -83,8 +105,11 @@ class CommandHelpFormatter:
                     "DETAILED OPTION DESCRIPTIONS:",
                     "",
                     "  --client:",
-                    "    Specifies which MCP client to configure. Currently only supports",
-                    "    'claude-desktop', but designed for future extensibility.",
+                    "    Specifies which MCP client to configure:",
+                    "    • claude-desktop: Claude Desktop app configuration",
+                    "    • vscode-workspace: VSCode workspace .vscode/mcp.json (team sharing)",
+                    "    • vscode-user: VSCode user profile (personal, all projects)",
+                    "    • intellij: IntelliJ/PyCharm GitHub Copilot integration",
                     "",
                     "  --dry-run:",
                     "    Shows exactly what would be configured without making any changes.",
@@ -114,8 +139,14 @@ class CommandHelpFormatter:
                 "    mcp-config setup <server> -h      # Quick parameter list",
                 "",
                 "EXAMPLES:",
-                "  # Basic setup with auto-detection",
+                "  # Basic setup with auto-detection (Claude Desktop)",
                 "  mcp-config setup mcp-code-checker my-checker --project-dir .",
+                "",
+                "  # Setup for VSCode workspace (team sharing)",
+                "  mcp-config setup mcp-code-checker team-proj --project-dir . --client vscode-workspace",
+                "",
+                "  # Setup for IntelliJ/PyCharm GitHub Copilot",
+                "  mcp-config setup mcp-code-checker intellij-proj --project-dir . --client intellij",
                 "",
                 "  # Preview changes without applying",
                 "  mcp-config setup mcp-code-checker test --project-dir . --dry-run",
@@ -142,7 +173,7 @@ class CommandHelpFormatter:
             "REMOVE COMMAND",
             "=============",
             "",
-            "Remove an MCP server configuration from Claude Desktop.",
+            "Remove an MCP server configuration from any supported MCP client.",
             "",
             "USAGE:",
             "  mcp-config remove <server-name> [options]",
@@ -152,6 +183,7 @@ class CommandHelpFormatter:
             "",
             "OPTIONS:",
             "  --client CHOICE    MCP client to configure [default: claude-desktop]",
+            "                     Choices: claude-desktop, vscode-workspace, vscode-user, intellij",
             "                     (required when using wildcards)",
             "  --force            Skip confirmation prompt when removing multiple servers",
             "  --dry-run          Preview removal without applying changes",
@@ -188,17 +220,20 @@ class CommandHelpFormatter:
         lines.extend(
             [
                 "EXAMPLES:",
-                "  # Remove a single server",
+                "  # Remove a single server (Claude Desktop)",
                 "  mcp-config remove my-checker",
+                "",
+                "  # Remove from VSCode workspace",
+                "  mcp-config remove team-proj --client vscode-workspace",
+                "",
+                "  # Remove from IntelliJ",
+                "  mcp-config remove intellij-proj --client intellij",
                 "",
                 '  # Remove all servers starting with "checker" (--client required)',
                 '  mcp-config remove "checker*" --client claude-desktop',
                 "",
                 "  # Remove all dev servers, skip confirmation",
-                '  mcp-config remove "*-dev" --client claude-desktop --force',
-                "",
-                '  # Remove servers matching pattern "test-?" (single character)',
-                '  mcp-config remove "test-?" --client claude-desktop',
+                '  mcp-config remove "*-dev" --client vscode-workspace --force',
                 "",
                 "  # Preview removal without making changes",
                 "  mcp-config remove my-checker --dry-run",
@@ -224,13 +259,14 @@ class CommandHelpFormatter:
             "LIST COMMAND",
             "============",
             "",
-            "List all MCP servers in Claude Desktop configuration.",
+            "List all MCP servers across supported MCP clients.",
             "",
             "USAGE:",
             "  mcp-config list [options]",
             "",
             "OPTIONS:",
-            "  --client CHOICE    MCP client to query [default: claude-desktop]",
+            "  --client CHOICE    MCP client to query [default: all clients]",
+            "                     Choices: claude-desktop, vscode-workspace, vscode-user, intellij",
             "  --detailed         Show detailed server information",
             "  --managed-only     Show only mcp-config managed servers",
             "",
@@ -255,8 +291,13 @@ class CommandHelpFormatter:
         lines.extend(
             [
                 "EXAMPLES:",
-                "  # List all servers",
+                "  # List all servers across all clients",
                 "  mcp-config list",
+                "",
+                "  # List servers for specific client",
+                "  mcp-config list --client claude-desktop",
+                "  mcp-config list --client vscode-workspace",
+                "  mcp-config list --client intellij",
                 "",
                 "  # Show detailed information",
                 "  mcp-config list --detailed",
@@ -292,6 +333,7 @@ class CommandHelpFormatter:
             "",
             "OPTIONS:",
             "  --client CHOICE    MCP client to validate [default: claude-desktop]",
+            "                     Choices: claude-desktop, vscode-workspace, vscode-user, intellij",
             "  --verbose          Show detailed validation information",
             "",
             "VALIDATION CHECKS:",
@@ -328,6 +370,8 @@ class CommandHelpFormatter:
                 "",
                 "  # Validate a specific server",
                 "  mcp-config validate my-checker",
+                "  mcp-config validate team-proj --client vscode-workspace",
+                "  mcp-config validate intellij-proj --client intellij",
                 "",
                 "  # Verbose validation",
                 "  mcp-config validate my-checker --verbose",
@@ -650,6 +694,16 @@ class HelpFormatter:
         return "\n".join(lines)
 
 
+def print_intellij_support_help() -> int:
+    """Print IntelliJ support information.
+
+    Returns:
+        Exit code (0 for success)
+    """
+    print(INTELLIJ_SUPPORT_HELP)
+    return 0
+
+
 def print_command_help(command: Optional[str] = None, verbose: bool = False) -> int:
     """Print help for mcp-config commands.
 
@@ -672,6 +726,8 @@ def print_command_help(command: Optional[str] = None, verbose: bool = False) -> 
         print(CommandHelpFormatter.format_list_command_help(verbose))
     elif command == "validate":
         print(CommandHelpFormatter.format_validate_command_help(verbose))
+    elif command == "intellij":
+        print_intellij_support_help()
     elif command == "help":
         print("HELP COMMAND")
         print("============")
@@ -684,6 +740,7 @@ def print_command_help(command: Optional[str] = None, verbose: bool = False) -> 
         print("TOPICS:")
         print("  <command>          Show help for a specific command")
         print("  <server-type>      Show parameters for a server type")
+        print("  intellij           Show IntelliJ/PyCharm setup information")
         print("  all                Show comprehensive documentation")
         print("")
         print("OPTIONS:")
@@ -697,6 +754,7 @@ def print_command_help(command: Optional[str] = None, verbose: bool = False) -> 
         print("  mcp-config help                    # Show overview")
         print("  mcp-config help setup               # Help for setup command")
         print("  mcp-config help mcp-code-checker    # Help for server parameters")
+        print("  mcp-config help intellij            # IntelliJ/PyCharm setup info")
         print("  mcp-config help all                 # Complete documentation")
     else:
         print(f"Unknown command: {command}")

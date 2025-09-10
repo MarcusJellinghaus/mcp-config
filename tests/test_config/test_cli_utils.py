@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.mcp_config.cli_utils import (
+    SUPPORTED_CLIENTS,
     add_parameter_to_parser,
     build_setup_parser,
     create_full_parser,
@@ -402,3 +403,37 @@ class TestDynamicServerRegistration:
 
         # Both servers should be mentioned
         assert "mcp-code-checker" in help_text
+
+
+class TestIntelliJSupport:
+    """Test basic IntelliJ client support."""
+
+    def test_intellij_in_supported_clients(self) -> None:
+        """Test that intellij is included in supported clients."""
+        assert "intellij" in SUPPORTED_CLIENTS
+
+    def test_intellij_accepted_in_cli(self) -> None:
+        """Test that CLI accepts --client intellij option."""
+        parser = create_full_parser()
+
+        # Should accept intellij as client option in setup command
+        args = parser.parse_args(
+            [
+                "setup",
+                "mcp-code-checker",
+                "test",
+                "--project-dir",
+                ".",
+                "--client",
+                "intellij",
+            ]
+        )
+        assert args.client == "intellij"
+
+        # Should accept intellij as client option in remove command
+        args = parser.parse_args(["remove", "test-server", "--client", "intellij"])
+        assert args.client == "intellij"
+
+        # Should accept intellij as client option in list command
+        args = parser.parse_args(["list", "--client", "intellij"])
+        assert args.client == "intellij"
