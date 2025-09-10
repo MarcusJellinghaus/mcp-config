@@ -476,8 +476,15 @@ class TestCompleteConfigurationExamples:
             "log_level": "DEBUG",
         }
 
-        with patch("src.mcp_config.integration._find_cli_executable") as mock_find:
+        # Mock the mcp-config directory detection to use our test directory
+        with (
+            patch("src.mcp_config.integration._find_cli_executable") as mock_find,
+            patch(
+                "src.mcp_config.integration._detect_mcp_config_directory"
+            ) as mock_detect,
+        ):
             mock_find.return_value = str(filesystem_exe)
+            mock_detect.return_value = mcp_config_dir  # Use our test mcp-config dir
 
             config = generate_client_config(
                 MCP_FILESYSTEM_SERVER,

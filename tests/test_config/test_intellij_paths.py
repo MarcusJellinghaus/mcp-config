@@ -168,8 +168,16 @@ class TestIntelliJHandlerIntegration:
 
     def test_get_config_path_returns_path_object(self) -> None:
         """Test that get_config_path returns a Path object."""
+        # Use platform-appropriate path for testing
+        import sys
+
+        if sys.platform == "win32":
+            test_home = Path("C:/test/home")
+        else:
+            test_home = Path("/test/home")
+
         with (
-            patch("pathlib.Path.home", return_value=Path("C:/test/home")),
+            patch("pathlib.Path.home", return_value=test_home),
             patch("pathlib.Path.exists", return_value=True),
         ):
 
@@ -178,7 +186,7 @@ class TestIntelliJHandlerIntegration:
             # Should return Path object
             assert isinstance(path, Path)
 
-            # Should be absolute path
+            # Should be absolute path (this will work on both platforms now)
             assert path.is_absolute()
 
     def test_handler_can_be_instantiated_without_errors(self) -> None:

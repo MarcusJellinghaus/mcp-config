@@ -43,86 +43,60 @@ class TestIntelliJHandlerPaths:
 
     def test_macos_path_projected(self, tmp_path: Path) -> None:
         """Test macOS path follows Apple app support conventions."""
-        # Create a mock path that behaves like a macOS path
-        from unittest.mock import Mock
-
-        # Mock the home directory
-        mock_home_str = "/Users/testuser"
+        # Create proper test directory structure
+        mock_home = tmp_path / "Users" / "testuser"
+        expected_dir = (
+            mock_home
+            / "Library"
+            / "Application Support"
+            / "github-copilot"
+            / "intellij"
+        )
+        expected_dir.mkdir(parents=True, exist_ok=True)
 
         with (
             patch("os.name", "posix"),
             patch("platform.system", return_value="Darwin"),
-            patch("pathlib.Path.home", return_value=Path(tmp_path / "home")),
-            patch("os.path.join") as mock_join,
+            patch("pathlib.Path.home", return_value=mock_home),
         ):
+            handler = IntelliJHandler()
+            path = handler.get_config_path()
 
-            # Mock os.path.join to return expected macOS path
-            mock_join.return_value = "/Users/testuser/Library/Application Support/github-copilot/intellij/mcp.json"
-
-            # Create a mock Path object that represents the expected path
-            mock_path = Mock()
-            mock_path.name = "mcp.json"
-            mock_path.parent.exists.return_value = True  # Mock directory exists
-            mock_path.__str__ = lambda: "/Users/testuser/Library/Application Support/github-copilot/intellij/mcp.json"  # type: ignore[assignment]
-
-            with patch("pathlib.Path", return_value=mock_path):
-                handler = IntelliJHandler()
-                path = handler.get_config_path()
-
-                # Verify macOS-specific path structure
-                assert (
-                    "Library/Application Support/github-copilot/intellij/mcp.json"
-                    in str(path)
-                )
-                assert "Library" in str(path)
-                assert "Application Support" in str(path)
-                assert "github-copilot" in str(path)
-                assert "intellij" in str(path)
-                assert path.name == "mcp.json"
-
-                # Verify os.path.join was called with correct arguments
-                mock_join.assert_called_once()
+            # Verify macOS-specific path structure (normalize separators for cross-platform testing)
+            path_str = str(path).replace("\\", "/")
+            assert (
+                "Library/Application Support/github-copilot/intellij/mcp.json"
+                in path_str
+            )
+            assert "Library" in str(path)
+            assert "Application Support" in str(path)
+            assert "github-copilot" in str(path)
+            assert "intellij" in str(path)
+            assert path.name == "mcp.json"
 
     def test_linux_path_projected(self, tmp_path: Path) -> None:
         """Test Linux path follows XDG Base Directory specification."""
-        # Create a mock path that behaves like a Linux path
-        from unittest.mock import Mock
-
-        # Mock the home directory
-        mock_home_str = "/home/testuser"
+        # Create proper test directory structure
+        mock_home = tmp_path / "home" / "testuser"
+        expected_dir = mock_home / ".local" / "share" / "github-copilot" / "intellij"
+        expected_dir.mkdir(parents=True, exist_ok=True)
 
         with (
             patch("os.name", "posix"),
             patch("platform.system", return_value="Linux"),
-            patch("pathlib.Path.home", return_value=Path(tmp_path / "home")),
-            patch("os.path.join") as mock_join,
+            patch("pathlib.Path.home", return_value=mock_home),
         ):
+            handler = IntelliJHandler()
+            path = handler.get_config_path()
 
-            # Mock os.path.join to return expected Linux path
-            mock_join.return_value = (
-                "/home/testuser/.local/share/github-copilot/intellij/mcp.json"
-            )
-
-            # Create a mock Path object that represents the expected path
-            mock_path = Mock()
-            mock_path.name = "mcp.json"
-            mock_path.parent.exists.return_value = True  # Mock directory exists
-            mock_path.__str__ = lambda: "/home/testuser/.local/share/github-copilot/intellij/mcp.json"  # type: ignore[assignment]
-
-            with patch("pathlib.Path", return_value=mock_path):
-                handler = IntelliJHandler()
-                path = handler.get_config_path()
-
-                # Verify Linux-specific path structure
-                assert ".local/share/github-copilot/intellij/mcp.json" in str(path)
-                assert ".local" in str(path)
-                assert "share" in str(path)
-                assert "github-copilot" in str(path)
-                assert "intellij" in str(path)
-                assert path.name == "mcp.json"
-
-                # Verify os.path.join was called with correct arguments
-                mock_join.assert_called_once()
+            # Verify Linux-specific path structure (normalize separators for cross-platform testing)
+            path_str = str(path).replace("\\", "/")
+            assert ".local/share/github-copilot/intellij/mcp.json" in path_str
+            assert ".local" in str(path)
+            assert "share" in str(path)
+            assert "github-copilot" in str(path)
+            assert "intellij" in str(path)
+            assert path.name == "mcp.json"
 
     # Note: Cross-platform consistency test removed due to Path type conflicts in test environment
     # The functionality is validated through individual platform tests above
