@@ -38,7 +38,7 @@ Structured development workflow for **Feature Implementation** consisting of mul
 **Outputs:**
 - New feature branch
 - Updated `TASK_TRACKER.md` with new tasks
-- Individual step detail files (`step_N.md`)
+- Individual step detail files (`steps/step_N.md`)
 - Background documentation (`summary.md`)
 - ( Future: Updated `Task_Tracker.md` )
 
@@ -56,7 +56,7 @@ Do not yet modify any code!
 #### Implementation Plan Creation Prompt:
 ```
 ## Python Project Implementation Plan Request
-Create a **summary** (`pr_info/summary.md`) and **implementation plan** with self-contained steps (`pr_info/step_1.md`, `pr_info/step_2.md`, etc.).
+Create a **summary** (`pr_info/summary.md`) and **implementation plan** with self-contained steps (`pr_info/steps/step_1.md`, `pr_info/steps/step_2.md`, etc.).
 
 ### Requirements:
 - Follow **Test-Driven Development** where applicable
@@ -85,7 +85,7 @@ Can we go through all suggested changes step by step?
 You explain, ask and I answer until we discussed all topics?
 
 === Wait for end of discussion
-Can you update the plan, please? Please update the files in folder `pr_info`
+Can you update the plan, please? Please update the files in folder `pr_info` (including creating the `steps/` subfolder for implementation details)
 ```
 
 ### 2. Implementation Steps
@@ -129,7 +129,7 @@ Each step consists of two main phases:
 
 **Implementation Prompt Template:**
 ```
-Please review the implementation plan in PR_Info, especially the summary and step {XX}.
+Please review the implementation plan in PR_Info, especially the summary and steps/step_{XX}.md.
 Please implement!
 Please verify your implementation running the various checks of the MCP server and by solving potential issues (and repeat).
 Please do not invent extra complexity not mentioned in the project plan.
@@ -205,4 +205,33 @@ After all implementation steps are complete:
   - Includes full git diff for comprehensive summary
   - Saves result as `PR_Info/summary.md`
   - Provides structured prompt for LLM summary generation
+  - Cleans up development artifacts: deletes `steps/` subfolder and clears Tasks section from `TASK_TRACKER.md`
+
+**Final Clean State:**
+After feature completion, the cleaned `TASK_TRACKER.md` should contain only the template structure:
+```markdown
+# Task Status Tracker
+
+## Instructions for LLM
+
+This tracks **Feature Implementation** consisting of multiple **Implementation Steps** (tasks).
+
+**Development Process:** See [DEVELOPMENT_PROCESS.md](./DEVELOPMENT_PROCESS.md) for detailed workflow, prompts, and tools.
+
+**How to update tasks:**
+1. Change [ ] to [x] when implementation step is fully complete (code + checks pass)
+2. Change [x] to [ ] if task needs to be reopened
+3. Add brief notes in the linked detail files if needed
+4. Keep it simple - just GitHub-style checkboxes
+
+**Task format:**
+- [x] = Implementation step complete (code + all checks pass)
+- [ ] = Implementation step not complete
+- Each task links to a detail file in PR_Info/ folder
+
+---
+
+## Tasks
+
+```
 
