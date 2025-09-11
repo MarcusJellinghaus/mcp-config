@@ -56,7 +56,7 @@ Do not yet modify any code!
 #### Implementation Plan Creation Prompt:
 ```
 ## Python Project Implementation Plan Request
-Create a **summary** (`pr_info/summary.md`) and **implementation plan** with self-contained steps (`pr_info/steps/step_1.md`, `pr_info/steps/step_2.md`, etc.).
+Create a **summary** (`pr_info/steps/summary.md`) and **implementation plan** with self-contained steps (`pr_info/steps/step_1.md`, `pr_info/steps/step_2.md`, etc.).
 
 ### Requirements:
 - Follow **Test-Driven Development** where applicable
@@ -74,18 +74,29 @@ Create a **summary** (`pr_info/summary.md`) and **implementation plan** with sel
 
 #### Plan Review Prompt:
 ```
-## Revise implementation plan
-Please review the project plan for a new feature in folder PR_Info.
+Please review the project plan for a new feature in folder PR_Info\steps.
 Please revise the project plan with a balanced level of detail.
 Please let me know if any complexity could be reduced.
 Please let me know any questions / comments or suggestions you might have.
+```
 
-=== Wait for presentation of overall plan
+Wait for presentation of overall plan
+```
 Can we go through all suggested changes step by step?
 You explain, ask and I answer until we discussed all topics?
+```
 
-=== Wait for end of discussion
-Can you update the plan, please? Please update the files in folder `pr_info` (including creating the `steps/` subfolder for implementation details)
+```
+Can we go through all questions question by question?
+You explain, ask and I answer until we discussed all topics?
+```
+
+Wait for end of discussion
+```
+Can you update the plan, please? 
+Please update the files in folder `pr_info` 
+(including creating the `steps/` subfolder for implementation details)
+Please do targeted changes.
 ```
 
 ### 2. Implementation Steps
