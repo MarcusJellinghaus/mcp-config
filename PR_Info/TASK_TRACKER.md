@@ -29,11 +29,11 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
   - [x] Run pylint, pytest, mypy checks and fix issues
   - [x] Prepare git commit with concise message
 
-- [ ] **Step 2: Update CLI Parser for Repeatable Parameters (TDD)** - [details](./steps/step_2.md)
-  - [ ] Write tests for CLI parser with action="append"
-  - [ ] Modify add_parameter_to_parser() for repeatable parameters
-  - [ ] Run pylint, pytest, mypy checks and fix issues
-  - [ ] Prepare git commit with concise message
+- [x] **Step 2: Update CLI Parser for Repeatable Parameters (TDD)** - [details](./steps/step_2.md)
+  - [x] Write tests for CLI parser with action="append"
+  - [x] Modify add_parameter_to_parser() for repeatable parameters
+  - [x] Run pylint, pytest, mypy checks and fix issues
+  - [x] Prepare git commit with concise message
 
 - [ ] **Step 3a: Basic List Handling in Argument Generation (TDD)** - [details](./steps/step_3a.md)
   - [ ] Write tests for list argument generation

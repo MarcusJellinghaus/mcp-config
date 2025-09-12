@@ -25,6 +25,7 @@ def create_mock_parameter(
     param.auto_detect = False
     param.choices = None
     param.validator = None
+    param.repeatable = False  # Add repeatable attribute for CLI utils compatibility
     return param
 
 
