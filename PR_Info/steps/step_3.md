@@ -9,23 +9,12 @@ Modify the `ServerConfig.generate_args()` method to handle parameters that produ
 - **File**: `tests/test_config/test_servers.py` (add to existing file)
 - **Section**: Add new test functions to existing server tests
 
-### TESTS TO WRITE
+### TESTS TO WRITE (SIMPLIFIED KISS APPROACH)
 ```python
-import pytest
 from mcp_config.servers import ServerConfig, ParameterDef
 
-@pytest.mark.parametrize("value,param_repeatable,expected_args", [
-    # Single value, non-repeatable (existing behavior)
-    ("single_value", False, ["--test-param", "single_value"]),
-    # Single value, repeatable (should work the same)
-    ("single_value", True, ["--test-param", "single_value"]),
-    # List value, repeatable (new behavior)  
-    (["val1", "val2"], True, ["--test-param", "val1", "--test-param", "val2"]),
-    # Empty list, repeatable (should generate no args)
-    ([], True, []),
-])
-def test_generate_args_with_repeatable_parameters(value, param_repeatable, expected_args):
-    """Test argument generation handles repeatable parameters correctly."""
+def test_list_argument_generation():
+    """Test list values generate multiple argument pairs."""
     config = ServerConfig(
         name="test-server",
         display_name="Test Server", 
@@ -35,100 +24,48 @@ def test_generate_args_with_repeatable_parameters(value, param_repeatable, expec
                 name="test-param",
                 arg_name="--test-param",
                 param_type="string",
-                repeatable=param_repeatable
+                repeatable=True
             )
         ]
     )
     
-    user_params = {"test_param": value} if value != [] else {}
-    args = config.generate_args(user_params, use_cli_command=True)
+    # Test multiple values
+    user_params_multi = {"test_param": ["val1", "val2"]}
+    args_multi = config.generate_args(user_params_multi, use_cli_command=True)
+    assert "--test-param" in args_multi
+    assert "val1" in args_multi
+    assert "val2" in args_multi
+    assert args_multi.count("--test-param") == 2
     
-    # Should contain expected args (order matters for lists)
-    for expected_arg in expected_args:
-        assert expected_arg in args
+    # Test single value in list
+    user_params_single = {"test_param": ["val1"]}
+    args_single = config.generate_args(user_params_single, use_cli_command=True)
+    assert "--test-param" in args_single
+    assert "val1" in args_single
+    assert args_single.count("--test-param") == 1
     
-    # Check exact sequence for list cases
-    if isinstance(value, list) and value:  # Non-empty list
-        start_idx = args.index(expected_args[0])
-        actual_sequence = args[start_idx:start_idx + len(expected_args)]
-        assert actual_sequence == expected_args
+    # Test empty list (should be skipped)
+    user_params_empty = {"test_param": []}
+    args_empty = config.generate_args(user_params_empty, use_cli_command=True)
+    assert "--test-param" not in args_empty
 
-def test_generate_args_mixed_repeatable_and_regular():
-    """Test mixing repeatable and regular parameters."""
+def test_non_list_arguments_unchanged():
+    """Test single values work as before."""
     config = ServerConfig(
         name="test-server",
         display_name="Test Server",
         main_module="test.py", 
         parameters=[
             ParameterDef(name="regular-param", arg_name="--regular-param", param_type="string"),
-            ParameterDef(name="repeat-param", arg_name="--repeat-param", param_type="string", repeatable=True)
         ]
     )
     
-    user_params = {
-        "regular_param": "single_value",
-        "repeat_param": ["val1", "val2"]
-    }
-    
+    user_params = {"regular_param": "single_value"}
     args = config.generate_args(user_params, use_cli_command=True)
     
-    # Should contain both types
     assert "--regular-param" in args
     assert "single_value" in args
-    assert "--repeat-param" in args
-    assert "val1" in args
-    assert "val2" in args
-
-def test_generate_args_empty_list_skipped():
-    """Test empty lists are skipped completely."""
-    config = ServerConfig(
-        name="test-server",
-        display_name="Test Server",
-        main_module="test.py",
-        parameters=[
-            ParameterDef(
-                name="optional-repeat",
-                arg_name="--optional-repeat",
-                param_type="string",
-                repeatable=True
-            )
-        ]
-    )
-    
-    user_params = {"optional_repeat": []}  # Empty list
-    args = config.generate_args(user_params, use_cli_command=True)
-    
-    # Should not contain the parameter at all
-    assert "--optional-repeat" not in args
-
-def test_generate_args_path_normalization_with_lists():
-    """Test path normalization works with repeatable path parameters."""
-    config = ServerConfig(
-        name="test-server",
-        display_name="Test Server",
-        main_module="test.py",
-        parameters=[
-            ParameterDef(
-                name="include-path",
-                arg_name="--include-path",
-                param_type="path",
-                repeatable=True
-            )
-        ]
-    )
-    
-    user_params = {
-        "project_dir": "/base/project",
-        "include_path": ["./subdir1", "./subdir2"]
-    }
-    
-    args = config.generate_args(user_params, use_cli_command=True)
-    
-    # Should contain normalized paths
-    assert "--include-path" in args
-    # Exact path normalization depends on implementation, but should be strings
-    path_indices = [i for i, arg in enumerate(args) if arg == "--include-path"]
-    assert len(path_indices) == 2
+    assert args.count("--regular-param") == 1
 ```
 
 ### EXPECTED RESULT
@@ -142,12 +79,14 @@ Tests should **FAIL** because the list handling logic doesn't exist in `generate
 - **Section**: Parameter processing loop
 
 ### WHAT
-**Enhanced implementation with extracted helper method**:
+**Enhanced implementation with extracted helper method (CLEAN CODE APPROACH)**:
 - Add helper method `_add_parameter_args()` for clean, testable code
 - Detect when parameter value is a list (from `action="append"`)
 - Generate multiple `--param value` pairs for each list item
 - Maintain existing behavior for single values
 - Handle empty lists (skip completely)
+
+**Design Decision**: Use helper method for cleaner, more maintainable code rather than inline logic
 
 ### HOW
 - Integration: Modify existing parameter processing loop

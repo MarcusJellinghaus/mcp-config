@@ -9,28 +9,28 @@ Extend the `ParameterDef` dataclass to support parameters that can be specified 
 - **File**: `tests/test_config/test_servers.py` (add to existing file)
 - **Section**: Add new test functions to existing test file
 
-### TESTS TO WRITE
+### TESTS TO WRITE (SIMPLIFIED KISS APPROACH)
 ```python
-def test_parameter_def_with_repeatable_true():
-    """Test ParameterDef creation with repeatable=True."""
-    param = ParameterDef(
+def test_parameter_def_with_repeatable():
+    """Test ParameterDef supports repeatable=True and defaults to False."""
+    # Test with repeatable=True
+    param_true = ParameterDef(
         name="test-param",
         arg_name="--test-param", 
         param_type="string",
         repeatable=True
     )
-    assert param.repeatable is True
-
-def test_parameter_def_repeatable_defaults_false():
-    """Test ParameterDef repeatable defaults to False."""
-    param = ParameterDef(
+    assert param_true.repeatable is True
+    
+    # Test default (repeatable=False)
+    param_default = ParameterDef(
         name="test-param",
         arg_name="--test-param",
         param_type="string"
     )
-    assert param.repeatable is False
+    assert param_default.repeatable is False
 
-def test_parameter_def_existing_functionality_unchanged():
+def test_parameter_def_existing_functionality():
     """Test existing ParameterDef creation still works."""
     # Test with existing parameters from MCP_CODE_CHECKER
     param = ParameterDef(

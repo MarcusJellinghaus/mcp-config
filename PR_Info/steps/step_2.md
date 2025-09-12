@@ -9,39 +9,14 @@ Modify the CLI argument parser to use `action="append"` for parameters marked as
 - **File**: `tests/test_config/test_cli_utils.py` (add to existing file)
 - **Section**: Add new test functions to existing CLI utils tests
 
-### TESTS TO WRITE
+### TESTS TO WRITE (SIMPLIFIED KISS APPROACH)
 ```python
-import pytest
 import argparse
 from mcp_config.servers import ParameterDef
 from mcp_config.cli_utils import add_parameter_to_parser
 
-@pytest.mark.parametrize("repeatable,expected_action", [
-    (True, "append"),
-    (False, None),  # No action key when not repeatable
-])
-def test_add_parameter_to_parser_repeatable(repeatable, expected_action):
-    """Test CLI parser handles repeatable parameters correctly."""
-    parser = argparse.ArgumentParser()
-    param = ParameterDef(
-        name="test-param",
-        arg_name="--test-param",
-        param_type="string",
-        repeatable=repeatable
-    )
-    
-    add_parameter_to_parser(parser, param)
-    
-    # Check the action was set correctly
-    for action in parser._actions:
-        if hasattr(action, 'dest') and action.dest == 'test_param':
-            if expected_action:
-                assert action.__class__.__name__ == '_AppendAction'
-            else:
-                assert action.__class__.__name__ != '_AppendAction'
-
-def test_cli_parsing_multiple_values():
-    """Test actual CLI parsing with repeated parameters."""
+def test_repeatable_parameter_parsing():
+    """Test CLI parser handles repeatable parameters with action=append."""
     parser = argparse.ArgumentParser()
     param = ParameterDef(
         name="reference-project",
@@ -52,35 +27,24 @@ def test_cli_parsing_multiple_values():
     add_parameter_to_parser(parser, param)
     
     # Test parsing multiple values
-    args = parser.parse_args([
+    args_multiple = parser.parse_args([
         "--reference-project", "docs=/path/to/docs",
         "--reference-project", "examples=/path/to/examples"
     ])
+    assert args_multiple.reference_project == ["docs=/path/to/docs", "examples=/path/to/examples"]
     
-    assert args.reference_project == ["docs=/path/to/docs", "examples=/path/to/examples"]
+    # Test parsing single value (still becomes list with action=append)
+    args_single = parser.parse_args(["--reference-project", "docs=/path/to/docs"])
+    assert args_single.reference_project == ["docs=/path/to/docs"]
 
-def test_cli_parsing_single_repeatable_value():
-    """Test parsing single value for repeatable parameter."""
-    parser = argparse.ArgumentParser()
-    param = ParameterDef(
-        name="reference-project", 
-        arg_name="--reference-project",
-        param_type="string",
-        repeatable=True
-    )
-    add_parameter_to_parser(parser, param)
-    
-    args = parser.parse_args(["--reference-project", "docs=/path/to/docs"])
-    assert args.reference_project == ["docs=/path/to/docs"]
-
-def test_non_repeatable_parameter_unchanged():
-    """Test non-repeatable parameters work as before."""
+def test_non_repeatable_unchanged():
+    """Test non-repeatable parameters still work normally."""
     parser = argparse.ArgumentParser()
     param = ParameterDef(
         name="project-dir",
         arg_name="--project-dir",
         param_type="string",
-        repeatable=False  # Explicit for clarity
+        repeatable=False
     )
     add_parameter_to_parser(parser, param)
     

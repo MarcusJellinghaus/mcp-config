@@ -9,15 +9,17 @@ Add the `reference-project` parameter to the `MCP_FILESYSTEM_SERVER` configurati
 - **File**: `tests/test_config/test_servers.py` (add to existing file)
 - **Section**: Add new test functions to existing server tests
 
-### TESTS TO WRITE
+### TESTS TO WRITE (SIMPLIFIED KISS APPROACH)
 ```python
-def test_filesystem_server_has_reference_project_parameter():
-    """Test that filesystem server includes reference-project parameter."""
+def test_filesystem_server_has_reference_project():
+    """Test filesystem server includes reference-project parameter with correct attributes."""
     from mcp_config.servers import registry
+    from mcp_config.cli_utils import build_setup_parser
     
     server_config = registry.get("mcp-server-filesystem")
     assert server_config is not None
     
+    # Check parameter exists with correct attributes
     ref_param = server_config.get_parameter_by_name("reference-project")
     assert ref_param is not None
     assert ref_param.name == "reference-project"
@@ -25,90 +27,41 @@ def test_filesystem_server_has_reference_project_parameter():
     assert ref_param.param_type == "string"
     assert ref_param.required is False
     assert ref_param.repeatable is True
-
-def test_filesystem_server_reference_project_in_help():
-    """Test reference-project parameter appears in CLI help."""
-    from mcp_config.cli_utils import build_setup_parser
     
+    # Check parameter appears in CLI help
     parser = build_setup_parser("mcp-server-filesystem")
     help_text = parser.format_help()
-    
     assert "--reference-project" in help_text
-    assert "name=path" in help_text.lower() or "name=/path" in help_text.lower()
-    assert "multiple" in help_text.lower()  # Should mention it can be repeated
 
-def test_filesystem_server_generates_multiple_reference_projects():
-    """Test filesystem server generates correct args for multiple reference projects."""
+def test_reference_project_argument_generation():
+    """Test reference projects generate correct arguments."""
     from mcp_config.servers import registry
     
     server_config = registry.get("mcp-server-filesystem")
     
-    user_params = {
+    # Test multiple reference projects
+    user_params_multi = {
         "project_dir": "/base/project",
-        "reference_project": [
-            "docs=/path/to/docs",
-            "examples=/path/to/examples"
-        ]
+        "reference_project": ["docs=/path/to/docs", "examples=/path/to/examples"]
     }
+    args_multi = server_config.generate_args(user_params_multi, use_cli_command=True)
+    assert args_multi.count("--reference-project") == 2
+    assert "docs=/path/to/docs" in args_multi
+    assert "examples=/path/to/examples" in args_multi
     
-    args = server_config.generate_args(user_params, use_cli_command=True)
-    
-    # Should contain both reference project entries
-    assert "--reference-project" in args
-    ref_indices = [i for i, arg in enumerate(args) if arg == "--reference-project"]
-    assert len(ref_indices) == 2
-    
-    # Check values are correct
-    assert "docs=/path/to/docs" in args
-    assert "examples=/path/to/examples" in args
-
-def test_filesystem_server_single_reference_project():
-    """Test filesystem server works with single reference project."""
-    from mcp_config.servers import registry
-    
-    server_config = registry.get("mcp-server-filesystem")
-    
-    user_params = {
+    # Test single reference project
+    user_params_single = {
         "project_dir": "/base/project",
-        "reference_project": ["docs=/path/to/docs"]  # argparse with append always gives list
+        "reference_project": ["docs=/path/to/docs"]
     }
+    args_single = server_config.generate_args(user_params_single, use_cli_command=True)
+    assert args_single.count("--reference-project") == 1
+    assert "docs=/path/to/docs" in args_single
     
-    args = server_config.generate_args(user_params, use_cli_command=True)
-    
-    # Should contain single reference project entry
-    assert "--reference-project" in args
-    assert "docs=/path/to/docs" in args
-    ref_indices = [i for i, arg in enumerate(args) if arg == "--reference-project"]
-    assert len(ref_indices) == 1
-
-def test_filesystem_server_no_reference_project_optional():
-    """Test filesystem server works without reference projects (optional parameter)."""
-    from mcp_config.servers import registry
-    
-    server_config = registry.get("mcp-server-filesystem")
-    
-    user_params = {
-        "project_dir": "/base/project"
-        # No reference_project provided
-    }
-    
-    args = server_config.generate_args(user_params, use_cli_command=True)
-    
-    # Should not contain reference-project at all
-    assert "--reference-project" not in args
-
-def test_filesystem_server_parameter_position():
-    """Test reference-project parameter is in the correct position in parameters list."""
-    from mcp_config.servers import registry
-    
-    server_config = registry.get("mcp-server-filesystem")
-    param_names = [p.name for p in server_config.parameters]
-    
-    # Should be in the parameters list
-    assert "reference-project" in param_names
-    
-    # Should be after the core parameters but position doesn't matter too much
-    assert "project-dir" in param_names  # Core parameter should still be there
+    # Test no reference projects (optional)
+    user_params_none = {"project_dir": "/base/project"}
+    args_none = server_config.generate_args(user_params_none, use_cli_command=True)
+    assert "--reference-project" not in args_none
 ```
 
 ### EXPECTED RESULT
