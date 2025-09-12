@@ -199,6 +199,7 @@ def _run_subprocess(
                                         ],
                                         capture_output=True,
                                         timeout=5,
+                                        check=False,
                                     )
                                 except (
                                     subprocess.SubprocessError,
@@ -368,6 +369,7 @@ def _run_subprocess(
                                     ],
                                     capture_output=True,
                                     timeout=5,
+                                    check=False,
                                 )
                             except (
                                 subprocess.SubprocessError,
