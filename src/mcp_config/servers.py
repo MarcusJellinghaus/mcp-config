@@ -94,6 +94,24 @@ class ServerConfig:
     main_module: str
     parameters: list[ParameterDef] = field(default_factory=list)
 
+    def _add_parameter_args(
+        self, args: list[str], param: ParameterDef, value: Any
+    ) -> None:
+        """Helper method to add parameter arguments to args list.
+
+        Args:
+            args: List to append arguments to
+            param: Parameter definition
+            value: Parameter value (single value or list for repeatable params)
+        """
+        if param.repeatable and isinstance(value, list):
+            # Handle list values for repeatable parameters
+            for item in value:
+                args.extend([param.arg_name, str(item)])
+        else:
+            # Handle single values (both repeatable and non-repeatable)
+            args.extend([param.arg_name, str(value)])
+
     def generate_args(
         self, user_params: dict[str, Any], use_cli_command: bool = False
     ) -> list[str]:
@@ -167,8 +185,8 @@ class ServerConfig:
             # Get value from processed params or use default
             value = processed_params.get(param_key, param.default)
 
-            # Skip if no value provided
-            if value is None:
+            # Skip if no value provided or empty list
+            if value is None or (isinstance(value, list) and len(value) == 0):
                 continue
 
             # Skip venv-path for mcp-server-filesystem in CLI command mode
@@ -197,13 +215,16 @@ class ServerConfig:
                 if value:  # Only add flag if True
                     args.append(param.arg_name)
             else:
-                # Normalize paths
-                if param.param_type == "path" and project_dir:
-                    value = str(normalize_path(value, project_dir))
-
-                # Add parameter and value
-                args.append(param.arg_name)
-                args.append(str(value))
+                # Handle parameter argument generation (non-path parameters)
+                if param.param_type != "path":
+                    self._add_parameter_args(args, param, value)
+                else:
+                    # Normalize paths
+                    if project_dir:
+                        value = str(normalize_path(value, project_dir))
+                    # Add parameter and value for path parameters
+                    args.append(param.arg_name)
+                    args.append(str(value))
 
         return args
 

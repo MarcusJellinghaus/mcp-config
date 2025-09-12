@@ -727,3 +727,61 @@ class TestGlobalRegistry:
 
         # Non-existent server should not be registered
         assert not registry.is_registered("non-existent-server")
+
+    def test_list_argument_generation(self) -> None:
+        """Test list values generate multiple argument pairs."""
+        config = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="test-param",
+                    arg_name="--test-param",
+                    param_type="string",
+                    repeatable=True,
+                )
+            ],
+        )
+
+        # Test multiple values and single value in list
+        user_params_multi = {"test_param": ["val1", "val2"]}
+        args_multi = config.generate_args(user_params_multi, use_cli_command=True)
+        assert "--test-param" in args_multi
+        assert "val1" in args_multi
+        assert "val2" in args_multi
+        assert args_multi.count("--test-param") == 2
+
+        # Test single value in list
+        user_params_single = {"test_param": ["val1"]}
+        args_single = config.generate_args(user_params_single, use_cli_command=True)
+        assert "--test-param" in args_single
+        assert "val1" in args_single
+        assert args_single.count("--test-param") == 1
+
+        # Test empty list (should be skipped silently)
+        user_params_empty: dict[str, list[str]] = {"test_param": []}
+        args_empty = config.generate_args(user_params_empty, use_cli_command=True)
+        assert "--test-param" not in args_empty
+
+    def test_non_list_arguments_unchanged(self) -> None:
+        """Test single values work as before."""
+        config = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="regular-param",
+                    arg_name="--regular-param",
+                    param_type="string",
+                ),
+            ],
+        )
+
+        user_params = {"regular_param": "single_value"}
+        args = config.generate_args(user_params, use_cli_command=True)
+
+        assert "--regular-param" in args
+        assert "single_value" in args
+        assert args.count("--regular-param") == 1

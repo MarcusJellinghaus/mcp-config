@@ -35,12 +35,12 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
   - [x] Run pylint, pytest, mypy checks and fix issues
   - [x] Prepare git commit with concise message
 
-- [ ] **Step 3a: Basic List Handling in Argument Generation (TDD)** - [details](./steps/step_3a.md)
-  - [ ] Write tests for list argument generation
-  - [ ] Add helper method _add_parameter_args() to ServerConfig
-  - [ ] Modify generate_args() to handle list values
-  - [ ] Run pylint, pytest, mypy checks and fix issues
-  - [ ] Prepare git commit with concise message
+- [x] **Step 3a: Basic List Handling in Argument Generation (TDD)** - [details](./steps/step_3a.md)
+  - [x] Write tests for list argument generation
+  - [x] Add helper method _add_parameter_args() to ServerConfig
+  - [x] Modify generate_args() to handle list values
+  - [x] Run pylint, pytest, mypy checks and fix issues
+  - [x] Prepare git commit with concise message
 
 - [ ] **Step 3b: Add Path Normalization for Lists (TDD)** - [details](./steps/step_3b.md)
   - [ ] Write tests for path normalization with lists
