@@ -689,3 +689,98 @@ class TestMCPFilesystemServerIntegration:
         test_file = tmp_path / "test.txt"
         test_file.write_text("test")
         assert not MCP_FILESYSTEM_SERVER.validate_project(test_file)
+
+
+class TestRepeatableParameterIntegration:
+    """Integration tests for repeatable parameter functionality (Step 5)."""
+
+    def test_reference_project_end_to_end(self, tmp_path: Path) -> None:
+        """Test complete workflow: CLI parsing → argument generation → command execution."""
+        from src.mcp_config.cli_utils import parse_and_validate_args
+        from src.mcp_config.servers import registry
+
+        # Simulate CLI args for setup command with multiple reference projects
+        test_args = [
+            "setup",
+            "mcp-server-filesystem",
+            "test-fs",
+            "--project-dir",
+            str(tmp_path),
+            "--reference-project",
+            "docs=/path/to/docs",
+            "--reference-project",
+            "examples=/path/to/examples",
+            "--dry-run",
+        ]
+
+        # Test CLI parsing
+        parsed_args, errors = parse_and_validate_args(test_args)
+        assert len(errors) == 0
+        assert parsed_args.server_type == "mcp-server-filesystem"
+        assert parsed_args.reference_project == [
+            "docs=/path/to/docs",
+            "examples=/path/to/examples",
+        ]
+
+        # Test argument generation
+        server_config = registry.get("mcp-server-filesystem")
+        user_params = {
+            "project_dir": parsed_args.project_dir,
+            "reference_project": parsed_args.reference_project,
+        }
+        args = server_config.generate_args(user_params, use_cli_command=True)
+
+        # Test final command structure
+        assert args.count("--reference-project") == 2
+        assert "docs=/path/to/docs" in args
+        assert "examples=/path/to/examples" in args
+        assert "--project-dir" in args
+        assert str(tmp_path) in args
+
+    def test_reference_project_edge_cases_and_command_generation(
+        self, tmp_path: Path
+    ) -> None:
+        """Test edge cases, command generation, and final command structure."""
+        from src.mcp_config.servers import registry
+
+        server_config = registry.get("mcp-server-filesystem")
+
+        # Test empty list (should be skipped silently)
+        empty_params = {"project_dir": str(tmp_path), "reference_project": []}
+        empty_args = server_config.generate_args(empty_params, use_cli_command=True)
+        assert "--reference-project" not in empty_args
+
+        # Test single value
+        single_params = {
+            "project_dir": str(tmp_path),
+            "reference_project": ["docs=/docs"],
+        }
+        single_args = server_config.generate_args(single_params, use_cli_command=True)
+        assert single_args.count("--reference-project") == 1
+        assert "docs=/docs" in single_args
+
+        # Test None/missing (should be skipped silently)
+        none_params = {"project_dir": str(tmp_path)}
+        none_args = server_config.generate_args(none_params, use_cli_command=True)
+        assert "--reference-project" not in none_args
+
+        # Test actual command generation with multiple reference projects
+        multi_params = {
+            "project_dir": str(tmp_path),
+            "reference_project": ["docs=/docs", "examples=/examples"],
+        }
+        multi_args = server_config.generate_args(multi_params, use_cli_command=True)
+
+        # Create full command (simulating what would be executed)
+        cmd_parts = ["mcp-server-filesystem"] + multi_args
+        command_string = " ".join(cmd_parts)
+
+        # Verify command contains expected elements
+        assert "mcp-server-filesystem" in command_string
+        assert f"--project-dir {tmp_path}" in command_string
+        assert "--reference-project docs=/docs" in command_string
+        assert "--reference-project examples=/examples" in command_string
+
+        # Verify it's a valid, executable command structure
+        assert command_string.count("--reference-project") == 2
+        assert command_string.startswith("mcp-server-filesystem")
