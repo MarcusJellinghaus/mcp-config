@@ -82,7 +82,7 @@ Please let me know any questions / comments or suggestions you might have.
 
 Wait for presentation of overall plan
 ```
-Can we go through all suggested changes step by step?
+Can we go through all suggested changes and questions step by step?
 You explain, ask and I answer until we discussed all topics?
 ```
 
