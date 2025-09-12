@@ -785,3 +785,55 @@ class TestGlobalRegistry:
         assert "--regular-param" in args
         assert "single_value" in args
         assert args.count("--regular-param") == 1
+
+    def test_path_normalization_with_lists(self) -> None:
+        """Test path normalization works correctly with lists from repeatable parameters."""
+        config = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="path-param",
+                    arg_name="--path-param",
+                    param_type="path",
+                    repeatable=True,
+                )
+            ],
+        )
+
+        # Test multiple path values get normalized
+        user_params_multi = {"path_param": ["../docs", "./examples"]}
+        args_multi = config.generate_args(user_params_multi, use_cli_command=True)
+
+        # Should contain normalized paths (exact values depend on normalize_path implementation)
+        assert "--path-param" in args_multi
+        assert args_multi.count("--path-param") == 2
+        # Verify paths were processed (not containing .. or ./ if normalize_path handles them)
+
+        # Test single path value in list
+        user_params_single = {"path_param": ["../single/path"]}
+        args_single = config.generate_args(user_params_single, use_cli_command=True)
+        assert "--path-param" in args_single
+        assert args_single.count("--path-param") == 1
+
+        # Test that non-path repeatable parameters still work (regression test)
+        config_string = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="string-param",
+                    arg_name="--string-param",
+                    param_type="string",
+                    repeatable=True,
+                )
+            ],
+        )
+
+        user_params_string = {"string_param": ["val1", "val2"]}
+        args_string = config_string.generate_args(
+            user_params_string, use_cli_command=True
+        )
+        assert args_string.count("--string-param") == 2

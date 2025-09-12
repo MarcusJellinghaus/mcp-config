@@ -215,16 +215,17 @@ class ServerConfig:
                 if value:  # Only add flag if True
                     args.append(param.arg_name)
             else:
-                # Handle parameter argument generation (non-path parameters)
-                if param.param_type != "path":
-                    self._add_parameter_args(args, param, value)
-                else:
-                    # Normalize paths
-                    if project_dir:
+                # Normalize paths (updated logic for lists using explicit for-loop)
+                if param.param_type == "path" and project_dir:
+                    if isinstance(value, list):
+                        # Explicit for-loop approach for list normalization
+                        for i, v in enumerate(value):
+                            value[i] = str(normalize_path(v, project_dir))
+                    else:
                         value = str(normalize_path(value, project_dir))
-                    # Add parameter and value for path parameters
-                    args.append(param.arg_name)
-                    args.append(str(value))
+
+                # Use helper method for parameter argument generation
+                self._add_parameter_args(args, param, value)
 
         return args
 

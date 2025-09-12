@@ -42,11 +42,11 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
   - [x] Run pylint, pytest, mypy checks and fix issues
   - [x] Prepare git commit with concise message
 
-- [ ] **Step 3b: Add Path Normalization for Lists (TDD)** - [details](./steps/step_3b.md)
-  - [ ] Write tests for path normalization with lists
-  - [ ] Update path normalization logic using explicit for-loop
-  - [ ] Run pylint, pytest, mypy checks and fix issues
-  - [ ] Prepare git commit with concise message
+- [x] **Step 3b: Add Path Normalization for Lists (TDD)** - [details](./steps/step_3b.md)
+  - [x] Write tests for path normalization with lists
+  - [x] Update path normalization logic using explicit for-loop
+  - [x] Run pylint, pytest, mypy checks and fix issues
+  - [x] Prepare git commit with concise message
 
 - [ ] **Step 4: Add Reference Project Parameter Definition (TDD)** - [details](./steps/step_4.md)
   - [ ] Write tests for reference-project parameter existence
