@@ -23,11 +23,11 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
 
 ### Implementation Steps
 
-- [ ] **Step 1: Add Repeatable Parameter Support to ParameterDef (TDD)** - [details](./steps/step_1.md)
-  - [ ] Write tests for repeatable parameter functionality
-  - [ ] Implement repeatable field in ParameterDef dataclass
-  - [ ] Run pylint, pytest, mypy checks and fix issues
-  - [ ] Prepare git commit with concise message
+- [x] **Step 1: Add Repeatable Parameter Support to ParameterDef (TDD)** - [details](./steps/step_1.md)
+  - [x] Write tests for repeatable parameter functionality
+  - [x] Implement repeatable field in ParameterDef dataclass
+  - [x] Run pylint, pytest, mypy checks and fix issues
+  - [x] Prepare git commit with concise message
 
 - [ ] **Step 2: Update CLI Parser for Repeatable Parameters (TDD)** - [details](./steps/step_2.md)
   - [ ] Write tests for CLI parser with action="append"

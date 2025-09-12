@@ -24,6 +24,7 @@ class ParameterDef:
         is_flag: True for boolean flags (action="store_true")
         auto_detect: True if value can be auto-detected
         validator: Optional validation function
+        repeatable: Whether parameter can be specified multiple times
     """
 
     name: str
@@ -36,6 +37,7 @@ class ParameterDef:
     is_flag: bool = False
     auto_detect: bool = False
     validator: Callable[[Any, str], list[str]] | None = None
+    repeatable: bool = False
 
     def __post_init__(self) -> None:
         """Validate parameter definition after creation."""

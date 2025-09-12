@@ -106,6 +106,37 @@ class TestParameterDef:
                 default="not_a_bool",
             )
 
+    def test_parameter_def_with_repeatable(self) -> None:
+        """Test ParameterDef supports repeatable=True and defaults to False."""
+        # Test with repeatable=True
+        param_true = ParameterDef(
+            name="test-param",
+            arg_name="--test-param", 
+            param_type="string",
+            repeatable=True
+        )
+        assert param_true.repeatable is True
+        
+        # Test default (repeatable=False)
+        param_default = ParameterDef(
+            name="test-param",
+            arg_name="--test-param",
+            param_type="string"
+        )
+        assert param_default.repeatable is False
+
+    def test_parameter_def_existing_functionality(self) -> None:
+        """Test existing ParameterDef creation still works."""
+        # Test with existing parameters from MCP_CODE_CHECKER
+        param = ParameterDef(
+            name="project-dir",
+            arg_name="--project-dir",
+            param_type="path",
+            required=True
+        )
+        assert param.repeatable is False  # Default value
+        assert param.required is True
+
 
 class TestServerConfig:
     """Test the ServerConfig class."""
