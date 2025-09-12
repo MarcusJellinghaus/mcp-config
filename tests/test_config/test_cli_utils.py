@@ -405,6 +405,53 @@ class TestDynamicServerRegistration:
         assert "mcp-code-checker" in help_text
 
 
+class TestRepeatableParameters:
+    """Test repeatable parameter functionality."""
+
+    def test_repeatable_parameter_parsing(self) -> None:
+        """Test CLI parser handles repeatable parameters with action=append."""
+        parser = argparse.ArgumentParser()
+        param = ParameterDef(
+            name="reference-project",
+            arg_name="--reference-project",
+            param_type="string",
+            repeatable=True,
+        )
+        add_parameter_to_parser(parser, param)
+
+        # Test parsing multiple values
+        args_multiple = parser.parse_args(
+            [
+                "--reference-project",
+                "docs=/path/to/docs",
+                "--reference-project",
+                "examples=/path/to/examples",
+            ]
+        )
+        assert args_multiple.reference_project == [
+            "docs=/path/to/docs",
+            "examples=/path/to/examples",
+        ]
+
+        # Test parsing single value (still becomes list with action=append)
+        args_single = parser.parse_args(["--reference-project", "docs=/path/to/docs"])
+        assert args_single.reference_project == ["docs=/path/to/docs"]
+
+    def test_non_repeatable_unchanged(self) -> None:
+        """Test non-repeatable parameters still work normally."""
+        parser = argparse.ArgumentParser()
+        param = ParameterDef(
+            name="project-dir",
+            arg_name="--project-dir",
+            param_type="string",
+            repeatable=False,
+        )
+        add_parameter_to_parser(parser, param)
+
+        args = parser.parse_args(["--project-dir", "/path/to/project"])
+        assert args.project_dir == "/path/to/project"  # Single string, not list
+
+
 class TestIntelliJSupport:
     """Test basic IntelliJ client support."""
 

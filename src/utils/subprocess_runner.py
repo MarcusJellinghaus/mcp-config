@@ -199,6 +199,7 @@ def _run_subprocess(
                                         ],
                                         capture_output=True,
                                         timeout=5,
+                                        check=False,  # Don't raise on taskkill failure - process may already be dead
                                     )
                                 except (
                                     subprocess.SubprocessError,
@@ -368,6 +369,7 @@ def _run_subprocess(
                                     ],
                                     capture_output=True,
                                     timeout=5,
+                                    check=False,  # Don't raise on taskkill failure - process may already be dead
                                 )
                             except (
                                 subprocess.SubprocessError,

@@ -24,6 +24,7 @@ class ParameterDef:
         is_flag: True for boolean flags (action="store_true")
         auto_detect: True if value can be auto-detected
         validator: Optional validation function
+        repeatable: Whether parameter can be specified multiple times
     """
 
     name: str
@@ -36,6 +37,7 @@ class ParameterDef:
     is_flag: bool = False
     auto_detect: bool = False
     validator: Callable[[Any, str], list[str]] | None = None
+    repeatable: bool = False
 
     def __post_init__(self) -> None:
         """Validate parameter definition after creation."""
@@ -91,6 +93,24 @@ class ServerConfig:
     display_name: str
     main_module: str
     parameters: list[ParameterDef] = field(default_factory=list)
+
+    def _add_parameter_args(
+        self, args: list[str], param: ParameterDef, value: Any
+    ) -> None:
+        """Helper method to add parameter arguments to args list.
+
+        Args:
+            args: List to append arguments to
+            param: Parameter definition
+            value: Parameter value (single value or list for repeatable params)
+        """
+        if param.repeatable and isinstance(value, list):
+            # Handle list values for repeatable parameters
+            for item in value:
+                args.extend([param.arg_name, str(item)])
+        else:
+            # Handle single values (both repeatable and non-repeatable)
+            args.extend([param.arg_name, str(value)])
 
     def generate_args(
         self, user_params: dict[str, Any], use_cli_command: bool = False
@@ -165,8 +185,8 @@ class ServerConfig:
             # Get value from processed params or use default
             value = processed_params.get(param_key, param.default)
 
-            # Skip if no value provided
-            if value is None:
+            # Skip if no value provided or empty list
+            if value is None or (isinstance(value, list) and len(value) == 0):
                 continue
 
             # Skip venv-path for mcp-server-filesystem in CLI command mode
@@ -195,13 +215,17 @@ class ServerConfig:
                 if value:  # Only add flag if True
                     args.append(param.arg_name)
             else:
-                # Normalize paths
+                # Normalize paths (updated logic for lists using explicit for-loop)
                 if param.param_type == "path" and project_dir:
-                    value = str(normalize_path(value, project_dir))
+                    if isinstance(value, list):
+                        # Explicit for-loop approach for list normalization
+                        for i, v in enumerate(value):
+                            value[i] = str(normalize_path(v, project_dir))
+                    else:
+                        value = str(normalize_path(value, project_dir))
 
-                # Add parameter and value
-                args.append(param.arg_name)
-                args.append(str(value))
+                # Use helper method for parameter argument generation
+                self._add_parameter_args(args, param, value)
 
         return args
 
@@ -579,6 +603,16 @@ MCP_FILESYSTEM_SERVER = ServerConfig(
             auto_detect=True,
             help="Path for structured JSON logs. "
             "Auto-generates timestamped log file in project_dir/logs/ if not specified",
+        ),
+        ParameterDef(
+            name="reference-project",
+            arg_name="--reference-project",
+            param_type="string",
+            required=False,
+            repeatable=True,
+            help="Reference project in format 'name=path'. "
+            "Can be specified multiple times to add multiple reference projects. "
+            "Example: --reference-project docs=/path/to/docs",
         ),
     ],
 )

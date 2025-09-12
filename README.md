@@ -16,6 +16,11 @@ mcp-config setup mcp-code-checker "My Project" --client vscode-workspace --proje
 
 # Setup for IntelliJ/PyCharm (GitHub Copilot)
 mcp-config setup mcp-code-checker "My Project" --client intellij --project-dir .
+
+# Setup filesystem server with reference projects
+mcp-config setup mcp-server-filesystem "My Files" --project-dir . \
+  --reference-project docs=/path/to/docs \
+  --reference-project examples=/path/to/examples
 ```
 
 ## Built-in Help System

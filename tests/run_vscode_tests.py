@@ -154,7 +154,3 @@ def main() -> int:
     else:
         print("\n⚠️  Some tests failed. Please review the errors above.")
         return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())

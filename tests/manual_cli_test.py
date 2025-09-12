@@ -264,7 +264,3 @@ def main() -> int:
     except AssertionError as e:
         print(f"\n✗ Tests failed: {e}")
         return 1
-
-
-if __name__ == "__main__":
-    sys.exit(main())

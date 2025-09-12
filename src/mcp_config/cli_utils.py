@@ -165,6 +165,10 @@ def add_parameter_to_parser(
         "dest": param.name.replace("-", "_"),  # Convert to valid Python identifier
     }
 
+    # Handle repeatable parameters
+    if param.repeatable:
+        kwargs["action"] = "append"
+
     # Handle required parameters
     if param.required:
         kwargs["required"] = True

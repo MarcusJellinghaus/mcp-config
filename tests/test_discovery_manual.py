@@ -74,11 +74,3 @@ def test_initialization() -> None:
         print(f"  Errors: {errors}")
 
     print("✓ Initialization test completed\n")
-
-
-if __name__ == "__main__":
-    print("Running discovery module tests...\n")
-    test_validator()
-    test_discovery()
-    test_initialization()
-    print("All tests completed successfully!")

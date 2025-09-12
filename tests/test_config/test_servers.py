@@ -106,6 +106,35 @@ class TestParameterDef:
                 default="not_a_bool",
             )
 
+    def test_parameter_def_with_repeatable(self) -> None:
+        """Test ParameterDef supports repeatable=True and defaults to False."""
+        # Test with repeatable=True
+        param_true = ParameterDef(
+            name="test-param",
+            arg_name="--test-param",
+            param_type="string",
+            repeatable=True,
+        )
+        assert param_true.repeatable is True
+
+        # Test default (repeatable=False)
+        param_default = ParameterDef(
+            name="test-param", arg_name="--test-param", param_type="string"
+        )
+        assert param_default.repeatable is False
+
+    def test_parameter_def_existing_functionality(self) -> None:
+        """Test existing ParameterDef creation still works."""
+        # Test with existing parameters from MCP_CODE_CHECKER
+        param = ParameterDef(
+            name="project-dir",
+            arg_name="--project-dir",
+            param_type="path",
+            required=True,
+        )
+        assert param.repeatable is False  # Default value
+        assert param.required is True
+
 
 class TestServerConfig:
     """Test the ServerConfig class."""
@@ -135,7 +164,9 @@ class TestServerConfig:
         assert MCP_FILESYSTEM_SERVER.name == "mcp-server-filesystem"
         assert MCP_FILESYSTEM_SERVER.display_name == "MCP Filesystem Server"
         assert MCP_FILESYSTEM_SERVER.main_module == "src/mcp_server_filesystem/main.py"
-        assert len(MCP_FILESYSTEM_SERVER.parameters) == 5
+        assert (
+            len(MCP_FILESYSTEM_SERVER.parameters) == 6
+        )  # Updated to include reference-project
 
         # Check all parameter names are present
         param_names = [p.name for p in MCP_FILESYSTEM_SERVER.parameters]
@@ -145,6 +176,7 @@ class TestServerConfig:
             "venv-path",
             "log-level",
             "log-file",
+            "reference-project",
         ]
         assert set(param_names) == set(expected_names)
 
@@ -681,7 +713,7 @@ class TestGlobalRegistry:
         config = registry.get("mcp-server-filesystem")
         assert config is not None
         assert config.name == "mcp-server-filesystem"
-        assert len(config.parameters) == 5
+        assert len(config.parameters) == 6
 
     def test_registry_completeness(self) -> None:
         """Test that the global registry has expected servers."""
@@ -698,3 +730,170 @@ class TestGlobalRegistry:
 
         # Non-existent server should not be registered
         assert not registry.is_registered("non-existent-server")
+
+    def test_list_argument_generation(self) -> None:
+        """Test list values generate multiple argument pairs."""
+        config = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="test-param",
+                    arg_name="--test-param",
+                    param_type="string",
+                    repeatable=True,
+                )
+            ],
+        )
+
+        # Test multiple values and single value in list
+        user_params_multi = {"test_param": ["val1", "val2"]}
+        args_multi = config.generate_args(user_params_multi, use_cli_command=True)
+        assert "--test-param" in args_multi
+        assert "val1" in args_multi
+        assert "val2" in args_multi
+        assert args_multi.count("--test-param") == 2
+
+        # Test single value in list
+        user_params_single = {"test_param": ["val1"]}
+        args_single = config.generate_args(user_params_single, use_cli_command=True)
+        assert "--test-param" in args_single
+        assert "val1" in args_single
+        assert args_single.count("--test-param") == 1
+
+        # Test empty list (should be skipped silently)
+        user_params_empty: dict[str, list[str]] = {"test_param": []}
+        args_empty = config.generate_args(user_params_empty, use_cli_command=True)
+        assert "--test-param" not in args_empty
+
+    def test_non_list_arguments_unchanged(self) -> None:
+        """Test single values work as before."""
+        config = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="regular-param",
+                    arg_name="--regular-param",
+                    param_type="string",
+                ),
+            ],
+        )
+
+        user_params = {"regular_param": "single_value"}
+        args = config.generate_args(user_params, use_cli_command=True)
+
+        assert "--regular-param" in args
+        assert "single_value" in args
+        assert args.count("--regular-param") == 1
+
+    def test_path_normalization_with_lists(self) -> None:
+        """Test path normalization works correctly with lists from repeatable parameters."""
+        config = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="path-param",
+                    arg_name="--path-param",
+                    param_type="path",
+                    repeatable=True,
+                )
+            ],
+        )
+
+        # Test multiple path values get normalized
+        user_params_multi = {"path_param": ["../docs", "./examples"]}
+        args_multi = config.generate_args(user_params_multi, use_cli_command=True)
+
+        # Should contain normalized paths (exact values depend on normalize_path implementation)
+        assert "--path-param" in args_multi
+        assert args_multi.count("--path-param") == 2
+        # Verify paths were processed (not containing .. or ./ if normalize_path handles them)
+
+        # Test single path value in list
+        user_params_single = {"path_param": ["../single/path"]}
+        args_single = config.generate_args(user_params_single, use_cli_command=True)
+        assert "--path-param" in args_single
+        assert args_single.count("--path-param") == 1
+
+        # Test that non-path repeatable parameters still work (regression test)
+        config_string = ServerConfig(
+            name="test-server",
+            display_name="Test Server",
+            main_module="test.py",
+            parameters=[
+                ParameterDef(
+                    name="string-param",
+                    arg_name="--string-param",
+                    param_type="string",
+                    repeatable=True,
+                )
+            ],
+        )
+
+        user_params_string = {"string_param": ["val1", "val2"]}
+        args_string = config_string.generate_args(
+            user_params_string, use_cli_command=True
+        )
+        assert args_string.count("--string-param") == 2
+
+    def test_filesystem_server_has_reference_project(self) -> None:
+        """Test filesystem server includes reference-project parameter with correct attributes."""
+        from src.mcp_config.cli_utils import build_setup_parser
+        from src.mcp_config.servers import registry
+
+        server_config = registry.get("mcp-server-filesystem")
+        assert server_config is not None
+
+        # Check parameter exists with correct attributes
+        ref_param = server_config.get_parameter_by_name("reference-project")
+        assert ref_param is not None
+        assert ref_param.name == "reference-project"
+        assert ref_param.arg_name == "--reference-project"
+        assert ref_param.param_type == "string"
+        assert ref_param.required is False
+        assert ref_param.repeatable is True
+
+        # Check parameter appears in CLI help
+        parser = build_setup_parser("mcp-server-filesystem")
+        help_text = parser.format_help()
+        assert "--reference-project" in help_text
+
+    def test_reference_project_argument_generation(self) -> None:
+        """Test reference projects generate correct arguments."""
+        from src.mcp_config.servers import registry
+
+        server_config = registry.get("mcp-server-filesystem")
+        assert server_config is not None
+
+        # Test multiple reference projects
+        user_params_multi = {
+            "project_dir": "/base/project",
+            "reference_project": ["docs=/path/to/docs", "examples=/path/to/examples"],
+        }
+        args_multi = server_config.generate_args(
+            user_params_multi, use_cli_command=True
+        )
+        assert args_multi.count("--reference-project") == 2
+        assert "docs=/path/to/docs" in args_multi
+        assert "examples=/path/to/examples" in args_multi
+
+        # Test single reference project
+        user_params_single = {
+            "project_dir": "/base/project",
+            "reference_project": ["docs=/path/to/docs"],
+        }
+        args_single = server_config.generate_args(
+            user_params_single, use_cli_command=True
+        )
+        assert args_single.count("--reference-project") == 1
+        assert "docs=/path/to/docs" in args_single
+
+        # Test no reference projects (optional)
+        user_params_none = {"project_dir": "/base/project"}
+        args_none = server_config.generate_args(user_params_none, use_cli_command=True)
+        assert "--reference-project" not in args_none

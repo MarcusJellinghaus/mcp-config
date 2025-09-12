@@ -11,10 +11,13 @@ python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 pip install -e ".[dev]"
 
-# Install test servers
+# Install mcp servers for development support
 pip uninstall mcp-code-checker mcp-server-filesystem  
 pip install "mcp-code-checker @ git+https://github.com/MarcusJellinghaus/mcp-code-checker.git"
 pip install "mcp-server-filesystem @ git+https://github.com/MarcusJellinghaus/mcp_server_filesystem.git"
+
+# To ensure that config tool (referenced by the MCP servers) is installed editable
+pip install -e ".[dev]"
 ```
 
 ## Development Tools
