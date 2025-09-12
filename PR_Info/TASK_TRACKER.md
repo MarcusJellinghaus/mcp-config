@@ -48,11 +48,11 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
   - [x] Run pylint, pytest, mypy checks and fix issues
   - [x] Prepare git commit with concise message
 
-- [ ] **Step 4: Add Reference Project Parameter Definition (TDD)** - [details](./steps/step_4.md)
-  - [ ] Write tests for reference-project parameter existence
-  - [ ] Add ParameterDef to MCP_FILESYSTEM_SERVER.parameters
-  - [ ] Run pylint, pytest, mypy checks and fix issues
-  - [ ] Prepare git commit with concise message
+- [x] **Step 4: Add Reference Project Parameter Definition (TDD)** - [details](./steps/step_4.md)
+  - [x] Write tests for reference-project parameter existence
+  - [x] Add ParameterDef to MCP_FILESYSTEM_SERVER.parameters
+  - [x] Run pylint, pytest, mypy checks and fix issues
+  - [x] Prepare git commit with concise message
 
 - [ ] **Step 5: Integration Tests and Final Verification (TDD)** - [details](./steps/step_5.md)
   - [ ] Write comprehensive end-to-end integration tests

@@ -604,6 +604,16 @@ MCP_FILESYSTEM_SERVER = ServerConfig(
             help="Path for structured JSON logs. "
             "Auto-generates timestamped log file in project_dir/logs/ if not specified",
         ),
+        ParameterDef(
+            name="reference-project",
+            arg_name="--reference-project",
+            param_type="string",
+            required=False,
+            repeatable=True,
+            help="Reference project in format 'name=path'. "
+            "Can be specified multiple times to add multiple reference projects. "
+            "Example: --reference-project docs=/path/to/docs",
+        ),
     ],
 )
 
