@@ -87,6 +87,9 @@ This allows the filesystem server to access multiple project directories.
 - **Output**: Clear, simple documentation for users
 - **Structure**: Concise help text + optional usage example
 
+## TIME ESTIMATE
+**~15 minutes** (simple documentation verification and updates)
+
 ## LLM Prompt
 Implement Step 6 for simple documentation updates. Verify that CLI help text for the --reference-project parameter is clear and includes the format and repeatability information. Make any necessary updates to help text to be user-friendly. Optionally add a brief usage example to README.md or USER_GUIDE.md. Keep documentation simple and focused on essential usage information (KISS principle).
 

@@ -1,7 +1,7 @@
-# Step 3: Update Argument Generation for Lists (TDD)
+# Step 3a: Basic List Handling in Argument Generation (TDD)
 
 ## Objective
-Modify the `ServerConfig.generate_args()` method to handle parameters that produce list values from repeatable CLI arguments using Test-Driven Development.
+Add core list processing to `ServerConfig.generate_args()` method to handle parameters that produce list values from repeatable CLI arguments using Test-Driven Development.
 
 ## Step 3a: Write Tests First
 
@@ -9,7 +9,7 @@ Modify the `ServerConfig.generate_args()` method to handle parameters that produ
 - **File**: `tests/test_config/test_servers.py` (add to existing file)
 - **Section**: Add new test functions to existing server tests
 
-### TESTS TO WRITE (SIMPLIFIED KISS APPROACH)
+### TESTS TO WRITE (STREAMLINED APPROACH)
 ```python
 from mcp_config.servers import ServerConfig, ParameterDef
 
@@ -29,7 +29,7 @@ def test_list_argument_generation():
         ]
     )
     
-    # Test multiple values
+    # Test multiple values and single value in list
     user_params_multi = {"test_param": ["val1", "val2"]}
     args_multi = config.generate_args(user_params_multi, use_cli_command=True)
     assert "--test-param" in args_multi
@@ -44,7 +44,7 @@ def test_list_argument_generation():
     assert "val1" in args_single
     assert args_single.count("--test-param") == 1
     
-    # Test empty list (should be skipped)
+    # Test empty list (should be skipped silently)
     user_params_empty = {"test_param": []}
     args_empty = config.generate_args(user_params_empty, use_cli_command=True)
     assert "--test-param" not in args_empty
@@ -71,7 +71,7 @@ def test_non_list_arguments_unchanged():
 ### EXPECTED RESULT
 Tests should **FAIL** because the list handling logic doesn't exist in `generate_args()` yet.
 
-## Step 3b: Implement to Make Tests Pass
+## Step 3a: Implement to Make Tests Pass
 
 ### WHERE
 - **File**: `src/mcp_config/servers.py` 
@@ -79,7 +79,7 @@ Tests should **FAIL** because the list handling logic doesn't exist in `generate
 - **Section**: Parameter processing loop
 
 ### WHAT
-**Enhanced implementation with extracted helper method (CLEAN CODE APPROACH)**:
+**Add helper method and basic list processing**:
 - Add helper method `_add_parameter_args()` for clean, testable code
 - Detect when parameter value is a list (from `action="append"`)
 - Generate multiple `--param value` pairs for each list item
@@ -91,8 +91,8 @@ Tests should **FAIL** because the list handling logic doesn't exist in `generate
 ### HOW
 - Integration: Modify existing parameter processing loop
 - Extract logic into helper method for better testing
-- Handle isinstance(value, list) check in helper
-- Use helper method from main generate_args()
+- Handle `isinstance(value, list)` check in helper
+- Use helper method from main `generate_args()`
 
 ### IMPLEMENTATION
 ```python
@@ -132,15 +132,12 @@ def generate_args(self, user_params: dict[str, Any], use_cli_command: bool = Fal
             if value:  # Only add flag if True
                 args.append(param.arg_name)
         else:
-            # Normalize paths (existing logic updated for lists)
-            if param.param_type == "path" and project_dir:
-                if isinstance(value, list):
-                    value = [str(normalize_path(v, project_dir)) for v in value]
-                else:
-                    value = str(normalize_path(value, project_dir))
-
-            # Use helper method for parameter argument generation
-            self._add_parameter_args(args, param, value)
+            # Use helper method for parameter argument generation (non-path parameters)
+            if param.param_type != "path":
+                self._add_parameter_args(args, param, value)
+            else:
+                # Path handling will be added in Step 3b
+                args.extend([param.arg_name, str(value)])
 
     return args
 ```
@@ -158,10 +155,13 @@ Run the tests written in Step 3a - they should now **PASS**.
 6. Refactor if needed (helper method already provides good separation)
 ```
 
+## TIME ESTIMATE
+**~30 minutes** (including testing and debugging)
+
 ## DATA
 - **Input**: `user_params` dict potentially containing lists for repeatable params
 - **Output**: `args` list with repeated `--param value` entries
 - **Structure**: `["--reference-project", "docs=/path", "--reference-project", "examples=/path"]`
 
 ## LLM Prompt
-Using Test-Driven Development, implement Step 3 to update argument generation. First write tests in `tests/test_config/test_servers.py` that verify list values generate multiple argument pairs, single values work unchanged, empty lists are skipped, and path normalization works with lists. Then add helper method `_add_parameter_args()` and modify `generate_args()` in `src/mcp_config/servers.py` to handle repeatable parameters. Verify all tests pass.
+Using Test-Driven Development, implement Step 3a for basic list handling. First write tests in `tests/test_config/test_servers.py` that verify list values generate multiple argument pairs, single values work unchanged, and empty lists are skipped. Then add helper method `_add_parameter_args()` and modify `generate_args()` in `src/mcp_config/servers.py` to handle repeatable parameters (excluding path normalization). Verify all tests pass.

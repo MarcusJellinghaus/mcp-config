@@ -9,7 +9,7 @@ Modify the CLI argument parser to use `action="append"` for parameters marked as
 - **File**: `tests/test_config/test_cli_utils.py` (add to existing file)
 - **Section**: Add new test functions to existing CLI utils tests
 
-### TESTS TO WRITE (SIMPLIFIED KISS APPROACH)
+### TESTS TO WRITE (STREAMLINED APPROACH)
 ```python
 import argparse
 from mcp_config.servers import ParameterDef
@@ -116,6 +116,9 @@ Run the tests written in Step 2a - they should now **PASS**.
 5. Run tests - confirm they pass (Green)
 6. Refactor if needed (likely not needed for this simple change)
 ```
+
+## TIME ESTIMATE
+**~45 minutes** (including testing and debugging)
 
 ## DATA
 - **Input**: `param` with potential `repeatable=True`

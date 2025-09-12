@@ -10,7 +10,7 @@ Create comprehensive integration tests to verify the complete repeatable paramet
   - `tests/test_config/test_integration.py` (if it exists) or relevant existing files
   - Focus on end-to-end scenarios
 
-### INTEGRATION TESTS TO WRITE (SIMPLIFIED KISS APPROACH)
+### INTEGRATION TESTS TO WRITE (STREAMLINED APPROACH)
 ```python
 def test_reference_project_end_to_end():
     """Test complete workflow: CLI parsing → argument generation → command execution."""
@@ -47,13 +47,13 @@ def test_reference_project_end_to_end():
     assert "--project-dir" in args
     assert "/base/project" in args
 
-def test_reference_project_edge_cases():
-    """Test empty lists, single values, None values."""
+def test_reference_project_edge_cases_and_command_generation():
+    """Test edge cases, command generation, and final command structure."""
     from mcp_config.servers import registry
     
     server_config = registry.get("mcp-server-filesystem")
     
-    # Test empty list (should be skipped)
+    # Test empty list (should be skipped silently)
     empty_params = {"project_dir": "/base/project", "reference_project": []}
     empty_args = server_config.generate_args(empty_params, use_cli_command=True)
     assert "--reference-project" not in empty_args
@@ -64,26 +64,20 @@ def test_reference_project_edge_cases():
     assert single_args.count("--reference-project") == 1
     assert "docs=/docs" in single_args
     
-    # Test None/missing (should be skipped)
+    # Test None/missing (should be skipped silently)
     none_params = {"project_dir": "/base/project"}
     none_args = server_config.generate_args(none_params, use_cli_command=True)
     assert "--reference-project" not in none_args
-
-def test_filesystem_server_command_generation():
-    """Test actual mcp-server-filesystem command with reference projects."""
-    from mcp_config.servers import registry
     
-    server_config = registry.get("mcp-server-filesystem")
-    user_params = {
+    # Test actual command generation with multiple reference projects
+    multi_params = {
         "project_dir": "/base/project",
         "reference_project": ["docs=/docs", "examples=/examples"]
     }
-    
-    # Generate command arguments
-    args = server_config.generate_args(user_params, use_cli_command=True)
+    multi_args = server_config.generate_args(multi_params, use_cli_command=True)
     
     # Create full command (simulating what would be executed)
-    cmd_parts = ["mcp-server-filesystem"] + args
+    cmd_parts = ["mcp-server-filesystem"] + multi_args
     command_string = " ".join(cmd_parts)
     
     # Verify command contains expected elements
@@ -119,6 +113,9 @@ Run complete test suite:
 - No regression in existing functionality
 - End-to-end scenarios work correctly
 
+## TIME ESTIMATE
+**~45 minutes** (including comprehensive testing and debugging)
+
 ## TDD ALGORITHM
 ```
 1. Write comprehensive integration tests
@@ -135,7 +132,7 @@ Run complete test suite:
 - **Structure**: Comprehensive test coverage across unit, integration, and edge case scenarios
 
 ## LLM Prompt
-Using Test-Driven Development, implement Step 5 for integration testing and final verification. Write comprehensive integration tests that cover end-to-end scenarios, backward compatibility, edge cases, and cross-client functionality. Run all tests and fix any integration issues discovered. Ensure the complete repeatable parameter feature works correctly with the reference-project parameter while maintaining existing functionality. Verify all tests pass before considering the implementation complete.
+Using Test-Driven Development, implement Step 5 for integration testing and final verification. Write streamlined integration tests (2 comprehensive tests) that cover end-to-end scenarios, edge cases, and command generation. Run all tests and fix any integration issues discovered. Ensure the complete repeatable parameter feature works correctly with the reference-project parameter while maintaining existing functionality. Verify all tests pass before considering the implementation complete.
 
 ## Notes
 - **TDD Completion**: This step completes the TDD cycle with comprehensive integration testing

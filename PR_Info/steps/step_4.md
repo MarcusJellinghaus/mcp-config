@@ -122,5 +122,8 @@ Run the tests written in Step 4a - they should now **PASS**.
 - **Output**: Enhanced config with reference-project parameter
 - **Structure**: ParameterDef with name="reference-project", repeatable=True
 
+## TIME ESTIMATE
+**~30 minutes** (including testing and verification)
+
 ## LLM Prompt
 Using Test-Driven Development, implement Step 4 to add the reference-project parameter definition. First write tests in `tests/test_config/test_servers.py` that verify the filesystem server includes the reference-project parameter with correct attributes, appears in CLI help, generates proper arguments, and works both with and without reference projects. Then add the `ParameterDef` to `MCP_FILESYSTEM_SERVER.parameters` in `src/mcp_config/servers.py`. Verify all tests pass.

@@ -104,5 +104,8 @@ Run the tests written in Step 1a - they should now **PASS**.
 - **Output**: Enhanced ParameterDef with repeatable support
 - **Structure**: `repeatable: bool = False` added to dataclass fields
 
+## TIME ESTIMATE
+**~30 minutes** (simple dataclass extension with tests)
+
 ## LLM Prompt
 Using Test-Driven Development, implement Step 1 of adding reference-project parameter support. First write tests in `tests/test_config/test_servers.py` that verify ParameterDef can be created with repeatable=True, defaults to False, and doesn't break existing functionality. Then extend the `ParameterDef` dataclass in `src/mcp_config/servers.py` to include the `repeatable: bool = False` field and updated docstring. Verify all tests pass.

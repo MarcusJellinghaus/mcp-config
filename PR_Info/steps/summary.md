@@ -33,14 +33,20 @@ This generates a configuration with repeated `--reference-project` arguments tha
 - **OUT OF SCOPE**: Path validation, name=path parsing, client handler modifications, extensive user guides
 
 ## Key Design Decisions
-- **Error Handling**: Let filesystem server handle all validation and error messages
-- **Path Processing**: No normalization - pass paths through as-is to filesystem server
-- **Testing Strategy**: Comprehensive coverage with KISS simplifications (13 tests vs original 25+)
+- **Error Handling**: Skip empty lists silently, let filesystem server handle all validation and error messages
+- **Path Processing**: Explicit for-loop approach for path normalization with lists
+- **Validation Strategy**: Complete pass-through approach - no format validation in mcp-config
+- **Testing Strategy**: Streamlined coverage with combined test scenarios (11 tests total)
 - **Documentation**: Simple parameter documentation, not extensive examples
-- **Implementation Structure**: 6-step TDD approach for reviewability:
+- **Implementation Structure**: 7-step TDD approach for reviewability:
   1. ParameterDef repeatable support
   2. CLI parser updates
-  3. Argument generation with helper method
+  3a. Basic list handling in argument generation
+  3b. Path normalization for lists
   4. Reference-project parameter definition
-  5. Integration tests (3 focused tests)
+  5. Integration tests (2 focused tests)
   6. Simple documentation updates
+
+## Expected Usage Scale
+- **Typical usage**: 3-5 reference projects maximum
+- **Performance**: No optimizations needed for expected scale
