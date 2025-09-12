@@ -74,6 +74,3 @@ def test_initialization() -> None:
         print(f"  Errors: {errors}")
 
     print("✓ Initialization test completed\n")
-
-
-
