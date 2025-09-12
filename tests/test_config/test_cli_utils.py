@@ -415,17 +415,24 @@ class TestRepeatableParameters:
             name="reference-project",
             arg_name="--reference-project",
             param_type="string",
-            repeatable=True
+            repeatable=True,
         )
         add_parameter_to_parser(parser, param)
-        
+
         # Test parsing multiple values
-        args_multiple = parser.parse_args([
-            "--reference-project", "docs=/path/to/docs",
-            "--reference-project", "examples=/path/to/examples"
-        ])
-        assert args_multiple.reference_project == ["docs=/path/to/docs", "examples=/path/to/examples"]
-        
+        args_multiple = parser.parse_args(
+            [
+                "--reference-project",
+                "docs=/path/to/docs",
+                "--reference-project",
+                "examples=/path/to/examples",
+            ]
+        )
+        assert args_multiple.reference_project == [
+            "docs=/path/to/docs",
+            "examples=/path/to/examples",
+        ]
+
         # Test parsing single value (still becomes list with action=append)
         args_single = parser.parse_args(["--reference-project", "docs=/path/to/docs"])
         assert args_single.reference_project == ["docs=/path/to/docs"]
@@ -437,10 +444,10 @@ class TestRepeatableParameters:
             name="project-dir",
             arg_name="--project-dir",
             param_type="string",
-            repeatable=False
+            repeatable=False,
         )
         add_parameter_to_parser(parser, param)
-        
+
         args = parser.parse_args(["--project-dir", "/path/to/project"])
         assert args.project_dir == "/path/to/project"  # Single string, not list
 

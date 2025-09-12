@@ -111,17 +111,15 @@ class TestParameterDef:
         # Test with repeatable=True
         param_true = ParameterDef(
             name="test-param",
-            arg_name="--test-param", 
+            arg_name="--test-param",
             param_type="string",
-            repeatable=True
+            repeatable=True,
         )
         assert param_true.repeatable is True
-        
+
         # Test default (repeatable=False)
         param_default = ParameterDef(
-            name="test-param",
-            arg_name="--test-param",
-            param_type="string"
+            name="test-param", arg_name="--test-param", param_type="string"
         )
         assert param_default.repeatable is False
 
@@ -132,7 +130,7 @@ class TestParameterDef:
             name="project-dir",
             arg_name="--project-dir",
             param_type="path",
-            required=True
+            required=True,
         )
         assert param.repeatable is False  # Default value
         assert param.required is True
