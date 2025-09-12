@@ -86,11 +86,6 @@ Can we go through all suggested changes and questions step by step?
 You explain, ask and I answer until we discussed all topics?
 ```
 
-```
-Can we go through all questions question by question?
-You explain, ask and I answer until we discussed all topics?
-```
-
 Wait for end of discussion
 ```
 Can you update the plan, please? 
