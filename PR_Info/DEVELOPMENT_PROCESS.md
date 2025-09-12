@@ -56,7 +56,7 @@ Do not yet modify any code!
 #### Implementation Plan Creation Prompt:
 ```
 ## Python Project Implementation Plan Request
-Create a **summary** (`pr_info/summary.md`) and **implementation plan** with self-contained steps (`pr_info/steps/step_1.md`, `pr_info/steps/step_2.md`, etc.).
+Create a **summary** (`pr_info/steps/summary.md`) and **implementation plan** with self-contained steps (`pr_info/steps/step_1.md`, `pr_info/steps/step_2.md`, etc.).
 
 ### Requirements:
 - Follow **Test-Driven Development** where applicable
@@ -74,18 +74,41 @@ Create a **summary** (`pr_info/summary.md`) and **implementation plan** with sel
 
 #### Plan Review Prompt:
 ```
-## Revise implementation plan
-Please review the project plan for a new feature in folder PR_Info.
+Please review the project plan for a new feature in folder PR_Info\steps.
 Please revise the project plan with a balanced level of detail.
 Please let me know if any complexity could be reduced.
 Please let me know any questions / comments or suggestions you might have.
+```
 
-=== Wait for presentation of overall plan
+Wait for presentation of overall plan
+```
 Can we go through all suggested changes step by step?
 You explain, ask and I answer until we discussed all topics?
+```
 
-=== Wait for end of discussion
-Can you update the plan, please? Please update the files in folder `pr_info` (including creating the `steps/` subfolder for implementation details)
+```
+Can we go through all questions question by question?
+You explain, ask and I answer until we discussed all topics?
+```
+
+Wait for end of discussion
+```
+Can you update the plan, please? 
+Please update the files in folder `pr_info` 
+(including creating the `steps/` subfolder for implementation details)
+Please do targeted changes.
+```
+
+#### Task Tracker Update Prompt:
+```
+Please read the implementation steps in `pr_info/steps/` and 
+update `pr_info/TASK_TRACKER.md` to add all the implementation steps as tasks in the Tasks section.
+Follow the task format specified in the TASK_TRACKER.md file, 
+marking each step as incomplete [ ] and linking to the corresponding step file. 
+Review `pr_info/DEVELOPMENT_PROCESS.md` for context on the workflow and task requirements. 
+Each task should include the 3 quality checks (pylint, pytest, mypy) and 
+git commit preparation as outlined in the development process. 
+Also add the Feature Completion tasks for PR review and summary creation at the end.
 ```
 
 ### 2. Implementation Steps
@@ -135,6 +158,22 @@ Please verify your implementation running the various checks of the MCP server a
 Please do not invent extra complexity not mentioned in the project plan.
 Please let me know in case you encounter any issues or need a decision.
 Please work only on step {XX}
+```
+
+or using task tracker
+
+```
+Please look at `pr_info/TASK_TRACKER.md` and pick the next task that should be done.
+Please let me know on which task you are working on.
+Please implement!
+Please verify your implementation running the various checks of the MCP server and by solving potential issues (and repeat).
+Please do not invent extra complexity not mentioned in the project plan.
+Please let me know in case you encounter any issues or need a decision.
+Please provide a short concise commit message stating the step name in the title.
+Once you are done, please check again that task description on `pr_info/TASK_TRACKER.md` to ensure that everything is done.
+Once everything is done, please mark the task as done.
+Please work only on one task. Do not pick further tasks.
+
 ```
 
 **Common Implementation Failures & Responses:**
@@ -234,4 +273,3 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
 ## Tasks
 
 ```
-
