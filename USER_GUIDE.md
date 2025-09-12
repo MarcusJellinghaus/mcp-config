@@ -88,6 +88,15 @@ File system operations server.
 - `--project-dir` (required) - Directory to serve
 - `--python-executable` (auto-detected) - Python interpreter
 - `--log-level` (default: "INFO") - Logging level
+- `--reference-project` (repeatable) - Additional project directories in format "name=path"
+
+**Example with Reference Projects:**
+```bash
+mcp-config setup mcp-server-filesystem myfs \
+  --project-dir /path/to/main/project \
+  --reference-project docs=/path/to/documentation \
+  --reference-project examples=/path/to/examples
+```
 
 **Parameter Help:** Use `mcp-config help <server-type>` for complete parameter documentation.
 

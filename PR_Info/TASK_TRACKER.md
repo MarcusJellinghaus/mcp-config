@@ -60,12 +60,12 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
   - [x] Run pylint, pytest, mypy checks and fix issues
   - [x] Prepare git commit with concise message
 
-- [ ] **Step 6: Documentation Updates** - [details](./steps/step_6.md)
-  - [ ] Verify CLI help text displays correctly
-  - [ ] Update parameter help text if needed
-  - [ ] Optionally add usage example to README/USER_GUIDE
-  - [ ] Run pylint, pytest, mypy checks and fix issues
-  - [ ] Prepare git commit with concise message
+- [x] **Step 6: Documentation Updates** - [details](./steps/step_6.md)
+  - [x] Verify CLI help text displays correctly
+  - [x] Update parameter help text if needed
+  - [x] Optionally add usage example to README/USER_GUIDE
+  - [x] Run pylint, pytest, mypy checks and fix issues
+  - [x] Prepare git commit with concise message
 
 ### Feature Completion
 

@@ -724,6 +724,7 @@ class TestRepeatableParameterIntegration:
 
         # Test argument generation
         server_config = registry.get("mcp-server-filesystem")
+        assert server_config is not None  # Ensure server_config is not None
         user_params = {
             "project_dir": parsed_args.project_dir,
             "reference_project": parsed_args.reference_project,
@@ -744,6 +745,7 @@ class TestRepeatableParameterIntegration:
         from src.mcp_config.servers import registry
 
         server_config = registry.get("mcp-server-filesystem")
+        assert server_config is not None  # Ensure server_config is not None
 
         # Test empty list (should be skipped silently)
         empty_params = {"project_dir": str(tmp_path), "reference_project": []}
