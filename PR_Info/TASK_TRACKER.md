@@ -21,3 +21,61 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
 
 ## Tasks
 
+### Implementation Steps
+
+- [ ] **Step 1: Add Repeatable Parameter Support to ParameterDef (TDD)** - [details](./steps/step_1.md)
+  - [ ] Write tests for repeatable parameter functionality
+  - [ ] Implement repeatable field in ParameterDef dataclass
+  - [ ] Run pylint, pytest, mypy checks and fix issues
+  - [ ] Prepare git commit with concise message
+
+- [ ] **Step 2: Update CLI Parser for Repeatable Parameters (TDD)** - [details](./steps/step_2.md)
+  - [ ] Write tests for CLI parser with action="append"
+  - [ ] Modify add_parameter_to_parser() for repeatable parameters
+  - [ ] Run pylint, pytest, mypy checks and fix issues
+  - [ ] Prepare git commit with concise message
+
+- [ ] **Step 3a: Basic List Handling in Argument Generation (TDD)** - [details](./steps/step_3a.md)
+  - [ ] Write tests for list argument generation
+  - [ ] Add helper method _add_parameter_args() to ServerConfig
+  - [ ] Modify generate_args() to handle list values
+  - [ ] Run pylint, pytest, mypy checks and fix issues
+  - [ ] Prepare git commit with concise message
+
+- [ ] **Step 3b: Add Path Normalization for Lists (TDD)** - [details](./steps/step_3b.md)
+  - [ ] Write tests for path normalization with lists
+  - [ ] Update path normalization logic using explicit for-loop
+  - [ ] Run pylint, pytest, mypy checks and fix issues
+  - [ ] Prepare git commit with concise message
+
+- [ ] **Step 4: Add Reference Project Parameter Definition (TDD)** - [details](./steps/step_4.md)
+  - [ ] Write tests for reference-project parameter existence
+  - [ ] Add ParameterDef to MCP_FILESYSTEM_SERVER.parameters
+  - [ ] Run pylint, pytest, mypy checks and fix issues
+  - [ ] Prepare git commit with concise message
+
+- [ ] **Step 5: Integration Tests and Final Verification (TDD)** - [details](./steps/step_5.md)
+  - [ ] Write comprehensive end-to-end integration tests
+  - [ ] Fix any integration issues discovered
+  - [ ] Run pylint, pytest, mypy checks and fix issues
+  - [ ] Prepare git commit with concise message
+
+- [ ] **Step 6: Documentation Updates** - [details](./steps/step_6.md)
+  - [ ] Verify CLI help text displays correctly
+  - [ ] Update parameter help text if needed
+  - [ ] Optionally add usage example to README/USER_GUIDE
+  - [ ] Run pylint, pytest, mypy checks and fix issues
+  - [ ] Prepare git commit with concise message
+
+### Feature Completion
+
+- [ ] **PR Review** - Comprehensive review of entire feature implementation
+  - [ ] Use tools/pr_review.bat to generate review prompt
+  - [ ] Review LLM output and address any issues
+  - [ ] Make final adjustments if needed
+
+- [ ] **PR Summary Creation** - Generate final documentation and cleanup
+  - [ ] Use tools/pr_summary.bat to generate summary creation prompt
+  - [ ] Create comprehensive feature summary
+  - [ ] Clean up PR_Info folder (remove steps/ and clear tasks)
+
