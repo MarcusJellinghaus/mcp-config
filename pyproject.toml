@@ -38,7 +38,7 @@ dev = [
     "pytest-json-report>=1.5.0",
     "pytest-asyncio>=0.25.3",
     "mypy>=1.9.0",
-    # install manually via "pip install" to avoid circular dependency issues:
+    # install manually via "pip install --force-reinstall" to avoid circular dependency issues:
     # "mcp-code-checker @ git+https://github.com/MarcusJellinghaus/mcp-code-checker.git",
     # "mcp-server-filesystem @ git+https://github.com/MarcusJellinghaus/mcp_server_filesystem.git",
 ]
