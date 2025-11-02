@@ -103,36 +103,40 @@ Update user-facing documentation:
 
 ## Key Simplifications (KISS Principle)
 
+**See `decisions.md` for detailed decision rationale from planning review.**
+
 ### What We're NOT Implementing (MVP Scope)
 1. ❌ **Environment variable substitution** (`--use-env-vars`)
    - Complex feature requiring path detection, platform-specific variables
    - Users can manually edit `.mcp.json` if needed
    - **Recommendation**: Add in Phase 2 if user demand exists
 
-2. ❌ **Custom config directory** (`--config-dir`)
-   - Always use current working directory (project root)
-   - Matches Claude Code's project-based model
-   - Users run command from project directory
-
-3. ❌ **Complex validation framework**
+2. ❌ **Complex validation framework**
    - Simple inline normalization function
    - Immediate user feedback via print statements
+   - No validation of manually edited configs (Decision #5)
 
 ### What We're Keeping Simple
 1. ✅ **Copy-paste pattern** from `ClaudeDesktopHandler`
    - Same `mcpServers` structure
-   - Minimal changes for Claude Code specifics
+   - Minimal changes for Claude Code specifics (strip metadata, add type field)
    - Proven, tested code base
 
-2. ✅ **No metadata file**
+2. ✅ **No metadata file** (Decision #4)
    - All servers in `.mcp.json` are managed
    - Simpler remove logic (no ownership checks)
+   - Strip `_server_type` from configs before saving
    - Matches project config model
 
 3. ✅ **Basic help text**
    - Essential usage examples
    - No complex documentation system
    - Users learn by example
+
+4. ✅ **Simple error handling** (Decision #6)
+   - Raise `ValueError` for invalid server names (empty after normalization)
+   - Trust existing utilities for JSON errors (Decision #12)
+   - No backup cleanup automation (Decision #7)
 
 ## Implementation Approach
 
@@ -172,6 +176,9 @@ Each step includes:
 - **Files Modified**: 6 files + 2 new test files
 - **Implementation Time**: 4-6 hours with TDD approach
 - **Risk Level**: Low (follows existing patterns)
+
+## Planning Decisions
+See `decisions.md` for complete decision log from planning review discussion.
 
 ## Dependencies
 None - uses existing infrastructure

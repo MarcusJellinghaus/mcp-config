@@ -180,16 +180,18 @@ Each step builds on the previous one. Complete all tests before moving to the ne
 ## Getting Started
 
 1. Read [summary.md](summary.md) for full context
-2. Start with [step_1.md](step_1.md)
-3. Follow TDD approach strictly
-4. Complete each step fully before moving on
-5. Run tests after each step
-6. Review and refactor if needed
+2. Review [decisions.md](decisions.md) for planning decisions and rationale
+3. Start with [step_1.md](step_1.md)
+4. Follow TDD approach strictly
+5. Complete each step fully before moving on
+6. Run tests after each step
+7. Review and refactor if needed
 
 ## Questions?
 
 Refer back to:
 - **Summary** for architectural decisions
+- **Decisions.md** for planning review decisions and rationale
 - **Individual steps** for specific implementation details
 - **Issue #31** for original requirements
 - **Existing handlers** (ClaudeDesktopHandler, VSCodeHandler) for patterns
