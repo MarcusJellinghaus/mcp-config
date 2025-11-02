@@ -65,6 +65,9 @@ def test_normalize_server_name_length():
 
 def test_normalize_server_name_combined():
     """Test combination of transformations."""
+
+def test_normalize_server_name_empty_result():
+    """Test that names with only invalid characters raise ValueError."""
 ```
 
 ## HOW: Integration Points
@@ -115,10 +118,17 @@ def normalize_server_name(name: str) -> tuple[str, bool]:
     # Step 3: Truncate to 64 chars
     normalized = normalized[:64]
     
-    # Step 4: Check if modified
+    # Step 4: Check for empty string after normalization (DECISION #6)
+    if not normalized:
+        raise ValueError(
+            f"Server name '{original}' contains no valid characters after normalization. "
+            "Server names must contain at least one letter, number, underscore, or hyphen."
+        )
+    
+    # Step 5: Check if modified
     was_modified = (normalized != original)
     
-    # Step 5: Return tuple
+    # Step 6: Return tuple
     return normalized, was_modified
 ```
 
@@ -133,8 +143,8 @@ def normalize_server_name(name: str) -> tuple[str, bool]:
   - `bool`: True if name was modified, False if unchanged
 
 ### Test Cases
-| Input | Expected Output | Was Modified |
-|-------|----------------|--------------|
+| Input | Expected Output | Was Modified | Notes |
+|-------|----------------|--------------|-------|
 | `"my-server"` | `"my-server"` | `False` |
 | `"my server"` | `"my_server"` | `True` |
 | `"my server!"` | `"my_server"` | `True` |
@@ -142,7 +152,8 @@ def normalize_server_name(name: str) -> tuple[str, bool]:
 | `"a" * 100` | `"a" * 64` | `True` |
 | `"valid_name-123"` | `"valid_name-123"` | `False` |
 | `"  spaces  "` | `"__spaces__"` | `True` |
-| `"MixedCase"` | `"MixedCase"` | `False` |
+| `"MixedCase"` | `"MixedCase"` | `False` | |
+| `"!!!"` | `ValueError` | N/A | Edge case: empty after normalization |
 
 ## Implementation Order
 
@@ -163,10 +174,10 @@ def normalize_server_name(name: str) -> tuple[str, bool]:
 - [ ] No external dependencies beyond standard library
 
 ## Notes
-- Keep function pure (no side effects)
+- Keep function pure (no side effects, except raising ValueError)
 - Print statement happens in `setup_server()`, not in utility function
 - Function is used before saving to config file
-- Consider edge case: empty string after normalization → return original or raise error?
+- **Edge case handled**: Empty string after normalization raises `ValueError` (see Decision #6 in decisions.md)
 
 ## Next Step
 After completing this step, proceed to **Step 2: ClaudeCodeHandler Core Implementation**

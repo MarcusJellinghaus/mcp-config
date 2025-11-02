@@ -85,6 +85,9 @@ def _check_user_config_warning(self) -> None:
 
 def _add_type_field(self, server_config: dict[str, Any]) -> dict[str, Any]:
     """Add 'type': 'stdio' to server configuration."""
+
+def _strip_metadata_fields(self, server_config: dict[str, Any]) -> dict[str, Any]:
+    """Remove metadata fields like _server_type from config."""
 ```
 
 ## HOW: Integration Points
@@ -107,14 +110,14 @@ from .utils import (
 )
 ```
 
-### Inheritance from ClaudeDesktopHandler Pattern
+### Key Differences from ClaudeDesktopHandler
 ```python
 # Reuse structure from ClaudeDesktopHandler but adapt:
-# 1. get_config_path() -> return cwd / ".mcp.json"
-# 2. setup_server() -> add "type": "stdio", normalize name, no metadata
-# 3. remove_server() -> no metadata checks
-# 4. list_managed_servers() -> return all servers
-# 5. backup_config() -> use .mcp.backup_* naming
+# 1. get_config_path() -> return self.config_dir / ".mcp.json" (project-level)
+# 2. setup_server() -> add "type": "stdio", normalize name, strip _server_type metadata
+# 3. remove_server() -> no metadata checks (all servers are managed)
+# 4. list_managed_servers() -> return all servers (no metadata file)
+# 5. backup_config() -> use .mcp.backup_* naming (hidden files)
 ```
 
 ## ALGORITHM: Core Logic
@@ -122,12 +125,12 @@ from .utils import (
 ### setup_server() Pseudocode
 ```
 1. Normalize server name using normalize_server_name()
-2. Print normalization message if name changed
-3. Check and warn about user-level config
+2. Print normalization message if name changed (Decision #13: show every time)
+3. Check and warn about user-level config (Decision #2: informational only)
 4. Create backup of existing config
 5. Load current configuration
-6. Add "type": "stdio" to server_config
-7. Remove metadata fields from server_config (if any)
+6. Strip metadata fields from server_config (_server_type, etc.) (Decision #4)
+7. Add "type": "stdio" to server_config
 8. Add server to config["mcpServers"]
 9. Save updated configuration
 10. Return True on success, False on failure
@@ -148,6 +151,14 @@ from .utils import (
 1. Copy server_config to avoid mutation
 2. Add "type": "stdio" to copy
 3. Return modified config
+```
+
+### _strip_metadata_fields() Pseudocode
+```
+1. Copy server_config to avoid mutation
+2. Remove _server_type field if present
+3. Remove any other internal metadata fields
+4. Return cleaned config
 ```
 
 ## DATA: Input/Output Specifications
@@ -247,8 +258,8 @@ def test_list_managed_servers():
 def test_backup_config_creates_hidden_file():
     """Test backup uses .mcp.backup_* pattern"""
 
-def test_validate_config_requires_type_field():
-    """Test validation fails if type field missing"""
+def test_validate_config_basic():
+    """Test basic configuration validation (structure, required fields)"""
 ```
 
 ## Implementation Order
@@ -280,12 +291,13 @@ def test_validate_config_requires_type_field():
 ## Notes
 - Copy pattern from `ClaudeDesktopHandler` for consistency
 - Key differences from ClaudeDesktopHandler:
-  - `get_config_path()` returns project-level path
-  - `setup_server()` adds type field and normalizes names
-  - No metadata file operations
-  - Different backup naming convention
-- User config warning is informational only (non-blocking)
+  - `get_config_path()` returns project-level path (via config_dir parameter)
+  - `setup_server()` strips metadata fields, adds type field, and normalizes names
+  - No metadata file operations (all servers are managed)
+  - Different backup naming convention (hidden files)
+- User config warning is informational only (non-blocking) - Decision #2
 - All servers in `.mcp.json` are considered managed (owned by this tool)
+- **validate_config() does NOT check for type field** - Decision #5: users who manually edit are responsible for correctness
 
 ## Next Step
 After completing this step, proceed to **Step 3: CLI Integration**
