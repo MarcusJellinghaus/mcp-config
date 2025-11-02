@@ -26,3 +26,4 @@ venv/
 .mypy_cache/
 .ruff_cache/
 /build
+/.mcp-coder/create_plan_sessions
