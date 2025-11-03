@@ -97,16 +97,19 @@ def test_normalize_server_name_empty_result():
 @pytest.fixture(scope="function")
 def temp_config_dir(tmp_path):
     """Create a temporary directory for config testing."""
-    # Ensure clean state - remove any existing .mcp.json
-    config_file = tmp_path / ".mcp.json"
-    if config_file.exists():
-        config_file.unlink()
+    # Ensure clean state - remove any existing .mcp.json and backups
+    for file in tmp_path.glob(".mcp*.json"):
+        file.unlink()
     return tmp_path
 
 
 @pytest.fixture(scope="function")
 def handler(temp_config_dir):
     """Create a ClaudeCodeHandler instance with temp directory."""
+    # Ensure the directory is completely clean before creating handler
+    config_file = temp_config_dir / ".mcp.json"
+    if config_file.exists():
+        config_file.unlink()
     return ClaudeCodeHandler(config_dir=temp_config_dir)
 
 
@@ -270,16 +273,27 @@ def test_remove_server_not_found(handler, temp_config_dir, capsys):
 def test_list_managed_servers():
     """Test listing servers returns all servers as managed."""
     import tempfile
-    # Create a completely fresh temp directory
-    with tempfile.TemporaryDirectory() as tmpdir:
+    import uuid
+    # Create a completely fresh temp directory with unique name
+    with tempfile.TemporaryDirectory(prefix=f"test_list_{uuid.uuid4().hex}_") as tmpdir:
         temp_path = Path(tmpdir)
+        # Ensure directory is completely empty
+        assert not (temp_path / ".mcp.json").exists(), "Temp dir should not have .mcp.json"
         handler = ClaudeCodeHandler(config_dir=temp_path)
-    
+        
         # Setup multiple servers
         handler.setup_server("server1", {"command": "python1"})
         handler.setup_server("server2", {"command": "python2"})
 
         servers = handler.list_managed_servers()
+        
+        # Debug: print the actual config file contents
+        config_file = temp_path / ".mcp.json"
+        if config_file.exists():
+            with open(config_file, "r", encoding="utf-8") as f:
+                config_content = f.read()
+                print(f"\n=== CONFIG FILE CONTENTS ===\n{config_content}\n=========================")
+        
         assert len(servers) == 2, f"Expected 2 servers but found {len(servers)}: {[s['name'] for s in servers]}"
 
         # All servers should be marked as managed

@@ -189,7 +189,7 @@ class ClaudeCodeHandler(ClientHandler):
             # 10. Return True on success
             return True
 
-        except Exception as e:
+        except (ValueError, OSError, IOError, KeyError, TypeError) as e:
             print(f"Error setting up server '{server_name}': {e}")
             return False
 
@@ -223,7 +223,7 @@ class ClaudeCodeHandler(ClientHandler):
             # 6. Return True on success
             return True
 
-        except Exception as e:
+        except (OSError, IOError, KeyError, TypeError) as e:
             print(f"Error removing server '{server_name}': {e}")
             return False
 
@@ -327,7 +327,7 @@ class ClaudeCodeHandler(ClientHandler):
                 for name, server_config in config["mcpServers"].items():
                     errors.extend(validate_server_config(name, server_config))
 
-        except Exception as e:
+        except (OSError, IOError, TypeError) as e:
             errors.append(f"Error reading configuration: {e}")
 
         return errors
