@@ -9,7 +9,6 @@ import pytest
 
 from src.mcp_config.clients.claude_code import ClaudeCodeHandler, normalize_server_name
 
-
 # ============================================================================
 # Normalization Tests
 # ============================================================================
@@ -96,8 +95,9 @@ def test_normalize_server_name_empty_result():
 
 @pytest.fixture(scope="function")
 def temp_config_dir(tmp_path):
-    """Create a temporary directory for config testing."""
-    # Ensure clean state - remove any existing .mcp.json and backups
+    """Create a unique temporary directory for each test."""
+    # tmp_path is already unique per test function
+    # Ensure it's clean before test runs
     for file in tmp_path.glob(".mcp*.json"):
         file.unlink()
     return tmp_path
@@ -107,9 +107,9 @@ def temp_config_dir(tmp_path):
 def handler(temp_config_dir):
     """Create a ClaudeCodeHandler instance with temp directory."""
     # Ensure the directory is completely clean before creating handler
-    config_file = temp_config_dir / ".mcp.json"
-    if config_file.exists():
-        config_file.unlink()
+    # Remove all .mcp*.json files (config and backups)
+    for file in temp_config_dir.glob(".mcp*.json"):
+        file.unlink()
     return ClaudeCodeHandler(config_dir=temp_config_dir)
 
 
@@ -270,62 +270,67 @@ def test_remove_server_not_found(handler, temp_config_dir, capsys):
     assert "not found" in captured.out.lower()
 
 
-def test_list_managed_servers():
+def test_list_managed_servers(tmp_path):
     """Test listing servers returns all servers as managed."""
-    import tempfile
-    import uuid
-    # Create a completely fresh temp directory with unique name
-    with tempfile.TemporaryDirectory(prefix=f"test_list_{uuid.uuid4().hex}_") as tmpdir:
-        temp_path = Path(tmpdir)
-        # Ensure directory is completely empty
-        assert not (temp_path / ".mcp.json").exists(), "Temp dir should not have .mcp.json"
-        handler = ClaudeCodeHandler(config_dir=temp_path)
-        
-        # Setup multiple servers
-        handler.setup_server("server1", {"command": "python1"})
-        handler.setup_server("server2", {"command": "python2"})
+    # Use tmp_path directly (not via fixture) for complete isolation
+    # Ensure clean directory before test
+    config_file = tmp_path / ".mcp.json"
+    if config_file.exists():
+        config_file.unlink()
+    # Also remove any backup files
+    for file in tmp_path.glob(".mcp.backup*.json"):
+        file.unlink()
 
-        servers = handler.list_managed_servers()
-        
-        # Debug: print the actual config file contents
-        config_file = temp_path / ".mcp.json"
-        if config_file.exists():
-            with open(config_file, "r", encoding="utf-8") as f:
-                config_content = f.read()
-                print(f"\n=== CONFIG FILE CONTENTS ===\n{config_content}\n=========================")
-        
-        assert len(servers) == 2, f"Expected 2 servers but found {len(servers)}: {[s['name'] for s in servers]}"
+    # Create a fresh handler with clean temp directory
+    handler = ClaudeCodeHandler(config_dir=tmp_path)
 
-        # All servers should be marked as managed
-        server_names = {s["name"] for s in servers}
-        assert "server1" in server_names
-        assert "server2" in server_names
+    # Setup multiple servers (starting fresh with empty config)
+    config = {"mcpServers": {}}
+    handler.save_config(config)
 
-        # Check structure
-        for server in servers:
-            assert "name" in server
-            assert "type" in server
-            assert "command" in server
-            assert "managed" in server
-            assert server["managed"] is True
+    handler.setup_server("server1", {"command": "python1"})
+    handler.setup_server("server2", {"command": "python2"})
+
+    servers = handler.list_managed_servers()
+
+    # Check that we have exactly the servers we added
+    server_names = {s["name"] for s in servers}
+    assert server_names == {
+        "server1",
+        "server2",
+    }, f"Expected servers {{server1, server2}} but found: {server_names}"
+
+    # All servers should be marked as managed
+    server_names = {s["name"] for s in servers}
+    assert "server1" in server_names
+    assert "server2" in server_names
+
+    # Check structure
+    for server in servers:
+        assert "name" in server
+        assert "type" in server
+        assert "command" in server
+        assert "managed" in server
+        assert server["managed"] is True
 
 
-def test_list_all_servers():
+def test_list_all_servers(tmp_path):
     """Test list_all_servers returns same as list_managed_servers."""
-    import tempfile
-    # Create a completely fresh temp directory
-    with tempfile.TemporaryDirectory() as tmpdir:
-        temp_path = Path(tmpdir)
-        handler = ClaudeCodeHandler(config_dir=temp_path)
-        
-        handler.setup_server("server1", {"command": "python1"})
-        handler.setup_server("server2", {"command": "python2"})
+    # Use tmp_path directly (not via fixture) for complete isolation
+    # Ensure clean directory before test
+    for file in tmp_path.glob(".mcp*.json"):
+        file.unlink()
+    # Create a fresh handler with clean temp directory
+    handler = ClaudeCodeHandler(config_dir=tmp_path)
 
-        managed = handler.list_managed_servers()
-        all_servers = handler.list_all_servers()
+    handler.setup_server("server1", {"command": "python1"})
+    handler.setup_server("server2", {"command": "python2"})
 
-        assert len(managed) == len(all_servers)
-        assert set(s["name"] for s in managed) == set(s["name"] for s in all_servers)
+    managed = handler.list_managed_servers()
+    all_servers = handler.list_all_servers()
+
+    assert len(managed) == len(all_servers)
+    assert set(s["name"] for s in managed) == set(s["name"] for s in all_servers)
 
 
 def test_backup_config_creates_hidden_file(handler, temp_config_dir):

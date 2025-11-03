@@ -161,9 +161,7 @@ class ClaudeCodeHandler(ClientHandler):
 
             # 2. Print normalization message if name changed
             if was_modified:
-                print(
-                    f"Server name normalized: '{server_name}' -> '{normalized_name}'"
-                )
+                print(f"Server name normalized: '{server_name}' -> '{normalized_name}'")
 
             # 3. Check and warn about user-level config
             self._check_user_config_warning()
@@ -298,18 +296,19 @@ class ClaudeCodeHandler(ClientHandler):
         Returns:
             List of validation errors (empty if valid)
         """
-        errors = []
+        errors: list[str] = []
 
         try:
             config_path = self.get_config_path()
-            
+
             # Check if config file exists
             if not config_path.exists():
                 # No config file is valid (will use default)
                 return errors
-            
+
             # Try to load and parse the config
             import json
+
             try:
                 with open(config_path, "r", encoding="utf-8") as f:
                     config = json.load(f)
