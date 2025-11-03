@@ -7,12 +7,14 @@ MCP server configurations in different client applications.
 from typing import Any, Callable, Union
 
 from .base import ClientHandler
+from .claude_code import ClaudeCodeHandler
 from .claude_desktop import ClaudeDesktopHandler
 from .intellij import IntelliJHandler
 from .vscode import VSCodeHandler
 
 __all__ = [
     "ClientHandler",
+    "ClaudeCodeHandler",
     "ClaudeDesktopHandler",
     "IntelliJHandler",
     "VSCodeHandler",
@@ -25,6 +27,7 @@ __all__ = [
 HandlerFactory = Union[type[ClientHandler], Callable[[], ClientHandler]]
 
 CLIENT_HANDLERS: dict[str, HandlerFactory] = {
+    "claude-code": ClaudeCodeHandler,
     "claude-desktop": ClaudeDesktopHandler,
     "vscode-workspace": lambda: VSCodeHandler(workspace=True),
     "vscode-user": lambda: VSCodeHandler(workspace=False),
