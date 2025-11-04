@@ -11,6 +11,9 @@ pip install git+https://github.com/MarcusJellinghaus/mcp-config.git
 # Setup for Claude Desktop
 mcp-config setup mcp-code-checker "My Project" --project-dir .
 
+# Setup for Claude Code (project-level)
+mcp-config setup mcp-code-checker "My Project" --client claude-code --project-dir .
+
 # Setup for VSCode (team projects)
 mcp-config setup mcp-code-checker "My Project" --client vscode-workspace --project-dir .
 
@@ -58,7 +61,8 @@ mcp-config help mcp-code-checker --quick
 
 ## Supported Clients
 
-- **Claude Desktop** - claude_desktop_config.json
+- **Claude Desktop** - claude_desktop_config.json (user-level)
+- **Claude Code** - .mcp.json (project-level)
 - **VSCode** - .vscode/mcp.json  
 - **IntelliJ/PyCharm** - GitHub Copilot mcp.json
 

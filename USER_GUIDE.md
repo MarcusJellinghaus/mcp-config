@@ -49,6 +49,13 @@ mcp-config help [<topic>]
 - **Use for:** Personal AI assistant
 - **Paths:** Always absolute
 
+### Claude Code (`claude-code`)
+- **Config:** `.mcp.json` in project root directory
+- **Use for:** Project-level AI coding assistant
+- **Paths:** Absolute (converted from relative)
+- **Shareable:** Yes, commit to Git for team collaboration
+- **Requirements:** Server names must match pattern `[a-zA-Z0-9_-]` (1-64 characters)
+
 ### VSCode Workspace (`vscode-workspace`)  
 - **Config:** `.vscode/mcp.json` in project
 - **Use for:** Team projects, version control sharing
@@ -99,6 +106,82 @@ mcp-config setup mcp-server-filesystem myfs \
 ```
 
 **Parameter Help:** Use `mcp-config help <server-type>` for complete parameter documentation.
+
+## Claude Code Configuration
+
+Claude Code uses project-level configuration files (`.mcp.json`) located in your project root directory.
+
+### Configuration File Location
+- **Path**: `.mcp.json` in your project root directory
+- **Scope**: Project-level (each project has its own config)
+- **Version Control**: Can be committed to Git for team sharing
+
+### Setup Example
+```bash
+# Navigate to your project directory
+cd /path/to/your/project
+
+# Setup MCP server for this project
+mcp-config setup mcp-code-checker "my-checker" --client claude-code --project-dir .
+
+# Result: Creates .mcp.json in current directory
+```
+
+### Configuration Format
+```json
+{
+  "mcpServers": {
+    "my-checker": {
+      "type": "stdio",
+      "command": "python.exe",
+      "args": ["--project-dir", "C:\\path\\to\\project"],
+      "env": {"PYTHONPATH": "C:\\path\\"}
+    }
+  }
+}
+```
+
+### Key Differences from Claude Desktop
+- **Location**: Project root (cwd) vs user config directory
+- **Type field**: Requires `"type": "stdio"` for all servers
+- **Scope**: Per-project vs user-wide
+- **Version control**: Typically committed to Git
+
+### Server Name Requirements
+Claude Code has specific naming requirements:
+- **Pattern**: `[a-zA-Z0-9_-]` (letters, numbers, underscores, hyphens only)
+- **Length**: 1-64 characters maximum
+- **Auto-normalization**: Invalid characters are automatically normalized
+  - Spaces → underscores
+  - Invalid characters → removed
+  - Names truncated to 64 characters
+
+```bash
+# Example: Server name normalization
+mcp-config setup mcp-code-checker "my server!" --client claude-code --project-dir .
+# ℹ️  Server name normalized: 'my server!' → 'my_server'
+```
+
+### Common Commands
+```bash
+# List servers in current project
+mcp-config list --client claude-code
+
+# Remove server from current project
+mcp-config remove "my-checker" --client claude-code
+
+# Validate server configuration
+mcp-config validate "my-checker" --client claude-code
+
+# Preview changes without applying
+mcp-config setup mcp-code-checker "test" --client claude-code --project-dir . --dry-run
+```
+
+### Best Practices
+1. **Run from project root**: Always run commands from your project directory
+2. **Commit to Git**: Include `.mcp.json` in version control for team sharing
+3. **Automatic backups**: Each configuration change creates a timestamped backup (`.mcp.backup_*.json`) for easy rollback
+4. **Consistent naming**: Use clear, descriptive server names following conventions
 
 ## IntelliJ/PyCharm Support
 
