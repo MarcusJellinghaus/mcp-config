@@ -291,7 +291,7 @@ class ClaudeCodeHandler(ClientHandler):
         return backup_path
 
     def validate_config(self) -> list[str]:
-        """Validate config including type field requirement.
+        """Validate basic config structure (does not validate type field).
 
         Returns:
             List of validation errors (empty if valid)
