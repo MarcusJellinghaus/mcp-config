@@ -3,7 +3,8 @@
 import json
 import os
 from pathlib import Path
-from unittest.mock import patch
+from typing import Any, Dict
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -14,7 +15,7 @@ from src.mcp_config.clients.claude_code import ClaudeCodeHandler, normalize_serv
 # ============================================================================
 
 
-def test_normalize_server_name_valid():
+def test_normalize_server_name_valid() -> None:
     """Test that valid names pass through unchanged."""
     # Valid with hyphens
     normalized, was_modified = normalize_server_name("my-server")
@@ -32,7 +33,7 @@ def test_normalize_server_name_valid():
     assert was_modified is False
 
 
-def test_normalize_server_name_spaces():
+def test_normalize_server_name_spaces() -> None:
     """Test that spaces are converted to underscores."""
     normalized, was_modified = normalize_server_name("my server")
     assert normalized == "my_server"
@@ -44,7 +45,7 @@ def test_normalize_server_name_spaces():
     assert was_modified is True
 
 
-def test_normalize_server_name_invalid_chars():
+def test_normalize_server_name_invalid_chars() -> None:
     """Test that invalid characters are removed."""
     # Special characters
     normalized, was_modified = normalize_server_name("my server!")
@@ -57,7 +58,7 @@ def test_normalize_server_name_invalid_chars():
     assert was_modified is True
 
 
-def test_normalize_server_name_length():
+def test_normalize_server_name_length() -> None:
     """Test that names longer than 64 chars are truncated."""
     long_name = "a" * 100
     normalized, was_modified = normalize_server_name(long_name)
@@ -66,7 +67,7 @@ def test_normalize_server_name_length():
     assert was_modified is True
 
 
-def test_normalize_server_name_combined():
+def test_normalize_server_name_combined() -> None:
     """Test combination of transformations."""
     # Spaces + invalid chars + length (need valid chars to remain after cleanup)
     long_name_with_issues = "my server!" + "a" * 100 + "@@@"
@@ -77,7 +78,7 @@ def test_normalize_server_name_combined():
     assert was_modified is True
 
 
-def test_normalize_server_name_empty_result():
+def test_normalize_server_name_empty_result() -> None:
     """Test that names with only invalid characters raise ValueError."""
     with pytest.raises(ValueError) as exc_info:
         normalize_server_name("!!!")
@@ -94,7 +95,7 @@ def test_normalize_server_name_empty_result():
 
 
 @pytest.fixture(scope="function")
-def temp_config_dir(tmp_path):
+def temp_config_dir(tmp_path: Path) -> Path:
     """Create a unique temporary directory for each test."""
     # tmp_path is already unique per test function
     # Ensure it's clean before test runs
@@ -104,7 +105,7 @@ def temp_config_dir(tmp_path):
 
 
 @pytest.fixture(scope="function")
-def handler(temp_config_dir, monkeypatch):
+def handler(temp_config_dir: Path, monkeypatch: pytest.MonkeyPatch) -> ClaudeCodeHandler:
     """Create a ClaudeCodeHandler instance with temp directory."""
     # Ensure the directory is completely clean before creating handler
     # Remove all .mcp*.json files (config and backups)
@@ -115,7 +116,7 @@ def handler(temp_config_dir, monkeypatch):
     # by mocking the Claude Desktop handler's get_config_path to point nowhere
     from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
 
-    def mock_claude_desktop_config_path(self):
+    def mock_claude_desktop_config_path(self) -> Path:
         # Return a non-existent path in temp directory to prevent real config access
         return temp_config_dir / "isolated_claude_desktop_config.json"
 
@@ -126,21 +127,21 @@ def handler(temp_config_dir, monkeypatch):
     return ClaudeCodeHandler(config_dir=temp_config_dir)
 
 
-def test_get_config_path_default(temp_config_dir):
+def test_get_config_path_default(temp_config_dir: Path) -> None:
     """Test config path is config_dir/.mcp.json."""
     handler = ClaudeCodeHandler(config_dir=temp_config_dir)
     config_path = handler.get_config_path()
     assert config_path == temp_config_dir / ".mcp.json"
 
 
-def test_get_config_path_cwd():
+def test_get_config_path_cwd() -> None:
     """Test config path defaults to cwd/.mcp.json."""
     handler = ClaudeCodeHandler()
     config_path = handler.get_config_path()
     assert config_path == Path.cwd() / ".mcp.json"
 
 
-def test_load_config_creates_default(handler):
+def test_load_config_creates_default(handler: ClaudeCodeHandler) -> None:
     """Test loading non-existent config returns default structure."""
     config = handler.load_config()
     assert "mcpServers" in config
@@ -148,7 +149,7 @@ def test_load_config_creates_default(handler):
     assert len(config["mcpServers"]) == 0
 
 
-def test_load_config_existing(handler, temp_config_dir):
+def test_load_config_existing(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test loading existing config returns the content."""
     # Create a config file
     config_path = temp_config_dir / ".mcp.json"
@@ -168,7 +169,7 @@ def test_load_config_existing(handler, temp_config_dir):
     assert config == test_config
 
 
-def test_save_config_creates_file(handler, temp_config_dir):
+def test_save_config_creates_file(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test saving config creates .mcp.json file."""
     config = {"mcpServers": {"my-server": {"type": "stdio", "command": "test"}}}
     handler.save_config(config)
@@ -182,7 +183,7 @@ def test_save_config_creates_file(handler, temp_config_dir):
     assert saved_config == config
 
 
-def test_setup_server_adds_type_field(handler, temp_config_dir):
+def test_setup_server_adds_type_field(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test that type: stdio is added to server config."""
     server_config = {"command": "python", "args": ["-m", "test"]}
     result = handler.setup_server("my-server", server_config)
@@ -196,7 +197,7 @@ def test_setup_server_adds_type_field(handler, temp_config_dir):
     assert config["mcpServers"]["my-server"]["command"] == "python"
 
 
-def test_setup_server_normalizes_name(handler, temp_config_dir, capsys):
+def test_setup_server_normalizes_name(handler: ClaudeCodeHandler, temp_config_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Test that server names are normalized."""
     server_config = {"command": "python", "args": ["-m", "test"]}
     result = handler.setup_server("my server!", server_config)
@@ -214,7 +215,7 @@ def test_setup_server_normalizes_name(handler, temp_config_dir, capsys):
     assert "my server!" not in config["mcpServers"]
 
 
-def test_setup_server_strips_metadata(handler, temp_config_dir):
+def test_setup_server_strips_metadata(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test that metadata fields like _server_type are stripped."""
     server_config = {
         "command": "python",
@@ -235,7 +236,12 @@ def test_setup_server_strips_metadata(handler, temp_config_dir):
 
 
 @patch("pathlib.Path.home")
-def test_setup_server_warns_user_config(mock_home, handler, temp_config_dir, capsys):
+def test_setup_server_warns_user_config(
+    mock_home: MagicMock,
+    handler: ClaudeCodeHandler,
+    temp_config_dir: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test warning printed if ~/.mcp.json exists."""
     # Create a fake home directory with user config
     fake_home = temp_config_dir / "home"
@@ -255,7 +261,7 @@ def test_setup_server_warns_user_config(mock_home, handler, temp_config_dir, cap
     assert "warning" in captured.out.lower() or "note" in captured.out.lower()
 
 
-def test_remove_server_success(handler, temp_config_dir):
+def test_remove_server_success(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test removing existing server."""
     # Setup a server first
     server_config = {"command": "python", "args": ["-m", "test"]}
@@ -274,7 +280,7 @@ def test_remove_server_success(handler, temp_config_dir):
     assert "my-server" not in config["mcpServers"]
 
 
-def test_remove_server_not_found(handler, temp_config_dir, capsys):
+def test_remove_server_not_found(handler: ClaudeCodeHandler, temp_config_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Test removing non-existent server fails gracefully."""
     result = handler.remove_server("nonexistent-server")
     assert result is False
@@ -283,7 +289,7 @@ def test_remove_server_not_found(handler, temp_config_dir, capsys):
     assert "not found" in captured.out.lower()
 
 
-def test_list_managed_servers(tmp_path):
+def test_list_managed_servers(tmp_path: Path) -> None:
     """Test listing servers returns all servers as managed."""
     # Use tmp_path directly (not via fixture) for complete isolation
     # Ensure clean directory before test
@@ -298,7 +304,7 @@ def test_list_managed_servers(tmp_path):
     handler = ClaudeCodeHandler(config_dir=tmp_path)
 
     # Setup multiple servers (starting fresh with empty config)
-    config = {"mcpServers": {}}
+    config: Dict[str, Any] = {"mcpServers": {}}
     handler.save_config(config)
 
     handler.setup_server("server1", {"command": "python1"})
@@ -327,7 +333,7 @@ def test_list_managed_servers(tmp_path):
         assert server["managed"] is True
 
 
-def test_list_all_servers(tmp_path):
+def test_list_all_servers(tmp_path: Path) -> None:
     """Test list_all_servers returns same as list_managed_servers."""
     # Use tmp_path directly (not via fixture) for complete isolation
     # Ensure clean directory before test
@@ -346,7 +352,7 @@ def test_list_all_servers(tmp_path):
     assert set(s["name"] for s in managed) == set(s["name"] for s in all_servers)
 
 
-def test_backup_config_creates_hidden_file(handler, temp_config_dir):
+def test_backup_config_creates_hidden_file(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test backup uses .mcp.backup_* pattern."""
     # Create initial config
     handler.setup_server("test-server", {"command": "python"})
@@ -359,7 +365,7 @@ def test_backup_config_creates_hidden_file(handler, temp_config_dir):
     assert backup_path.suffix == ".json"
 
 
-def test_validate_config_basic(handler, temp_config_dir):
+def test_validate_config_basic(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test basic configuration validation."""
     # Valid config
     handler.setup_server("test-server", {"command": "python", "args": []})
@@ -367,7 +373,7 @@ def test_validate_config_basic(handler, temp_config_dir):
     assert len(errors) == 0
 
 
-def test_validate_config_invalid_structure(handler, temp_config_dir):
+def test_validate_config_invalid_structure(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test validation catches invalid config structure."""
     # Create invalid config
     config_path = temp_config_dir / ".mcp.json"
@@ -379,7 +385,7 @@ def test_validate_config_invalid_structure(handler, temp_config_dir):
     assert any("mcpServers" in err for err in errors)
 
 
-def test_validate_config_missing_required_fields(handler, temp_config_dir):
+def test_validate_config_missing_required_fields(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
     """Test validation catches missing required fields."""
     # Create config with server missing command
     config_path = temp_config_dir / ".mcp.json"

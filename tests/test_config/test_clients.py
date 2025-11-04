@@ -139,7 +139,7 @@ class TestClaudeDesktopHandler:
     """Test ClaudeDesktopHandler functionality with isolated config paths."""
 
     @pytest.fixture(scope="class", autouse=True)
-    def clean_real_config(self):
+    def clean_real_config(self) -> Generator[None, None, None]:
         """Clean any pollution in real config files before and after tests."""
         # Before tests: backup and clean real config if it has test data
         real_config_path = None
@@ -217,7 +217,7 @@ class TestClaudeDesktopHandler:
             pass
 
     @pytest.fixture
-    def temp_config_dir(self) -> Generator[Path, None, None]:
+    def temp_config_dir(self) -> Generator[Path, None, None]:  # type: ignore[misc]
         """Create a temporary directory for config files."""
         with tempfile.TemporaryDirectory() as tmpdir:
             temp_path = Path(tmpdir)
@@ -236,7 +236,7 @@ class TestClaudeDesktopHandler:
                     pass
 
     @pytest.fixture(autouse=True)
-    def mock_config_path(self, temp_config_dir: Path, monkeypatch: Any) -> None:
+    def mock_config_path(self, temp_config_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[misc]
         """Mock the config path at class level for ALL tests.
 
         This fixture is autouse=True to ensure complete test isolation by preventing
@@ -275,7 +275,7 @@ class TestClaudeDesktopHandler:
         monkeypatch.setattr(utils, "load_json_config", patched_load_json_config)
 
     @pytest.fixture
-    def handler(self, temp_config_dir: Path) -> ClaudeDesktopHandler:
+    def handler(self, temp_config_dir: Path) -> ClaudeDesktopHandler:  # type: ignore[misc]
         """Create a handler with mocked config path."""
         config_path = temp_config_dir / "claude_desktop_config.json"
 
@@ -294,7 +294,7 @@ class TestClaudeDesktopHandler:
         return handler
 
     @pytest.fixture
-    def sample_config(self) -> Dict[str, Any]:
+    def sample_config(self) -> Dict[str, Any]:  # type: ignore[misc]
         """Sample Claude Desktop configuration."""
         return {
             "mcpServers": {
@@ -311,7 +311,7 @@ class TestClaudeDesktopHandler:
         }
 
     @pytest.fixture
-    def managed_server_config(self) -> Dict[str, Any]:
+    def managed_server_config(self) -> Dict[str, Any]:  # type: ignore[misc]
         """Configuration for a managed server."""
         return {
             "command": "/usr/bin/python",
@@ -322,7 +322,7 @@ class TestClaudeDesktopHandler:
         }
 
     def test_load_missing_config(
-        self, handler: ClaudeDesktopHandler, monkeypatch: Any
+        self, handler: ClaudeDesktopHandler, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """Test loading when config doesn't exist."""
         # Ensure the temp config file doesn't exist
@@ -644,7 +644,7 @@ class TestMetadataSeparation:
     """Test that metadata is properly separated from Claude Desktop config."""
 
     @pytest.fixture
-    def temp_config_dir(self) -> Generator[Path, None, None]:
+    def temp_config_dir(self) -> Generator[Path, None, None]:  # type: ignore[misc]
         """Create a temporary directory for config files."""
         with tempfile.TemporaryDirectory() as tmpdir:
             temp_path = Path(tmpdir)
@@ -663,7 +663,7 @@ class TestMetadataSeparation:
                     pass
 
     @pytest.fixture(autouse=True)
-    def mock_config_path(self, temp_config_dir: Path, monkeypatch: Any) -> None:
+    def mock_config_path(self, temp_config_dir: Path, monkeypatch: pytest.MonkeyPatch) -> None:  # type: ignore[misc]
         """Mock the config path at class level for ALL tests in this class."""
         config_path = temp_config_dir / "claude_desktop_config.json"
 
@@ -673,7 +673,7 @@ class TestMetadataSeparation:
         )
 
     @pytest.fixture
-    def handler(self, temp_config_dir: Path) -> ClaudeDesktopHandler:
+    def handler(self, temp_config_dir: Path) -> ClaudeDesktopHandler:  # type: ignore[misc]
         """Create a handler with mocked config path."""
         config_path = temp_config_dir / "claude_desktop_config.json"
 

@@ -2,7 +2,7 @@
 
 import sys
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,7 +22,7 @@ from src.mcp_config.servers import MCP_CODE_CHECKER
 
 # Global fixture to prevent cross-contamination with Claude Desktop config
 @pytest.fixture(scope="module", autouse=True)
-def isolate_claude_desktop_config(tmp_path_factory):
+def isolate_claude_desktop_config(tmp_path_factory: pytest.TempPathFactory) -> Generator[None, None, None]:
     """Prevent any accidental writes to Claude Desktop config during integration tests."""
     temp_dir = tmp_path_factory.mktemp("claude_desktop_isolation")
 
@@ -30,17 +30,17 @@ def isolate_claude_desktop_config(tmp_path_factory):
 
     original_get_config_path = ClaudeDesktopHandler.get_config_path
 
-    def mock_get_config_path(self):
+    def mock_get_config_path(self: ClaudeDesktopHandler) -> Path:
         # Return isolated path to prevent real config access
         return temp_dir / "isolated_claude_desktop_config.json"
 
     # Patch for the duration of this module
-    ClaudeDesktopHandler.get_config_path = mock_get_config_path
+    ClaudeDesktopHandler.get_config_path = mock_get_config_path  # type: ignore[method-assign]
 
     yield
 
     # Restore original method
-    ClaudeDesktopHandler.get_config_path = original_get_config_path
+    ClaudeDesktopHandler.get_config_path = original_get_config_path  # type: ignore[method-assign]
 
 
 
@@ -104,7 +104,7 @@ class TestClaudeCodeSetupCommand:
         mock_handler.setup_server.assert_called_once()
 
     def test_setup_with_normalization(
-        self, mock_handler: MagicMock, temp_project_dir: Path, capsys
+        self, mock_handler: MagicMock, temp_project_dir: Path, capsys: pytest.CaptureFixture[str]
     ) -> None:
         """Test setup normalizes server name."""
         user_params = {"project_dir": str(temp_project_dir)}
