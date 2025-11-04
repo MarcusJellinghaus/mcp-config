@@ -496,7 +496,13 @@ def handle_list_command(args: argparse.Namespace) -> int:
             clients = [args.client]
         else:
             # List all clients when no specific client is specified
-            clients = ["claude-desktop", "claude-code", "vscode-workspace", "vscode-user", "intellij"]
+            clients = [
+                "claude-desktop",
+                "claude-code",
+                "vscode-workspace",
+                "vscode-user",
+                "intellij",
+            ]
 
         for client_name in clients:
             try:

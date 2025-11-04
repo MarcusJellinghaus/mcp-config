@@ -11,7 +11,13 @@ from typing import Any
 from .servers import ServerConfig, registry
 
 # Supported MCP clients
-SUPPORTED_CLIENTS = ["claude-desktop", "claude-code", "vscode-workspace", "vscode-user", "intellij"]
+SUPPORTED_CLIENTS = [
+    "claude-desktop",
+    "claude-code",
+    "vscode-workspace",
+    "vscode-user",
+    "intellij",
+]
 
 
 def build_setup_parser(server_type: str | None = None) -> argparse.ArgumentParser:
