@@ -346,7 +346,7 @@ class TestClaudeDesktopHandler:
             metadata_path.unlink()
 
         # Most direct approach: mock the load_config method itself
-        def mock_load_config():
+        def mock_load_config() -> Dict[str, Any]:
             return {"mcpServers": {}}
 
         # Apply the mock for this test only
