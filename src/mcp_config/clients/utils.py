@@ -141,10 +141,6 @@ def validate_server_config(name: str, server_config: dict[str, Any]) -> list[str
     """
     errors = []
 
-    if not isinstance(server_config, dict):
-        errors.append(f"Server '{name}' configuration must be an object")
-        return errors
-
     # Check required fields
     if "command" not in server_config:
         errors.append(f"Server '{name}' missing required 'command' field")
