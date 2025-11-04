@@ -104,7 +104,7 @@ def temp_config_dir(tmp_path: Path) -> Path:
     return tmp_path
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture(scope="function")  # type: ignore[misc]
 def handler(
     temp_config_dir: Path, monkeypatch: pytest.MonkeyPatch
 ) -> ClaudeCodeHandler:
@@ -118,7 +118,7 @@ def handler(
     # by mocking the Claude Desktop handler's get_config_path to point nowhere
     from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
 
-    def mock_claude_desktop_config_path(self) -> Path:
+    def mock_claude_desktop_config_path(self: Any) -> Path:
         # Return a non-existent path in temp directory to prevent real config access
         return temp_config_dir / "isolated_claude_desktop_config.json"
 
