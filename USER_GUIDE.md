@@ -180,7 +180,7 @@ mcp-config setup mcp-code-checker "test" --client claude-code --project-dir . --
 ### Best Practices
 1. **Run from project root**: Always run commands from your project directory
 2. **Commit to Git**: Include `.mcp.json` in version control for team sharing
-3. **Backup files**: Backups are created as hidden files (`.mcp.backup_*.json`)
+3. **Automatic backups**: Each configuration change creates a timestamped backup (`.mcp.backup_*.json`) for easy rollback
 4. **Consistent naming**: Use clear, descriptive server names following conventions
 
 ## IntelliJ/PyCharm Support

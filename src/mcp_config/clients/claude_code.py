@@ -4,7 +4,7 @@ import re
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any
 
 from .base import ClientHandler
 from .constants import DEFAULT_CLAUDE_CONFIG
@@ -15,7 +15,7 @@ from .utils import (
 )
 
 
-def normalize_server_name(name: str) -> Tuple[str, bool]:
+def normalize_server_name(name: str) -> tuple[str, bool]:
     """
     Normalize server name to meet Claude Code requirements.
 
