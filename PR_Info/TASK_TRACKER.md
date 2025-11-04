@@ -41,7 +41,7 @@ This tracks **Feature Implementation** consisting of multiple **Implementation S
 
 [x] Register ClaudeCodeHandler in `src/mcp_config/clients/__init__.py`
 [x] Run pylint on modified files and fix all issues
-[ ] Run pytest on integration tests and fix all failures
+[x] Run pytest on integration tests and fix all failures
 [ ] Run mypy on modified files and fix all type errors
 [ ] Prepare git commit message for Step 3
 
