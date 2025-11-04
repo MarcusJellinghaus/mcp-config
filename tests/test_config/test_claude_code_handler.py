@@ -110,21 +110,19 @@ def handler(temp_config_dir, monkeypatch):
     # Remove all .mcp*.json files (config and backups)
     for file in temp_config_dir.glob(".mcp*.json"):
         file.unlink()
-    
+
     # Prevent any accidental cross-pollution with Claude Desktop config
     # by mocking the Claude Desktop handler's get_config_path to point nowhere
     from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
-    
+
     def mock_claude_desktop_config_path(self):
         # Return a non-existent path in temp directory to prevent real config access
         return temp_config_dir / "isolated_claude_desktop_config.json"
-    
+
     monkeypatch.setattr(
-        ClaudeDesktopHandler,
-        "get_config_path",
-        mock_claude_desktop_config_path
+        ClaudeDesktopHandler, "get_config_path", mock_claude_desktop_config_path
     )
-    
+
     return ClaudeCodeHandler(config_dir=temp_config_dir)
 
 

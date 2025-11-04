@@ -51,13 +51,19 @@ class TestIntelliJHelpSupport:
         """Test that setup command help mentions all supported clients."""
         help_text = CommandHelpFormatter.format_setup_command_help()
         assert "any supported MCP client" in help_text
-        assert "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij" in help_text
+        assert (
+            "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij"
+            in help_text
+        )
 
     def test_setup_command_verbose_help_explains_clients(self) -> None:
         """Test that verbose setup help explains each client type."""
         help_text = CommandHelpFormatter.format_setup_command_help(verbose=True)
         assert "claude-desktop: Claude Desktop app configuration" in help_text
-        assert "claude-code: Claude Code CLI project configuration (.mcp.json)" in help_text
+        assert (
+            "claude-code: Claude Code CLI project configuration (.mcp.json)"
+            in help_text
+        )
         assert (
             "vscode-workspace: VSCode workspace .vscode/mcp.json (team sharing)"
             in help_text
@@ -79,7 +85,10 @@ class TestIntelliJHelpSupport:
         """Test that remove command help mentions all supported clients."""
         help_text = CommandHelpFormatter.format_remove_command_help()
         assert "any supported MCP client" in help_text
-        assert "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij" in help_text
+        assert (
+            "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij"
+            in help_text
+        )
 
     def test_remove_command_examples_include_intellij(self) -> None:
         """Test that remove command examples include IntelliJ usage."""
@@ -93,7 +102,10 @@ class TestIntelliJHelpSupport:
         """Test that list command help mentions all supported clients."""
         help_text = CommandHelpFormatter.format_list_command_help()
         assert "across supported MCP clients" in help_text
-        assert "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij" in help_text
+        assert (
+            "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij"
+            in help_text
+        )
 
     def test_list_command_examples_include_intellij(self) -> None:
         """Test that list command examples include IntelliJ usage."""
@@ -104,7 +116,10 @@ class TestIntelliJHelpSupport:
     def test_validate_command_help_mentions_all_clients(self) -> None:
         """Test that validate command help mentions all supported clients."""
         help_text = CommandHelpFormatter.format_validate_command_help()
-        assert "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij" in help_text
+        assert (
+            "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij"
+            in help_text
+        )
 
     def test_validate_command_examples_include_intellij(self) -> None:
         """Test that validate command examples include IntelliJ usage."""
@@ -167,7 +182,9 @@ class TestMultiClientConsistency:
 
     def test_client_choices_consistent_across_commands(self) -> None:
         """Test that client choices are consistently listed across all commands."""
-        expected_choices = "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij"
+        expected_choices = (
+            "claude-desktop, claude-code, vscode-workspace, vscode-user, intellij"
+        )
 
         commands = [
             CommandHelpFormatter.format_setup_command_help(),
