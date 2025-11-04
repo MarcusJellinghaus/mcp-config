@@ -7,6 +7,27 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+# Global fixture to prevent cross-contamination with Claude Desktop config
+@pytest.fixture(scope="module", autouse=True)
+def isolate_claude_desktop_config(tmp_path_factory):
+    """Prevent any accidental writes to Claude Desktop config during integration tests."""
+    temp_dir = tmp_path_factory.mktemp("claude_desktop_isolation")
+    
+    from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
+    original_get_config_path = ClaudeDesktopHandler.get_config_path
+    
+    def mock_get_config_path(self):
+        # Return isolated path to prevent real config access
+        return temp_dir / "isolated_claude_desktop_config.json"
+    
+    # Patch for the duration of this module
+    ClaudeDesktopHandler.get_config_path = mock_get_config_path
+    
+    yield
+    
+    # Restore original method
+    ClaudeDesktopHandler.get_config_path = original_get_config_path
+
 from src.mcp_config.clients import (
     CLIENT_HANDLERS,
     ClaudeCodeHandler,
