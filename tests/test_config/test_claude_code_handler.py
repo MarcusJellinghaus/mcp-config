@@ -105,7 +105,9 @@ def temp_config_dir(tmp_path: Path) -> Path:
 
 
 @pytest.fixture(scope="function")
-def handler(temp_config_dir: Path, monkeypatch: pytest.MonkeyPatch) -> ClaudeCodeHandler:
+def handler(
+    temp_config_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> ClaudeCodeHandler:
     """Create a ClaudeCodeHandler instance with temp directory."""
     # Ensure the directory is completely clean before creating handler
     # Remove all .mcp*.json files (config and backups)
@@ -149,7 +151,9 @@ def test_load_config_creates_default(handler: ClaudeCodeHandler) -> None:
     assert len(config["mcpServers"]) == 0
 
 
-def test_load_config_existing(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_load_config_existing(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test loading existing config returns the content."""
     # Create a config file
     config_path = temp_config_dir / ".mcp.json"
@@ -169,7 +173,9 @@ def test_load_config_existing(handler: ClaudeCodeHandler, temp_config_dir: Path)
     assert config == test_config
 
 
-def test_save_config_creates_file(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_save_config_creates_file(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test saving config creates .mcp.json file."""
     config = {"mcpServers": {"my-server": {"type": "stdio", "command": "test"}}}
     handler.save_config(config)
@@ -183,7 +189,9 @@ def test_save_config_creates_file(handler: ClaudeCodeHandler, temp_config_dir: P
     assert saved_config == config
 
 
-def test_setup_server_adds_type_field(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_setup_server_adds_type_field(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test that type: stdio is added to server config."""
     server_config = {"command": "python", "args": ["-m", "test"]}
     result = handler.setup_server("my-server", server_config)
@@ -197,7 +205,11 @@ def test_setup_server_adds_type_field(handler: ClaudeCodeHandler, temp_config_di
     assert config["mcpServers"]["my-server"]["command"] == "python"
 
 
-def test_setup_server_normalizes_name(handler: ClaudeCodeHandler, temp_config_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_setup_server_normalizes_name(
+    handler: ClaudeCodeHandler,
+    temp_config_dir: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test that server names are normalized."""
     server_config = {"command": "python", "args": ["-m", "test"]}
     result = handler.setup_server("my server!", server_config)
@@ -215,7 +227,9 @@ def test_setup_server_normalizes_name(handler: ClaudeCodeHandler, temp_config_di
     assert "my server!" not in config["mcpServers"]
 
 
-def test_setup_server_strips_metadata(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_setup_server_strips_metadata(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test that metadata fields like _server_type are stripped."""
     server_config = {
         "command": "python",
@@ -261,7 +275,9 @@ def test_setup_server_warns_user_config(
     assert "warning" in captured.out.lower() or "note" in captured.out.lower()
 
 
-def test_remove_server_success(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_remove_server_success(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test removing existing server."""
     # Setup a server first
     server_config = {"command": "python", "args": ["-m", "test"]}
@@ -280,7 +296,11 @@ def test_remove_server_success(handler: ClaudeCodeHandler, temp_config_dir: Path
     assert "my-server" not in config["mcpServers"]
 
 
-def test_remove_server_not_found(handler: ClaudeCodeHandler, temp_config_dir: Path, capsys: pytest.CaptureFixture[str]) -> None:
+def test_remove_server_not_found(
+    handler: ClaudeCodeHandler,
+    temp_config_dir: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
     """Test removing non-existent server fails gracefully."""
     result = handler.remove_server("nonexistent-server")
     assert result is False
@@ -352,7 +372,9 @@ def test_list_all_servers(tmp_path: Path) -> None:
     assert set(s["name"] for s in managed) == set(s["name"] for s in all_servers)
 
 
-def test_backup_config_creates_hidden_file(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_backup_config_creates_hidden_file(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test backup uses .mcp.backup_* pattern."""
     # Create initial config
     handler.setup_server("test-server", {"command": "python"})
@@ -365,7 +387,9 @@ def test_backup_config_creates_hidden_file(handler: ClaudeCodeHandler, temp_conf
     assert backup_path.suffix == ".json"
 
 
-def test_validate_config_basic(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_validate_config_basic(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test basic configuration validation."""
     # Valid config
     handler.setup_server("test-server", {"command": "python", "args": []})
@@ -373,7 +397,9 @@ def test_validate_config_basic(handler: ClaudeCodeHandler, temp_config_dir: Path
     assert len(errors) == 0
 
 
-def test_validate_config_invalid_structure(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_validate_config_invalid_structure(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test validation catches invalid config structure."""
     # Create invalid config
     config_path = temp_config_dir / ".mcp.json"
@@ -385,7 +411,9 @@ def test_validate_config_invalid_structure(handler: ClaudeCodeHandler, temp_conf
     assert any("mcpServers" in err for err in errors)
 
 
-def test_validate_config_missing_required_fields(handler: ClaudeCodeHandler, temp_config_dir: Path) -> None:
+def test_validate_config_missing_required_fields(
+    handler: ClaudeCodeHandler, temp_config_dir: Path
+) -> None:
     """Test validation catches missing required fields."""
     # Create config with server missing command
     config_path = temp_config_dir / ".mcp.json"
