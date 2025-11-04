@@ -11,7 +11,7 @@ from typing import Any
 from .servers import ServerConfig, registry
 
 # Supported MCP clients
-SUPPORTED_CLIENTS = ["claude-desktop", "vscode-workspace", "vscode-user", "intellij"]
+SUPPORTED_CLIENTS = ["claude-desktop", "claude-code", "vscode-workspace", "vscode-user", "intellij"]
 
 
 def build_setup_parser(server_type: str | None = None) -> argparse.ArgumentParser:
@@ -68,7 +68,7 @@ def add_global_options(parser: argparse.ArgumentParser) -> None:
         "--client",
         default="claude-desktop",
         choices=SUPPORTED_CLIENTS,
-        help="MCP client to configure. Options: claude-desktop, vscode-workspace (workspace config), vscode-user (user profile config), intellij (GitHub Copilot)",
+        help="MCP client to configure. Options: claude-desktop, claude-code (project .mcp.json), vscode-workspace (workspace config), vscode-user (user profile config), intellij (GitHub Copilot)",
     )
     parser.add_argument(
         "--dry-run",
@@ -393,7 +393,7 @@ def add_validate_subcommand(subparsers: Any) -> None:
         "--client",
         default="claude-desktop",
         choices=SUPPORTED_CLIENTS,
-        help="MCP client to validate (claude-desktop, vscode-workspace, vscode-user, intellij)",
+        help="MCP client to validate (claude-desktop, claude-code, vscode-workspace, vscode-user, intellij)",
     )
     validate_parser.add_argument(
         "--verbose",
@@ -475,8 +475,11 @@ def get_usage_examples() -> str:
   # Basic setup with auto-detection (Claude Desktop)
   mcp-config setup mcp-code-checker my-checker --project-dir .
   
+  # Setup for Claude Code (project-level .mcp.json)
+  mcp-config setup mcp-code-checker my-project --project-dir . --client claude-code
+  
   # Setup for VSCode workspace (recommended for team sharing)
-  mcp-config setup mcp-code-checker my-project --project-dir . --client vscode-workspace
+  mcp-config setup mcp-code-checker team-proj --project-dir . --client vscode-workspace
   
   # Setup for VSCode user profile (personal, all projects) 
   mcp-config setup mcp-code-checker global --project-dir ~/projects --client vscode-user
@@ -501,7 +504,8 @@ def get_usage_examples() -> str:
   # List all servers across all clients
   mcp-config list --detailed
   
-  # List VSCode servers
+  # List servers for specific clients
+  mcp-config list --client claude-code --detailed
   mcp-config list --client vscode-workspace --detailed
   mcp-config list --client vscode-user --detailed"""
 
@@ -515,6 +519,9 @@ def get_setup_examples() -> str:
     return """Examples:
   # Basic usage with auto-detection (Claude Desktop)
   mcp-config setup mcp-code-checker my-checker --project-dir .
+  
+  # Setup for Claude Code (project-level .mcp.json)
+  mcp-config setup mcp-code-checker my-project --project-dir . --client claude-code
   
   # Setup for VSCode workspace (recommended for team sharing)
   mcp-config setup mcp-code-checker team-project --project-dir . --client vscode-workspace
@@ -551,8 +558,11 @@ def get_remove_examples() -> str:
   # Remove a single server from Claude Desktop
   mcp-config remove my-checker
   
+  # Remove from Claude Code
+  mcp-config remove my-project --client claude-code
+  
   # Remove from VSCode workspace
-  mcp-config remove my-project --client vscode-workspace
+  mcp-config remove team-proj --client vscode-workspace
   
   # Remove from VSCode user profile
   mcp-config remove global --client vscode-user
@@ -588,6 +598,7 @@ def get_list_examples() -> str:
   
   # List servers for specific client
   mcp-config list --client claude-desktop
+  mcp-config list --client claude-code
   mcp-config list --client vscode-workspace
   mcp-config list --client vscode-user
   mcp-config list --client intellij
@@ -617,7 +628,8 @@ def get_validate_examples() -> str:
   
   # Validate for specific clients
   mcp-config validate my-checker --client claude-desktop
-  mcp-config validate my-project --client vscode-workspace
+  mcp-config validate my-project --client claude-code
+  mcp-config validate team-proj --client vscode-workspace
   mcp-config validate global --client vscode-user
   mcp-config validate my-intellij --client intellij"""
 
