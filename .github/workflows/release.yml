@@ -83,11 +83,7 @@ jobs:
           fi
           echo "$CHANGELOG" > release_notes.md
         else
-          {
-            echo "Release ${TAG_NAME}"
-            echo ""
-            echo "See git history for changes."
-          } > release_notes.md
+          printf "Release %s\n\nSee git history for changes.\n" "${TAG_NAME}" > release_notes.md
         fi
 
         echo "Release notes:"
