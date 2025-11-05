@@ -23,9 +23,9 @@ class TestPackageVersion:
 
         # Should match semantic versioning: X.Y.Z or X.Y.Z.devN
         pattern = r"^\d+\.\d+\.\d+(\.(dev|rc|alpha|beta)\d+)?$"
-        assert re.match(pattern, __version__), (
-            f"Version '{__version__}' does not match semantic versioning pattern"
-        )
+        assert re.match(
+            pattern, __version__
+        ), f"Version '{__version__}' does not match semantic versioning pattern"
 
     def test_version_not_empty(self) -> None:
         """Test that version is not an empty string."""
@@ -105,7 +105,11 @@ class TestCLIVersion:
             if action.dest == "version":
                 # The version string is formatted as "%(prog)s {__version__}"
                 # We can verify __version__ is in the version string
-                assert __version__ in str(action.version)
+                version_str = getattr(action, "version", None)
+                assert (
+                    version_str is not None
+                ), "Version action has no version attribute"
+                assert __version__ in str(version_str)
                 break
         else:
             pytest.fail("No version action found in parser")
