@@ -17,9 +17,23 @@
 - Git operations
 - Running batch scripts
 
+## 📦 Development Environment
+
+**Before running any dev tools (formatters, linters, tests):**
+- Check `pyproject.toml` for required dev dependencies
+- Install dev dependencies: `pip install -e ".[dev]"`
+- This ensures tools like `black`, `isort`, `pylint`, `pytest`, and `mypy` are available
+
+**Tool configurations are defined in `pyproject.toml`:**
+- `[tool.black]` - Black formatter settings
+- `[tool.isort]` - Import sorting settings (profile=black, float_to_top=true)
+- `[tool.mypy]` - Type checking settings
+- `[tool.pytest.ini_options]` - Test configuration
+
 ## 📝 Pull Request Workflow
 
 **BEFORE creating or updating ANY pull request:**
-1. Run code formatting: `bash tools/format_all.sh`
-2. Review and commit any formatting changes
-3. Then proceed with PR creation/update
+1. Ensure dev dependencies are installed: `pip install -e ".[dev]"`
+2. Run code formatting: `bash tools/format_all.sh`
+3. Review and commit any formatting changes
+4. Then proceed with PR creation/update
