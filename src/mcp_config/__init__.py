@@ -8,9 +8,14 @@ from .servers import registry
 
 # Version - managed by setuptools-scm
 try:
-    from importlib.metadata import version
+    from importlib.metadata import PackageNotFoundError, version
+
     __version__ = version("mcp-config")
-except Exception:
+except (PackageNotFoundError, ImportError, ModuleNotFoundError):
+    # Fallback when:
+    # - Package not installed (PackageNotFoundError)
+    # - importlib.metadata unavailable (ImportError)
+    # - Module structure issues (ModuleNotFoundError)
     __version__ = "0.1.0.dev0"
 
 # Set up logging
