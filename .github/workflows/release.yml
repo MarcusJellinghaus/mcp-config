@@ -89,11 +89,9 @@ jobs:
           echo "$CHANGELOG" > release_notes.md
         else
           # No CHANGELOG.md, create default release notes
-          cat > release_notes.md <<EOF
-        Release ${TAG_NAME}
-
-        See git history for changes.
-        EOF
+          echo "Release ${TAG_NAME}" > release_notes.md
+          echo "" >> release_notes.md
+          echo "See git history for changes." >> release_notes.md
         fi
         echo "Release notes:"
         cat release_notes.md
