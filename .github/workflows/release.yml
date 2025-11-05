@@ -74,25 +74,22 @@ jobs:
     - name: Extract changelog for this version
       id: changelog
       run: |
-        # Try to extract changelog section for this version
         TAG_NAME="${{ github.ref_name }}"
 
         if [ -f "CHANGELOG.md" ]; then
-          # Extract section between this version and the next
           CHANGELOG=$(sed -n "/## \[${TAG_NAME}\]/,/## \[/p" CHANGELOG.md | sed '$ d')
-
           if [ -z "$CHANGELOG" ]; then
             CHANGELOG="Release ${TAG_NAME}"
           fi
-
-          # Save to file for GitHub release
           echo "$CHANGELOG" > release_notes.md
         else
-          # No CHANGELOG.md, create default release notes
-          echo "Release ${TAG_NAME}" > release_notes.md
-          echo "" >> release_notes.md
-          echo "See git history for changes." >> release_notes.md
+          {
+            echo "Release ${TAG_NAME}"
+            echo ""
+            echo "See git history for changes."
+          } > release_notes.md
         fi
+
         echo "Release notes:"
         cat release_notes.md
 
