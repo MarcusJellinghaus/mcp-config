@@ -58,7 +58,12 @@ asyncio_default_fixture_loop_scope = "function"
 pythonpath = ["."]
 markers = [
     "cli: Tests for CLI command functionality",
-    "installation: Tests for installation modes"
+    "installation: Tests for installation modes",
+    "unit: Pure unit tests with no file I/O",
+    "integration: Integration tests with file I/O",
+    "client_handler: Tests for specific client handlers",
+    "cross_client: Tests that involve multiple clients",
+    "isolation_critical: Tests that must be completely isolated"
 ]
 
 
