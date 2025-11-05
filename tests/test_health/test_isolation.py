@@ -108,8 +108,8 @@ class TestIsolationHealth(BaseClientHandlerTest):
     @pytest.mark.isolation_critical
     def test_multiple_handlers_isolated(self, isolated_temp_dir: Path) -> None:
         """Verify that multiple handler types don't interfere with each other."""
-        from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
         from src.mcp_config.clients.claude_code import ClaudeCodeHandler
+        from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
 
         # Create both handler types
         desktop_handler = ClaudeDesktopHandler()

@@ -43,8 +43,8 @@ class BaseClientHandlerTest:
         in classes that inherit from BaseClientHandlerTest.
         """
         # Import all client handlers
-        from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
         from src.mcp_config.clients.claude_code import ClaudeCodeHandler
+        from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
 
         # Create separate subdirectories for each handler type to prevent cross-pollution
         claude_desktop_dir = isolated_temp_dir / "claude_desktop"

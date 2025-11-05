@@ -36,9 +36,11 @@ def global_test_isolation() -> Generator[None, None, None]:
     try:
         # Patch get_client_handler to prevent automatic migration on handler creation
         from src.mcp_config.clients import (
+            CLIENT_HANDLERS,
+        )
+        from src.mcp_config.clients import (
             get_client_handler as original_get_client_handler,
         )
-        from src.mcp_config.clients import CLIENT_HANDLERS
 
         def safe_get_client_handler(client_name: str) -> Any:
             """Get client handler without triggering migration."""
