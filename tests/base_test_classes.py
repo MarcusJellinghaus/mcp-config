@@ -48,9 +48,15 @@ class BaseClientHandlerTest:
         from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
         from src.mcp_config.clients.claude_code import ClaudeCodeHandler
 
+        # Create separate subdirectories for each handler type to prevent cross-pollution
+        claude_desktop_dir = isolated_temp_dir / "claude_desktop"
+        claude_code_dir = isolated_temp_dir / "claude_code"
+        claude_desktop_dir.mkdir(exist_ok=True)
+        claude_code_dir.mkdir(exist_ok=True)
+
         # Mock Claude Desktop Handler
         def mock_claude_desktop_config_path(self: Any) -> Path:
-            return isolated_temp_dir / "claude_desktop_config.json"
+            return claude_desktop_dir / "claude_desktop_config.json"
 
         monkeypatch.setattr(
             ClaudeDesktopHandler,
@@ -75,8 +81,8 @@ class BaseClientHandlerTest:
         def patched_load_json_config(path: Any, default: Any = None) -> Any:
             """Force any claude_desktop_config.json access to use temp path."""
             if hasattr(path, "name") and path.name == "claude_desktop_config.json":
-                # Redirect to temp path
-                temp_config_path = isolated_temp_dir / "claude_desktop_config.json"
+                # Redirect to claude_desktop subdirectory
+                temp_config_path = claude_desktop_dir / "claude_desktop_config.json"
                 return original_load_json_config(temp_config_path, default)
             return original_load_json_config(path, default)
 
@@ -88,8 +94,8 @@ class BaseClientHandlerTest:
         original_claude_code_init = claude_code.ClaudeCodeHandler.__init__
 
         def mock_claude_code_init(self: Any, config_dir: Path | None = None) -> None:
-            """Force Claude Code handler to use isolated temp dir."""
-            original_claude_code_init(self, config_dir=isolated_temp_dir)
+            """Force Claude Code handler to use isolated subdirectory."""
+            original_claude_code_init(self, config_dir=claude_code_dir)
 
         monkeypatch.setattr(
             claude_code.ClaudeCodeHandler,
@@ -157,7 +163,7 @@ class BaseClaudeDesktopTest(BaseClientHandlerTest):
         """Create a Claude Desktop handler with isolated config path."""
         from src.mcp_config.clients.claude_desktop import ClaudeDesktopHandler
 
-        # The config path is already mocked by setup_isolation
+        # The config path is already mocked by setup_isolation to use claude_desktop subdirectory
         handler = ClaudeDesktopHandler()
 
         # Ensure config file doesn't exist at start of test
@@ -173,6 +179,12 @@ class BaseClaudeDesktopTest(BaseClientHandlerTest):
                 metadata_path.unlink()
         except ImportError:
             pass
+
+        # Also ensure no other config files in the directory
+        if config_path.parent.exists():
+            for file in config_path.parent.glob("*.json"):
+                if file != config_path:
+                    file.unlink()
 
         return handler
 
@@ -216,13 +228,16 @@ class BaseClaudeCodeTest(BaseClientHandlerTest):
         """Create a Claude Code handler with isolated config directory."""
         from src.mcp_config.clients.claude_code import ClaudeCodeHandler
 
-        # Ensure directory is completely clean
-        for file in isolated_temp_dir.glob(".mcp*.json"):
-            file.unlink()
+        # The config_dir is automatically set to claude_code subdirectory by setup_isolation
+        claude_code_dir = isolated_temp_dir / "claude_code"
 
-        # The config_dir is automatically set to isolated_temp_dir by setup_isolation
-        # but we create it explicitly here for clarity
-        return ClaudeCodeHandler(config_dir=isolated_temp_dir)
+        # Ensure directory is completely clean
+        if claude_code_dir.exists():
+            for file in claude_code_dir.glob(".mcp*.json"):
+                file.unlink()
+
+        # Create handler - it will use claude_code_dir due to mocking in setup_isolation
+        return ClaudeCodeHandler()
 
     @pytest.fixture
     def sample_config(self) -> dict[str, Any]:

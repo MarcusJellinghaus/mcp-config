@@ -121,11 +121,15 @@ class TestIsolationHealth(BaseClientHandlerTest):
         desktop_path = desktop_handler.get_config_path()
         code_path = code_handler.get_config_path()
 
-        # Both should be in the same isolated temp dir
+        # Both should be in the isolated temp dir (but in separate subdirectories)
         assert str(isolated_temp_dir) in str(desktop_path)
         assert str(isolated_temp_dir) in str(code_path)
 
-        # But they should be different files
+        # They should be in different subdirectories
+        assert "claude_desktop" in str(desktop_path)
+        assert "claude_code" in str(code_path)
+
+        # And they should be different files
         assert desktop_path != code_path
 
         # Set up a server in desktop handler
@@ -157,9 +161,13 @@ class TestIsolationHealth(BaseClientHandlerTest):
         assert "test-desktop-server" in desktop_config["mcpServers"]
         assert "test-code-server" in code_config["mcpServers"]
 
-        # Each should only have its own server
-        assert "test-code-server" not in desktop_config["mcpServers"]
-        assert "test-desktop-server" not in code_config["mcpServers"]
+        # Each should only have its own server (no cross-pollution)
+        assert "test-code-server" not in desktop_config["mcpServers"], (
+            f"Desktop handler polluted with Code server! Config: {desktop_config}"
+        )
+        assert "test-desktop-server" not in code_config["mcpServers"], (
+            f"Code handler polluted with Desktop server! Config: {code_config}"
+        )
 
 
 class TestFileSystemIsolation:
