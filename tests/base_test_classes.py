@@ -35,9 +35,7 @@ class BaseClientHandlerTest:
 
     @pytest.fixture(autouse=True)
     def setup_isolation(
-        self,
-        isolated_temp_dir: Path,
-        monkeypatch: pytest.MonkeyPatch
+        self, isolated_temp_dir: Path, monkeypatch: pytest.MonkeyPatch
     ) -> Generator[None, None, None]:
         """Automatically isolate all client handlers for every test in this class.
 
@@ -59,9 +57,7 @@ class BaseClientHandlerTest:
             return claude_desktop_dir / "claude_desktop_config.json"
 
         monkeypatch.setattr(
-            ClaudeDesktopHandler,
-            "get_config_path",
-            mock_claude_desktop_config_path
+            ClaudeDesktopHandler, "get_config_path", mock_claude_desktop_config_path
         )
 
         # Also patch at the module level to catch any direct imports
@@ -70,7 +66,7 @@ class BaseClientHandlerTest:
         monkeypatch.setattr(
             claude_desktop.ClaudeDesktopHandler,
             "get_config_path",
-            mock_claude_desktop_config_path
+            mock_claude_desktop_config_path,
         )
 
         # Mock load_json_config to ensure temp path usage
@@ -98,9 +94,7 @@ class BaseClientHandlerTest:
             original_claude_code_init(self, config_dir=claude_code_dir)
 
         monkeypatch.setattr(
-            claude_code.ClaudeCodeHandler,
-            "__init__",
-            mock_claude_code_init
+            claude_code.ClaudeCodeHandler, "__init__", mock_claude_code_init
         )
 
         # Try to mock VSCode and IntelliJ handlers if they exist
@@ -111,9 +105,7 @@ class BaseClientHandlerTest:
                 return isolated_temp_dir / "vscode_settings.json"
 
             monkeypatch.setattr(
-                VSCodeHandler,
-                "get_config_path",
-                mock_vscode_config_path
+                VSCodeHandler, "get_config_path", mock_vscode_config_path
             )
         except (ImportError, AttributeError):
             pass
@@ -125,9 +117,7 @@ class BaseClientHandlerTest:
                 return isolated_temp_dir / "intellij_config.json"
 
             monkeypatch.setattr(
-                IntelliJHandler,
-                "get_config_path",
-                mock_intellij_config_path
+                IntelliJHandler, "get_config_path", mock_intellij_config_path
             )
         except (ImportError, AttributeError):
             pass
@@ -136,6 +126,7 @@ class BaseClientHandlerTest:
 
         # Cleanup: ensure all temp files are removed
         import shutil
+
         if isolated_temp_dir.exists():
             try:
                 shutil.rmtree(isolated_temp_dir, ignore_errors=True)
@@ -174,6 +165,7 @@ class BaseClaudeDesktopTest(BaseClientHandlerTest):
         # Clean up metadata file too
         try:
             from src.mcp_config.clients.constants import METADATA_FILE
+
             metadata_path = config_path.parent / METADATA_FILE
             if metadata_path.exists():
                 metadata_path.unlink()
@@ -269,27 +261,27 @@ class BaseIntegrationTest(BaseClientHandlerTest):
 
         # Create instances of all available handlers
         try:
-            handlers['claude-desktop'] = get_client_handler('claude-desktop')
+            handlers["claude-desktop"] = get_client_handler("claude-desktop")
         except Exception:
             pass
 
         try:
-            handlers['claude-code'] = get_client_handler('claude-code')
+            handlers["claude-code"] = get_client_handler("claude-code")
         except Exception:
             pass
 
         try:
-            handlers['vscode-workspace'] = get_client_handler('vscode-workspace')
+            handlers["vscode-workspace"] = get_client_handler("vscode-workspace")
         except Exception:
             pass
 
         try:
-            handlers['vscode-user'] = get_client_handler('vscode-user')
+            handlers["vscode-user"] = get_client_handler("vscode-user")
         except Exception:
             pass
 
         try:
-            handlers['intellij'] = get_client_handler('intellij')
+            handlers["intellij"] = get_client_handler("intellij")
         except Exception:
             pass
 

@@ -36,14 +36,12 @@ class TestIsolationHealth(BaseClientHandlerTest):
 
         # Verify it's not in user home directory
         home_dir = Path.home()
-        assert not str(config_path).startswith(str(home_dir)), (
-            f"Handler is accessing home directory: {config_path}"
-        )
+        assert not str(config_path).startswith(
+            str(home_dir)
+        ), f"Handler is accessing home directory: {config_path}"
 
     @pytest.mark.isolation_critical
-    def test_no_real_config_access_claude_code(
-        self, isolated_temp_dir: Path
-    ) -> None:
+    def test_no_real_config_access_claude_code(self, isolated_temp_dir: Path) -> None:
         """Verify Claude Code handler doesn't access real config files."""
         from src.mcp_config.clients.claude_code import ClaudeCodeHandler
 
@@ -140,7 +138,7 @@ class TestIsolationHealth(BaseClientHandlerTest):
                 "args": ["desktop.py"],
                 "_managed_by": "mcp-config-managed",
                 "_server_type": "test",
-            }
+            },
         )
 
         # Set up a server in code handler
@@ -151,7 +149,7 @@ class TestIsolationHealth(BaseClientHandlerTest):
                 "args": ["code.py"],
                 "_managed_by": "mcp-config-managed",
                 "_server_type": "test",
-            }
+            },
         )
 
         # Load configs and verify they're separate
@@ -162,12 +160,12 @@ class TestIsolationHealth(BaseClientHandlerTest):
         assert "test-code-server" in code_config["mcpServers"]
 
         # Each should only have its own server (no cross-pollution)
-        assert "test-code-server" not in desktop_config["mcpServers"], (
-            f"Desktop handler polluted with Code server! Config: {desktop_config}"
-        )
-        assert "test-desktop-server" not in code_config["mcpServers"], (
-            f"Code handler polluted with Desktop server! Config: {code_config}"
-        )
+        assert (
+            "test-code-server" not in desktop_config["mcpServers"]
+        ), f"Desktop handler polluted with Code server! Config: {desktop_config}"
+        assert (
+            "test-desktop-server" not in code_config["mcpServers"]
+        ), f"Code handler polluted with Desktop server! Config: {code_config}"
 
 
 class TestFileSystemIsolation:
@@ -221,11 +219,10 @@ class TestFileSystemIsolation:
 
         # Directory should be empty (or only contain expected files)
         # Filter out any system files like .DS_Store
-        files = [f for f in files if not f.name.startswith('.')]
+        files = [f for f in files if not f.name.startswith(".")]
 
         assert len(files) == 0, (
-            f"Temp directory is not clean: {files}. "
-            "Cross-test pollution detected!"
+            f"Temp directory is not clean: {files}. " "Cross-test pollution detected!"
         )
 
 
@@ -244,9 +241,7 @@ class TestMigrationIsolation:
             return isolated_temp_dir / "claude_desktop_config.json"
 
         monkeypatch.setattr(
-            ClaudeDesktopHandler,
-            "get_config_path",
-            mock_get_config_path
+            ClaudeDesktopHandler, "get_config_path", mock_get_config_path
         )
 
         # Create a config with inline metadata
@@ -278,6 +273,7 @@ class TestMigrationIsolation:
 
         # Verify real config wasn't touched (if it exists)
         import platform
+
         if os.name == "nt":  # Windows
             real_config_base = Path.home() / "AppData" / "Roaming" / "Claude"
         elif platform.system() == "Darwin":  # macOS
@@ -295,9 +291,9 @@ class TestMigrationIsolation:
                 try:
                     real_config = json.load(f)
                     if "mcpServers" in real_config:
-                        assert "test-server" not in real_config["mcpServers"], (
-                            "Migration affected real config file!"
-                        )
+                        assert (
+                            "test-server" not in real_config["mcpServers"]
+                        ), "Migration affected real config file!"
                 except json.JSONDecodeError:
                     pass
 

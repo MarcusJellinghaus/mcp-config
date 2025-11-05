@@ -65,6 +65,7 @@ def load_json_config(
     if not config_path.exists():
         # Return a deep copy to prevent shared mutable state between handlers
         import copy
+
         return copy.deepcopy(default_config)
 
     try:
@@ -74,6 +75,7 @@ def load_json_config(
     except (json.JSONDecodeError, IOError) as e:
         # If there's an error reading/parsing, return deep copy of default
         import copy
+
         return copy.deepcopy(default_config)
 
 

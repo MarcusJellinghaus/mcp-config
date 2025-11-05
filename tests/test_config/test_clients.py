@@ -143,9 +143,7 @@ class TestClaudeDesktopHandler(BaseClaudeDesktopTest):
     and fixtures for handler, sample_config, and managed_server_config.
     """
 
-    def test_load_missing_config(
-        self, handler: ClaudeDesktopHandler
-    ) -> None:
+    def test_load_missing_config(self, handler: ClaudeDesktopHandler) -> None:
         """Test loading when config doesn't exist.
 
         With proper isolation from BaseClaudeDesktopTest, this test should work
@@ -165,6 +163,7 @@ class TestClaudeDesktopHandler(BaseClaudeDesktopTest):
         # Also ensure no metadata file exists
         try:
             from src.mcp_config.clients.constants import METADATA_FILE
+
             metadata_path = config_path.parent / METADATA_FILE
             if metadata_path.exists():
                 metadata_path.unlink()

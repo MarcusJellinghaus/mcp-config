@@ -16,3 +16,10 @@
 **Standard tools ONLY for:**
 - Git operations
 - Running batch scripts
+
+## 📝 Pull Request Workflow
+
+**BEFORE creating or updating ANY pull request:**
+1. Run code formatting: `bash tools/format_all.sh`
+2. Review and commit any formatting changes
+3. Then proceed with PR creation/update

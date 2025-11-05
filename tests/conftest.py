@@ -35,7 +35,9 @@ def global_test_isolation() -> Generator[None, None, None]:
 
     try:
         # Patch get_client_handler to prevent automatic migration on handler creation
-        from src.mcp_config.clients import get_client_handler as original_get_client_handler
+        from src.mcp_config.clients import (
+            get_client_handler as original_get_client_handler,
+        )
         from src.mcp_config.clients import CLIENT_HANDLERS
 
         def safe_get_client_handler(client_name: str) -> Any:
@@ -57,8 +59,7 @@ def global_test_isolation() -> Generator[None, None, None]:
 
         # Apply the patch
         patch_get_handler = patch(
-            'src.mcp_config.clients.get_client_handler',
-            safe_get_client_handler
+            "src.mcp_config.clients.get_client_handler", safe_get_client_handler
         )
         patch_get_handler.start()
         patches.append(patch_get_handler)
@@ -136,9 +137,7 @@ def mock_all_client_handlers(
         return isolated_temp_dir / "claude_desktop_config.json"
 
     monkeypatch.setattr(
-        ClaudeDesktopHandler,
-        "get_config_path",
-        mock_claude_desktop_config_path
+        ClaudeDesktopHandler, "get_config_path", mock_claude_desktop_config_path
     )
 
     # Mock Claude Code Handler - it already takes config_dir parameter
@@ -152,9 +151,7 @@ def mock_all_client_handlers(
         original_claude_code_init(self, config_dir=isolated_temp_dir)
 
     monkeypatch.setattr(
-        claude_code.ClaudeCodeHandler,
-        "__init__",
-        mock_claude_code_init
+        claude_code.ClaudeCodeHandler, "__init__", mock_claude_code_init
     )
 
     # Mock VSCode Handler
@@ -164,11 +161,7 @@ def mock_all_client_handlers(
         def mock_vscode_config_path(self: Any) -> Path:
             return isolated_temp_dir / "vscode_settings.json"
 
-        monkeypatch.setattr(
-            VSCodeHandler,
-            "get_config_path",
-            mock_vscode_config_path
-        )
+        monkeypatch.setattr(VSCodeHandler, "get_config_path", mock_vscode_config_path)
     except ImportError:
         pass  # VSCode handler might not exist yet
 
@@ -180,9 +173,7 @@ def mock_all_client_handlers(
             return isolated_temp_dir / "intellij_config.json"
 
         monkeypatch.setattr(
-            IntelliJHandler,
-            "get_config_path",
-            mock_intellij_config_path
+            IntelliJHandler, "get_config_path", mock_intellij_config_path
         )
     except ImportError:
         pass  # IntelliJ handler might not exist yet
@@ -201,9 +192,7 @@ def sample_configs() -> dict[str, dict[str, Any]]:
             # ... test code ...
     """
     return {
-        "empty": {
-            "mcpServers": {}
-        },
+        "empty": {"mcpServers": {}},
         "claude_desktop_basic": {
             "mcpServers": {
                 "filesystem": {
@@ -239,25 +228,16 @@ def sample_configs() -> dict[str, dict[str, Any]]:
 def pytest_configure(config: Any) -> None:
     """Configure pytest with custom markers and settings."""
     # Register custom markers to avoid warnings
+    config.addinivalue_line("markers", "unit: Pure unit tests with no file I/O")
+    config.addinivalue_line("markers", "integration: Integration tests with file I/O")
     config.addinivalue_line(
-        "markers",
-        "unit: Pure unit tests with no file I/O"
+        "markers", "client_handler: Tests for specific client handlers"
     )
     config.addinivalue_line(
-        "markers",
-        "integration: Integration tests with file I/O"
+        "markers", "cross_client: Tests that involve multiple clients"
     )
     config.addinivalue_line(
-        "markers",
-        "client_handler: Tests for specific client handlers"
-    )
-    config.addinivalue_line(
-        "markers",
-        "cross_client: Tests that involve multiple clients"
-    )
-    config.addinivalue_line(
-        "markers",
-        "isolation_critical: Tests that must be completely isolated"
+        "markers", "isolation_critical: Tests that must be completely isolated"
     )
 
 
