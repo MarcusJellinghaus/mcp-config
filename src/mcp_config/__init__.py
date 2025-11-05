@@ -6,6 +6,13 @@ from typing import List, Tuple
 from .discovery import initialize_external_servers
 from .servers import registry
 
+# Version - managed by setuptools-scm
+try:
+    from importlib.metadata import version
+    __version__ = version("mcp-config")
+except Exception:
+    __version__ = "0.1.0.dev0"
+
 # Set up logging
 logger = logging.getLogger(__name__)
 
