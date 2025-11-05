@@ -16,3 +16,11 @@
 **Standard tools ONLY for:**
 - Git operations
 - Running batch scripts
+
+## 📝 Pull Request Workflow
+
+**BEFORE creating or updating ANY pull request:**
+1. Install dev dependencies: `pip install -e ".[dev]"`
+2. Run formatting: `bash tools/format_all.sh`
+3. Commit formatting changes
+4. Proceed with PR

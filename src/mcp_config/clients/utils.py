@@ -60,20 +60,23 @@ def load_json_config(
         default_config: Default configuration to return if file doesn't exist or has errors
 
     Returns:
-        Configuration dictionary
+        Configuration dictionary (deep copy of default if file doesn't exist)
     """
     if not config_path.exists():
-        return default_config
+        # Return a deep copy to prevent shared mutable state between handlers
+        import copy
+
+        return copy.deepcopy(default_config)
 
     try:
         with open(config_path, "r", encoding="utf-8") as f:
             config: dict[str, Any] = json.load(f)
             return config
     except (json.JSONDecodeError, IOError) as e:
-        # If there's an error reading/parsing, return default
-        # but log warning if needed in production
-        print(f"Warning: Error loading config from {config_path}: {e}")
-        return default_config
+        # If there's an error reading/parsing, return deep copy of default
+        import copy
+
+        return copy.deepcopy(default_config)
 
 
 def save_json_config(config_path: Path, config: dict[str, Any]) -> None:
