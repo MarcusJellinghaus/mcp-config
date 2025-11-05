@@ -6,17 +6,14 @@ from typing import List, Tuple
 from .discovery import initialize_external_servers
 from .servers import registry
 
-# Version - managed by setuptools-scm
+# Version is automatically determined from git tags via setuptools-scm
 try:
-    from importlib.metadata import PackageNotFoundError, version
+    from importlib.metadata import version
 
     __version__ = version("mcp-config")
-except (PackageNotFoundError, ImportError, ModuleNotFoundError):
-    # Fallback when:
-    # - Package not installed (PackageNotFoundError)
-    # - importlib.metadata unavailable (ImportError)
-    # - Module structure issues (ModuleNotFoundError)
-    __version__ = "0.1.0.dev0"
+except Exception:
+    # Fallback for development/editable installs without proper metadata
+    __version__ = "0.0.0.dev0+unknown"
 
 # Set up logging
 logger = logging.getLogger(__name__)

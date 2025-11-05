@@ -109,7 +109,6 @@ include = ["mcp_config*"]
 package-dir = {"" = "src"}
 
 [tool.setuptools_scm]
-version_scheme = "guess-next-dev"
-local_scheme = "no-local-version"
-tag_regex = "^(?P<prefix>)?(?P<version>[0-9]+\\.[0-9]+\\.[0-9]+)(?P<suffix>.*)?$"
-fallback_version = "0.1.0.dev0"
+# Version is automatically determined from git tags
+# Tag format: v0.1.0 -> version 0.1.0
+# Between releases: 0.1.0.devN+gHASH (includes commit count and hash)
