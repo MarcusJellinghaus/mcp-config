@@ -84,14 +84,17 @@ jobs:
           if [ -z "$CHANGELOG" ]; then
             CHANGELOG="Release ${TAG_NAME}"
           fi
+
+          # Save to file for GitHub release
+          echo "$CHANGELOG" > release_notes.md
         else
-          CHANGELOG="Release ${TAG_NAME}
+          # No CHANGELOG.md, create default release notes
+          cat > release_notes.md <<EOF
+        Release ${TAG_NAME}
 
-See git history for changes."
+        See git history for changes.
+        EOF
         fi
-
-        # Save to file for GitHub release
-        echo "$CHANGELOG" > release_notes.md
         echo "Release notes:"
         cat release_notes.md
 
