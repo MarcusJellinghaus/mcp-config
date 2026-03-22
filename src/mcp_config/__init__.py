@@ -10,7 +10,7 @@ from .servers import registry
 try:
     from importlib.metadata import version
 
-    __version__ = version("mcp-config")
+    __version__ = version("mcp-config-tool")
 except Exception:
     # Fallback for development/editable installs without proper metadata
     __version__ = "0.0.0.dev0+unknown"
