@@ -1,5 +1,5 @@
 [project]
-name = "mcp-config"
+name = "mcp-config-tool"
 dynamic = ["version"]
 authors = [
     {name = "Marcus Jellinghaus", email = "Marcus@Jellinghaus.ch"},
@@ -109,6 +109,7 @@ include = ["mcp_config*"]
 package-dir = {"" = "src"}
 
 [tool.setuptools_scm]
+tag_regex = '^(?P<version>\d+\.\d+\.\d+)$'
 # Version is automatically determined from git tags
-# Tag format: v0.1.0 -> version 0.1.0
+# Tag format: 0.1.0 -> version 0.1.0
 # Between releases: 0.1.0.devN+gHASH (includes commit count and hash)
