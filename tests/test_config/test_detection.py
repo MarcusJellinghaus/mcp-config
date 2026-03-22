@@ -329,15 +329,13 @@ class TestProjectDependencies:
     def test_get_dependencies_from_requirements(self, tmp_path: Path) -> None:
         """Test reading dependencies from requirements.txt."""
         req_file = tmp_path / "requirements.txt"
-        req_file.write_text(
-            """# Comment
+        req_file.write_text("""# Comment
 requests>=2.28.0
 numpy==1.24.0
 
 # Another comment
 pandas
-"""
-        )
+""")
 
         deps = get_project_dependencies(tmp_path)
         assert "requests>=2.28.0" in deps
@@ -359,8 +357,7 @@ pandas
     def test_get_dependencies_from_pyproject(self, tmp_path: Path) -> None:
         """Test reading dependencies from pyproject.toml."""
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text(
-            """[project]
+        pyproject.write_text("""[project]
 name = "test-project"
 dependencies = [
     "requests>=2.28.0",
@@ -370,8 +367,7 @@ dependencies = [
 [project.optional-dependencies]
 dev = ["pytest>=7.0", "black"]
 test = ["coverage"]
-"""
-        )
+""")
 
         # Mock tomllib import
         mock_toml_data = {
